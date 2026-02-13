@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// AUTH
+// ============================================
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         UserRole @default(OPERATOR)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+enum UserRole {
+  ADMIN    // Daniel — full access
+  OPERATOR // Salvador, etc — record batches
+  VIEWER   // Investors, auditors — read only
+}
+
+// ============================================
+// LOTES
+// ============================================
+model Batch {
+  id   String @id @default(cuid())
+  code String @unique // ECO-DY500-20250119-001
+
+  date   DateTime
+  status BatchStatus @default(ACTIVE)
+
+  // Feedstock (entrada)
+  feedstockType      String  // "LDPE Agrícola"
+  feedstockOrigin    String  // "Michoacán, MX"
+  feedstockWeight    Float   // kg entrada
+  feedstockCondition String? // "Sin triturar, húmedo, ~30% tierra"
+  contaminationPct   Float?  // % estimado de contaminación
+
+  // Producto (salida)
+  oilOutput       Float? // litros de aceite
+  oilWeightKg     Float? // kg de aceite
+  residueWeightKg Float? // kg de residuo sólido
+  yieldPercent    Float? // rendimiento calculado
+
+  // Proceso
+  startTime       DateTime?
+  endTime         DateTime?
+  durationMinutes Int?
+  maxReactorTemp  Float? // °C máxima alcanzada
+  dieselConsumedL Float? // litros diesel consumidos
+
+  // Resultado
+  stopReason String? // "Completado", "Tapón en sistema"
+  notes      String?
+
+  // Operadores
+  operators String[] // ["Daniel", "Salvador"]
+
+  // Relaciones
+  readings     Reading[]
+  events       ProcessEvent[]
+  photos       Photo[]
+  labResults   LabResult[]
+  certificates Certificate[]
+
+  // GHG Impact (calculated, stored for performance)
+  co2Baseline  Float? // kg CO2eq sin proyecto (quema abierta)
+  co2Project   Float? // kg CO2eq con proyecto (pirólisis lifecycle)
+  co2Avoided   Float? // kg CO2eq evitados
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum BatchStatus {
+  ACTIVE
+  COMPLETED
+  INCOMPLETE
+  TEST
+}
+
+// ============================================
+// LECTURAS DE PROCESO (cada 5 min)
+// ============================================
+model Reading {
+  id      String @id @default(cuid())
+  batchId String
+  batch   Batch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  timestamp      DateTime
+  reactorTemp    Float? // °C — termopar reactor
+  controlTemp    Float? // °C — termopar amortiguador
+  steelTemp      Float? // °C — temperatura acero reactor
+  chainTemp      Float? // °C — temperatura cadena transmisión
+  compressorPsi  Float? // PSI compresor aire general
+  regulatorPsi   Float? // PSI unidad mantenimiento
+  damperPosition Float? // Posición papalote (entrada O₂)
+
+  notes String?
+
+  @@index([batchId, timestamp])
+}
+
+// ============================================
+// EVENTOS OPERATIVOS
+// ============================================
+model ProcessEvent {
+  id      String @id @default(cuid())
+  batchId String
+  batch   Batch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  timestamp DateTime
+  type      EventType
+  detail    String // "Quemador aceite ON", "Válvula SG-1 abierta"
+  notes     String?
+
+  @@index([batchId, timestamp])
+}
+
+enum EventType {
+  VALVE_CHANGE
+  EQUIPMENT_TOGGLE
+  FUEL_ADD
+  INCIDENT
+  OBSERVATION
+  PHASE_CHANGE
+}
+
+// ============================================
+// FOTOS
+// ============================================
+model Photo {
+  id      String @id @default(cuid())
+  batchId String
+  batch   Batch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  url     String
+  type    PhotoType
+  caption String?
+  takenAt DateTime @default(now())
+}
+
+enum PhotoType {
+  FEEDSTOCK
+  PROCESS
+  PRODUCT
+  LABEL
+  PLANT
+  OTHER
+}
+
+// ============================================
+// RESULTADOS DE LABORATORIO
+// ============================================
+model LabResult {
+  id      String @id @default(cuid())
+  batchId String
+  batch   Batch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  labName          String  // "Diamond Internacional de México"
+  labCertification String? // "ISO 9001 — AMTIVO"
+  sampleNumber     String  // "295-26"
+  lotNumber        String? // "12022026"
+  reportDate       DateTime
+
+  // Test results
+  crepitation   String? // "Negativo"
+  appearance    String? // "Clara y Brillante"
+  viscosity40C  Float?  // mm²/s — ASTM D7042
+  color         String? // "Café"
+  waterContent  Float?  // PPM — ASTM D6304
+  sulfurPercent Float?  // % m/m — ASTM D4951
+
+  additionalTests Json?   // Flexible field for extra tests
+  verdict         String? // "Cumple con las especificaciones"
+  pdfUrl          String?
+  analystName     String?
+}
+
+// ============================================
+// CERTIFICADOS DIGITALES
+// ============================================
+model Certificate {
+  id      String @id @default(cuid())
+  batchId String
+  batch   Batch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  code String @unique // Unique code for QR verification
+  hash String         // SHA-256 of all batch data
+
+  pdfUrl String?
+  qrData String // Data encoded in QR
+
+  // Impact metrics (snapshot at generation time)
+  co2Avoided      Float? // kg CO2 evitado
+  plasticDiverted Float? // kg plástico desviado
+
+  generatedAt DateTime  @default(now())
+  verifiedAt  DateTime? // When someone scans the QR
+}
