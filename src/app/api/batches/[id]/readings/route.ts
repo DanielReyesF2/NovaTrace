@@ -28,12 +28,12 @@ export async function POST(
   const body = await req.json();
   const data = createReadingSchema.parse(body);
 
+  const { timestamp, ...rest } = data;
   const reading = await prisma.reading.create({
     data: {
       batchId: id,
-      timestamp: data.timestamp ? new Date(data.timestamp) : new Date(),
-      ...data,
-      timestamp: undefined, // Remove string version
+      timestamp: timestamp ? new Date(timestamp) : new Date(),
+      ...rest,
     },
   });
 

@@ -34,7 +34,7 @@ yarn-error.log*
 next-env.d.ts
 
 # prisma
-prisma/migrations/
+# prisma/migrations/ — migrations must be version-controlled for deploy
 
 # ide
 .vscode/

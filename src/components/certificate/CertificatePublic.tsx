@@ -32,21 +32,21 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
   const { batch } = certificate;
 
   return (
-    <div className="min-h-screen bg-eco-bg flex items-center justify-center p-4">
+    <div className="min-h-screen bg-eco-bg-warm flex items-center justify-center p-4">
       <div className="w-full max-w-lg bg-[#FAFAF9] rounded-2xl p-10 text-gray-900 shadow-2xl">
         {/* Header */}
         <div className="text-center mb-8">
           <p className="text-[10px] tracking-[5px] text-gray-400 uppercase mb-2">
             Certificado de Trazabilidad
           </p>
-          <h1 className="text-3xl font-bold text-green-800 font-mono tracking-tighter">
+          <h1 className="text-3xl font-bold text-[#3d5c0e] font-mono tracking-tighter">
             ECONOVA
           </h1>
           <p className="text-[9px] tracking-[4px] text-gray-400 uppercase">
             Economía Circular · México
           </p>
-          <div className="w-12 h-px bg-green-800/30 mx-auto mt-4" />
-          <p className="font-mono text-xs text-green-800 mt-3">{batch.code}</p>
+          <div className="w-12 h-px bg-[#3d5c0e]/30 mx-auto mt-4" />
+          <p className="font-mono text-xs text-[#3d5c0e] mt-3">{batch.code}</p>
           <p className="text-xs text-gray-400">
             {new Date(batch.date).toLocaleDateString("es-MX", {
               day: "numeric",
@@ -59,7 +59,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
         {/* Sections */}
         <div className="space-y-5 text-xs">
           <section>
-            <h3 className="text-[9px] tracking-[2px] text-green-800 font-bold uppercase mb-1">
+            <h3 className="text-[9px] tracking-[2px] text-[#3d5c0e] font-bold uppercase mb-1">
               Origen del Residuo
             </h3>
             <p className="text-gray-600">{batch.feedstockType} · {batch.feedstockOrigin}</p>
@@ -68,7 +68,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
 
           {batch.oilOutput != null && batch.oilOutput > 0 && (
             <section>
-              <h3 className="text-[9px] tracking-[2px] text-green-800 font-bold uppercase mb-1">
+              <h3 className="text-[9px] tracking-[2px] text-[#3d5c0e] font-bold uppercase mb-1">
                 Producto
               </h3>
               <p className="text-gray-600">~{batch.oilOutput} litros aceite pirolítico</p>
@@ -77,21 +77,21 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
 
           {batch.labResults.length > 0 && (
             <section>
-              <h3 className="text-[9px] tracking-[2px] text-green-800 font-bold uppercase mb-1">
+              <h3 className="text-[9px] tracking-[2px] text-[#3d5c0e] font-bold uppercase mb-1">
                 Control de Calidad — {batch.labResults[0].labName}
               </h3>
               <p className="text-gray-600">
                 Azufre: {batch.labResults[0].sulfurPercent}% · Agua: {batch.labResults[0].waterContent} PPM
               </p>
               {batch.labResults[0].verdict && (
-                <p className="text-green-700 font-medium mt-1">✓ {batch.labResults[0].verdict}</p>
+                <p className="text-[#4a6d10] font-medium mt-1">✓ {batch.labResults[0].verdict}</p>
               )}
             </section>
           )}
 
           {batch.co2Avoided != null && (
             <section>
-              <h3 className="text-[9px] tracking-[2px] text-green-800 font-bold uppercase mb-1">
+              <h3 className="text-[9px] tracking-[2px] text-[#3d5c0e] font-bold uppercase mb-1">
                 Impacto Ambiental — Ciclo de Vida
               </h3>
               <p className="text-gray-600">
@@ -100,7 +100,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
               <p className="text-gray-600">
                 Con EcoNova: {batch.co2Project?.toFixed(1)} kg CO₂eq (pirólisis)
               </p>
-              <p className="text-green-700 font-bold mt-1">
+              <p className="text-[#4a6d10] font-bold mt-1">
                 {batch.co2Avoided.toFixed(1)} kg CO₂eq evitados
               </p>
             </section>

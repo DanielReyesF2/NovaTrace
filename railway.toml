@@ -2,9 +2,6 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "npx prisma migrate deploy && npm start"
+startCommand = "npx prisma migrate deploy && npx next start -H 0.0.0.0 -p ${PORT:-3000}"
 healthcheckPath = "/api/stats"
-healthcheckTimeout = 100
-
-[service]
-internalPort = 3000
+healthcheckTimeout = 300

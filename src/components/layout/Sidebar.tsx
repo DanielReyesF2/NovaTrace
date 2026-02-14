@@ -1,0 +1,204 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+
+interface SidebarProps {
+  user: {
+    email: string;
+    role: string;
+  };
+}
+
+const ROLE_STYLES: Record<string, { color: string; bg: string }> = {
+  ADMIN: { color: "#b5e951", bg: "rgba(181,233,81,0.15)" },
+  OPERATOR: { color: "#E8700A", bg: "rgba(232,112,10,0.15)" },
+  VIEWER: { color: "#2D8CF0", bg: "rgba(45,140,240,0.15)" },
+};
+
+const NAV_ITEMS = [
+  {
+    href: "/",
+    label: "Dashboard",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </svg>
+    ),
+  },
+  {
+    href: "/batch",
+    label: "Lotes",
+    matchPrefix: true,
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+        <rect x="9" y="3" width="6" height="4" rx="1" />
+        <path d="M9 14l2 2 4-4" />
+      </svg>
+    ),
+  },
+];
+
+export function Sidebar({ user }: SidebarProps) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [collapsed, setCollapsed] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const isActive = (item: (typeof NAV_ITEMS)[number]) => {
+    if (item.href === "/") return pathname === "/";
+    if (item.matchPrefix) return pathname.startsWith(item.href);
+    return pathname === item.href;
+  };
+
+  const roleStyle = ROLE_STYLES[user.role] || ROLE_STYLES.VIEWER;
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  };
+
+  return (
+    <>
+      {/* Mobile toggle */}
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="fixed top-4 left-4 z-50 md:hidden bg-eco-navy border border-white/10 rounded-lg p-2 text-white/60 hover:text-white"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M3 12h18M3 6h18M3 18h18" />
+        </svg>
+      </button>
+
+      {/* Mobile overlay */}
+      {!collapsed && (
+        <div
+          className="fixed inset-0 bg-black/30 z-30 md:hidden"
+          onClick={() => setCollapsed(true)}
+        />
+      )}
+
+      <aside
+        className={`
+          fixed md:sticky top-0 left-0 h-screen z-40
+          flex flex-col
+          bg-eco-navy border-r border-eco-navy-light/20
+          transition-all duration-200 ease-in-out
+          ${collapsed ? "-translate-x-full md:translate-x-0 md:w-16" : "w-64"}
+          md:translate-x-0
+        `}
+      >
+        {/* Logo */}
+        <div className="px-5 py-5 border-b border-white/8">
+          <Link href="/" className="flex items-center gap-2.5">
+            <Image
+              src="/logo-econova.png"
+              alt="EcoNova"
+              width={collapsed ? 32 : 140}
+              height={collapsed ? 32 : 50}
+              className={`transition-all duration-200 object-contain ${collapsed ? "md:w-8" : "w-[140px]"}`}
+              priority
+            />
+          </Link>
+          {!collapsed && (
+            <span className="text-[8px] tracking-[3px] text-white/35 uppercase mt-1 block pl-1">
+              Trace
+            </span>
+          )}
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-4 space-y-1">
+          {NAV_ITEMS.map((item) => {
+            const active = isActive(item);
+            return (
+              <Link
+                key={item.href}
+                href={item.href === "/batch" ? "/" : item.href}
+                className={`
+                  flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium
+                  transition-all duration-150 group relative
+                  ${active
+                    ? "bg-eco-green/15 text-eco-green"
+                    : "text-white/45 hover:text-white/70 hover:bg-white/5"
+                  }
+                `}
+              >
+                {active && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-eco-green rounded-full" />
+                )}
+                <span className="flex-shrink-0">{item.icon}</span>
+                <span className={`overflow-hidden transition-all duration-200 whitespace-nowrap ${collapsed ? "md:w-0 md:opacity-0" : "w-auto opacity-100"}`}>
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Collapse toggle (desktop) */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="hidden md:flex mx-3 mb-2 items-center justify-center py-2 rounded-lg text-white/25 hover:text-white/50 hover:bg-white/5 transition-colors"
+        >
+          <svg
+            width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"
+            className={`transition-transform duration-200 ${collapsed ? "rotate-180" : ""}`}
+          >
+            <path d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        {/* User section */}
+        <div className="border-t border-white/8 px-3 py-4">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold"
+              style={{ color: roleStyle.color, backgroundColor: roleStyle.bg }}
+            >
+              {user.email.charAt(0).toUpperCase()}
+            </div>
+            <div className={`overflow-hidden transition-all duration-200 min-w-0 ${collapsed ? "md:w-0 md:opacity-0" : "w-auto opacity-100"}`}>
+              <p className="text-xs text-white/60 truncate">{user.email}</p>
+              <span
+                className="text-[9px] font-semibold uppercase tracking-wider"
+                style={{ color: roleStyle.color }}
+              >
+                {user.role}
+              </span>
+            </div>
+          </div>
+
+          {/* Logout */}
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className={`
+              mt-3 w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs
+              text-white/30 hover:text-eco-red hover:bg-eco-red/10
+              transition-colors disabled:opacity-50
+            `}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="flex-shrink-0">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+              <polyline points="16,17 21,12 16,7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            <span className={`overflow-hidden transition-all duration-200 whitespace-nowrap ${collapsed ? "md:w-0 md:opacity-0" : "w-auto opacity-100"}`}>
+              {loggingOut ? "Saliendo..." : "Cerrar sesion"}
+            </span>
+          </button>
+        </div>
+      </aside>
+    </>
+  );
+}

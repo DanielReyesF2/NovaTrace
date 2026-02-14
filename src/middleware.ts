@@ -6,6 +6,7 @@ import { verifyToken } from "@/lib/auth";
 const PUBLIC_ROUTES = [
   "/api/auth/login",
   "/api/certificates/", // Public certificate verification
+  "/api/stats", // Health check endpoint
   "/verify/", // Public verification page
   "/login",
 ];

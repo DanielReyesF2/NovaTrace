@@ -5,20 +5,21 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Newsreader:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap');
 
 :root {
-  --eco-bg: #0A0A0A;
-  --eco-surface: #141414;
-  --eco-surface-2: #1A1A1A;
-  --eco-border: rgba(255, 255, 255, 0.06);
-  --eco-green: #00C853;
-  --eco-orange: #F97316;
-  --eco-purple: #A78BFA;
-  --eco-blue: #60A5FA;
-  --eco-red: #EF4444;
+  --eco-bg: #FAF8F4;
+  --eco-surface: #FFFFFF;
+  --eco-surface-2: #F0ECE4;
+  --eco-border: rgba(39, 57, 73, 0.1);
+  --eco-green: #b5e951;
+  --eco-navy: #273949;
+  --eco-orange: #E8700A;
+  --eco-purple: #7C5CFC;
+  --eco-blue: #2D8CF0;
+  --eco-red: #DC2626;
 }
 
 body {
   background: var(--eco-bg);
-  color: #ffffff;
+  color: #273949;
   font-family: 'JetBrains Mono', monospace;
   -webkit-font-smoothing: antialiased;
 }
@@ -31,17 +32,27 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(39, 57, 73, 0.12);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(39, 57, 73, 0.2);
 }
 
 /* Glow effects for accent elements */
 .eco-glow-green {
-  box-shadow: 0 0 20px rgba(0, 200, 83, 0.1);
+  box-shadow: 0 0 20px rgba(181, 233, 81, 0.15);
 }
 .eco-glow-orange {
-  box-shadow: 0 0 20px rgba(249, 115, 22, 0.1);
+  box-shadow: 0 0 20px rgba(232, 112, 10, 0.12);
+}
+
+/* Nova AI Assistant animations */
+@keyframes nova-fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes nova-slidedown {
+  from { opacity: 0; transform: translateY(-20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
