@@ -77,6 +77,15 @@ body {
   to { stroke-dashoffset: -20; }
 }
 
+/* Neural flow glow pulse */
+@keyframes neuralPulse {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.45; }
+}
+.neural-glow {
+  animation: neuralPulse 2s ease-in-out infinite;
+}
+
 /* Nova AI Assistant animations */
 @keyframes nova-fadein {
   from { opacity: 0; }

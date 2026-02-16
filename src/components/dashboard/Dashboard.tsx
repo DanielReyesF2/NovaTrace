@@ -131,6 +131,9 @@ export function Dashboard({ batches, recentEvents, lastBatchId, stats }: Dashboa
         </div>
       </div>
 
+      {/* ═══ MEXICO ORIGINS MAP ═══ */}
+      <MexicoMapCard batches={batches} />
+
       {/* ═══ ANIMATED TRACEABILITY PIPELINE ═══ */}
       <TraceabilityPipeline stats={stats} totalCerts={totalCerts} />
 
@@ -401,8 +404,6 @@ export function Dashboard({ batches, recentEvents, lastBatchId, stats }: Dashboa
         </div>
       </div>
 
-      {/* ═══ MEXICO ORIGINS MAP ═══ */}
-      <MexicoMapCard batches={batches} />
     </div>
   );
 }
