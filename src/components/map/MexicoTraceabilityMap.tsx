@@ -1,12 +1,21 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
-  MEXICO_OUTLINE,
-  ACTIVE_STATES,
-  PLANT_LOCATION,
+  ComposableMap,
+  Geographies,
+  Geography,
+  Marker,
+  Line,
+} from "react-simple-maps";
+import {
   STATE_ORIGINS,
+  STATE_COORDS,
+  PLANT_COORDS,
+  ACTIVE_STATE_NAMES,
 } from "./mexicoStates";
+
+const GEO_URL = "/mexico-states.json";
 
 interface BatchOrigin {
   feedstockOrigin: string;
@@ -30,28 +39,27 @@ interface StateAgg {
 
 export function MexicoTraceabilityMap({ batches }: MexicoTraceabilityMapProps) {
   const [hoveredState, setHoveredState] = useState<string | null>(null);
-  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; data: StateAgg } | null>(null);
 
-  const { stateData, totalKg, maxKg } = useMemo(() => {
+  const { stateData, maxKg } = useMemo(() => {
     const agg = new Map<string, StateAgg>();
     let total = 0;
 
     batches.forEach((b) => {
-      const stateId = STATE_ORIGINS[b.feedstockOrigin];
-      if (!stateId) return;
+      const stateName = STATE_ORIGINS[b.feedstockOrigin];
+      if (!stateName) return;
       total += b.feedstockWeight;
 
-      if (!agg.has(stateId)) {
-        const stateInfo = ACTIVE_STATES.find((s) => s.id === stateId);
-        agg.set(stateId, {
-          name: stateInfo?.name ?? stateId,
+      if (!agg.has(stateName)) {
+        agg.set(stateName, {
+          name: stateName,
           totalKg: 0,
           batchCount: 0,
           types: new Set(),
           pctOfTotal: 0,
         });
       }
-      const entry = agg.get(stateId)!;
+      const entry = agg.get(stateName)!;
       entry.totalKg += b.feedstockWeight;
       entry.batchCount += 1;
       entry.types.add(b.feedstockType);
@@ -66,18 +74,50 @@ export function MexicoTraceabilityMap({ batches }: MexicoTraceabilityMapProps) {
     return { stateData: agg, totalKg: total, maxKg: mx };
   }, [batches]);
 
-  const getStateOpacity = (stateId: string): number => {
-    const data = stateData.get(stateId);
-    if (!data || maxKg === 0) return 0.15;
-    return 0.25 + (data.totalKg / maxKg) * 0.6;
+  const getFill = useCallback(
+    (name: string): string => {
+      const data = stateData.get(name);
+      if (!data || maxKg === 0) {
+        return ACTIVE_STATE_NAMES.has(name)
+          ? "rgba(181,233,81,0.18)"
+          : "rgba(39,57,73,0.04)";
+      }
+      const intensity = 0.25 + (data.totalKg / maxKg) * 0.55;
+      return `rgba(181,233,81,${intensity})`;
+    },
+    [stateData, maxKg]
+  );
+
+  const getStroke = (name: string): string => {
+    if (hoveredState === name) return "#3d7a0a";
+    if (ACTIVE_STATE_NAMES.has(name)) return "rgba(61,122,10,0.5)";
+    return "rgba(39,57,73,0.12)";
   };
 
-  const handleMouseEnter = (stateId: string, cx: number, cy: number) => {
-    setHoveredState(stateId);
-    setTooltipPos({ x: cx, y: cy - 50 });
+  const getStrokeWidth = (name: string): number => {
+    if (hoveredState === name) return 1.8;
+    if (ACTIVE_STATE_NAMES.has(name)) return 0.8;
+    return 0.3;
   };
 
-  const tooltipData = hoveredState ? stateData.get(hoveredState) : null;
+  const handleMouseEnter = (name: string, event: React.MouseEvent) => {
+    setHoveredState(name);
+    const data = stateData.get(name);
+    if (data) {
+      setTooltip({ x: event.clientX, y: event.clientY, data });
+    }
+  };
+
+  const handleMouseMove = (event: React.MouseEvent) => {
+    if (tooltip) {
+      setTooltip((prev) => prev ? { ...prev, x: event.clientX, y: event.clientY } : null);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredState(null);
+    setTooltip(null);
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
@@ -90,181 +130,187 @@ export function MexicoTraceabilityMap({ batches }: MexicoTraceabilityMapProps) {
         </p>
       </div>
 
-      <div className="bg-eco-surface border border-eco-border rounded-xl p-6">
+      <div className="bg-eco-surface border border-eco-border rounded-xl p-6 relative">
         <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase mb-4">
           Mapa de Orígenes — México
         </h3>
 
-        <div className="relative">
-          <svg viewBox="30 80 560 300" className="w-full" style={{ maxHeight: "450px" }}>
-            {/* Mexico outline */}
-            <path
-              d={MEXICO_OUTLINE}
-              fill="rgba(39,57,73,0.03)"
-              stroke="rgba(39,57,73,0.12)"
-              strokeWidth="1.5"
-            />
+        <div className="relative" onMouseMove={handleMouseMove}>
+          <ComposableMap
+            projection="geoMercator"
+            projectionConfig={{
+              center: [-102, 23.5],
+              scale: 1600,
+            }}
+            width={800}
+            height={520}
+            style={{ width: "100%", height: "auto", maxHeight: "520px" }}
+          >
+            <Geographies geography={GEO_URL}>
+              {({ geographies }) =>
+                geographies.map((geo) => {
+                  const name = geo.properties.name as string;
+                  return (
+                    <Geography
+                      key={geo.rsmKey}
+                      geography={geo}
+                      fill={getFill(name)}
+                      stroke={getStroke(name)}
+                      strokeWidth={getStrokeWidth(name)}
+                      style={{
+                        default: { outline: "none", transition: "all 0.3s" },
+                        hover: { outline: "none" },
+                        pressed: { outline: "none" },
+                      }}
+                      onMouseEnter={(e) => handleMouseEnter(name, e)}
+                      onMouseLeave={handleMouseLeave}
+                    />
+                  );
+                })
+              }
+            </Geographies>
 
-            {/* Active states */}
-            {ACTIVE_STATES.map((state) => {
-              const isHovered = hoveredState === state.id;
-              const opacity = getStateOpacity(state.id);
-
+            {/* Flow lines from active states to plant */}
+            {Array.from(stateData.keys()).map((name) => {
+              const coords = STATE_COORDS[name];
+              if (!coords) return null;
               return (
-                <g key={state.id}>
-                  {/* State shape */}
-                  <path
-                    d={state.path}
-                    fill={`rgba(181,233,81,${opacity})`}
-                    stroke={isHovered ? "#3d7a0a" : "rgba(61,122,10,0.4)"}
-                    strokeWidth={isHovered ? 2.5 : 1.5}
-                    className="transition-all duration-300 cursor-pointer"
-                    onMouseEnter={() =>
-                      handleMouseEnter(state.id, state.centroid[0], state.centroid[1])
-                    }
-                    onMouseLeave={() => setHoveredState(null)}
-                  />
+                <Line
+                  key={`flow-${name}`}
+                  from={coords}
+                  to={PLANT_COORDS}
+                  stroke="rgba(181,233,81,0.5)"
+                  strokeWidth={1.5}
+                  strokeDasharray="5 3"
+                  className="flow-dash"
+                />
+              );
+            })}
 
-                  {/* Flow line to plant */}
-                  <line
-                    x1={state.centroid[0]}
-                    y1={state.centroid[1]}
-                    x2={PLANT_LOCATION[0]}
-                    y2={PLANT_LOCATION[1]}
-                    stroke="rgba(181,233,81,0.4)"
-                    strokeWidth="1.5"
-                    strokeDasharray="6 4"
-                    className="flow-dash"
-                  />
-
-                  {/* Pulsing dot at state origin */}
+            {/* Origin markers */}
+            {Array.from(stateData.entries()).map(([name, data]) => {
+              const coords = STATE_COORDS[name];
+              if (!coords) return null;
+              const isHovered = hoveredState === name;
+              return (
+                <Marker key={`marker-${name}`} coordinates={coords}>
+                  {/* Pulse ring */}
                   <circle
-                    cx={state.centroid[0]}
-                    cy={state.centroid[1]}
-                    r={isHovered ? 6 : 4}
-                    fill="#b5e951"
-                    stroke="#3d7a0a"
-                    strokeWidth="1.5"
-                    className="transition-all duration-200"
-                  />
-                  <circle
-                    cx={state.centroid[0]}
-                    cy={state.centroid[1]}
-                    r="8"
+                    r={8}
                     fill="none"
                     stroke="#b5e951"
-                    strokeWidth="1"
-                    opacity="0.4"
+                    strokeWidth={1}
+                    opacity={0.4}
                   >
                     <animate
                       attributeName="r"
-                      values="6;14;6"
+                      values="5;12;5"
                       dur="2s"
                       repeatCount="indefinite"
                     />
                     <animate
                       attributeName="opacity"
-                      values="0.6;0;0.6"
+                      values="0.5;0;0.5"
                       dur="2s"
                       repeatCount="indefinite"
                     />
                   </circle>
-
-                  {/* State label */}
+                  {/* Dot */}
+                  <circle
+                    r={isHovered ? 5 : 3.5}
+                    fill="#b5e951"
+                    stroke="#3d7a0a"
+                    strokeWidth={1.5}
+                    style={{ transition: "r 0.2s" }}
+                  />
+                  {/* Label */}
                   <text
-                    x={state.centroid[0]}
-                    y={state.centroid[1] - 12}
+                    y={-10}
                     textAnchor="middle"
-                    fill="rgba(39,57,73,0.6)"
-                    fontSize="8"
-                    fontFamily="JetBrains Mono, monospace"
-                    fontWeight="600"
+                    fontSize={7}
+                    fontFamily="'JetBrains Mono', monospace"
+                    fontWeight={600}
+                    fill="rgba(39,57,73,0.7)"
                   >
-                    {state.name}
+                    {name}
                   </text>
-                </g>
+                  {/* Weight label */}
+                  <text
+                    y={14}
+                    textAnchor="middle"
+                    fontSize={6}
+                    fontFamily="'JetBrains Mono', monospace"
+                    fontWeight={700}
+                    fill="#3d7a0a"
+                  >
+                    {data.totalKg} kg
+                  </text>
+                </Marker>
               );
             })}
 
             {/* Plant marker */}
-            <g>
+            <Marker coordinates={PLANT_COORDS}>
               <rect
-                x={PLANT_LOCATION[0] - 10}
-                y={PLANT_LOCATION[1] - 10}
-                width="20"
-                height="20"
-                rx="4"
+                x={-11}
+                y={-11}
+                width={22}
+                height={22}
+                rx={5}
                 fill="#273949"
                 stroke="#b5e951"
-                strokeWidth="2"
+                strokeWidth={2}
               />
               <text
-                x={PLANT_LOCATION[0]}
-                y={PLANT_LOCATION[1] + 4}
                 textAnchor="middle"
+                y={5}
                 fill="#b5e951"
-                fontSize="12"
+                fontSize={13}
                 fontWeight="bold"
+                fontFamily="'JetBrains Mono', monospace"
               >
                 E
               </text>
               <text
-                x={PLANT_LOCATION[0]}
-                y={PLANT_LOCATION[1] + 22}
                 textAnchor="middle"
+                y={24}
                 fill="#273949"
-                fontSize="7"
-                fontFamily="JetBrains Mono, monospace"
-                fontWeight="700"
+                fontSize={6}
+                fontWeight={700}
+                fontFamily="'JetBrains Mono', monospace"
               >
                 PLANTA ECONOVA
               </text>
-            </g>
+            </Marker>
+          </ComposableMap>
 
-            {/* Tooltip */}
-            {tooltipData && (
-              <g>
-                <rect
-                  x={tooltipPos.x - 70}
-                  y={tooltipPos.y - 35}
-                  width="140"
-                  height="40"
-                  rx="6"
-                  fill="#273949"
-                  stroke="rgba(181,233,81,0.3)"
-                  strokeWidth="1"
-                />
-                <text
-                  x={tooltipPos.x}
-                  y={tooltipPos.y - 18}
-                  textAnchor="middle"
-                  fill="#b5e951"
-                  fontSize="9"
-                  fontFamily="JetBrains Mono, monospace"
-                  fontWeight="700"
-                >
-                  {tooltipData.name}
-                </text>
-                <text
-                  x={tooltipPos.x}
-                  y={tooltipPos.y - 5}
-                  textAnchor="middle"
-                  fill="white"
-                  fontSize="8"
-                  fontFamily="JetBrains Mono, monospace"
-                >
-                  {tooltipData.totalKg} kg · {tooltipData.batchCount} lotes · {tooltipData.pctOfTotal.toFixed(0)}%
-                </text>
-              </g>
-            )}
-          </svg>
+          {/* HTML Tooltip */}
+          {tooltip && (
+            <div
+              className="fixed z-50 pointer-events-none"
+              style={{ left: tooltip.x + 12, top: tooltip.y - 60 }}
+            >
+              <div className="bg-eco-navy text-white px-3 py-2 rounded-lg shadow-lg border border-eco-green/20">
+                <div className="font-mono text-xs font-bold text-eco-green">
+                  {tooltip.data.name}
+                </div>
+                <div className="font-mono text-[10px] mt-0.5 text-white/80">
+                  {tooltip.data.totalKg} kg · {tooltip.data.batchCount} lotes · {tooltip.data.pctOfTotal.toFixed(0)}%
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-4 mt-3 text-[9px] text-eco-muted">
+        <div className="flex items-center gap-5 mt-4 text-[9px] text-eco-muted">
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm" style={{ background: "rgba(181,233,81,0.5)" }} />
+            <div className="w-3 h-3 rounded-sm" style={{ background: "rgba(181,233,81,0.6)" }} />
             Origen de material
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-sm" style={{ background: "rgba(181,233,81,0.18)" }} />
+            Estado sin datos
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-sm bg-eco-navy" />
@@ -277,7 +323,7 @@ export function MexicoTraceabilityMap({ batches }: MexicoTraceabilityMapProps) {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Detail Table */}
       <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
         <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase mb-4">
           Detalle por Estado
@@ -296,50 +342,53 @@ export function MexicoTraceabilityMap({ batches }: MexicoTraceabilityMapProps) {
             <tbody>
               {Array.from(stateData.entries())
                 .sort(([, a], [, b]) => b.totalKg - a.totalKg)
-                .map(([id, data]) => (
-                  <tr
-                    key={id}
-                    className="border-b border-eco-border/50 hover:bg-eco-surface-2/30 transition-colors"
-                    onMouseEnter={() => setHoveredState(id)}
-                    onMouseLeave={() => setHoveredState(null)}
-                  >
-                    <td className="py-2.5 px-2 font-semibold text-eco-ink">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-2.5 h-2.5 rounded-full"
-                          style={{
-                            background: `rgba(181,233,81,${getStateOpacity(id)})`,
-                            border: "1px solid rgba(61,122,10,0.4)",
-                          }}
-                        />
-                        {data.name}
-                      </div>
-                    </td>
-                    <td className="py-2.5 px-2 text-right">{data.batchCount}</td>
-                    <td className="py-2.5 px-2 text-right font-semibold">
-                      {data.totalKg} kg
-                    </td>
-                    <td className="py-2.5 px-2 text-eco-muted text-[10px]">
-                      {Array.from(data.types).join(", ")}
-                    </td>
-                    <td className="py-2.5 px-2 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <div className="w-12 h-1.5 bg-eco-surface-2 rounded-full overflow-hidden">
+                .map(([name, data]) => {
+                  const intensity = maxKg > 0 ? 0.25 + (data.totalKg / maxKg) * 0.55 : 0.15;
+                  return (
+                    <tr
+                      key={name}
+                      className="border-b border-eco-border/50 hover:bg-eco-surface-2/30 transition-colors"
+                      onMouseEnter={() => setHoveredState(name)}
+                      onMouseLeave={() => setHoveredState(null)}
+                    >
+                      <td className="py-2.5 px-2 font-semibold text-eco-ink">
+                        <div className="flex items-center gap-2">
                           <div
-                            className="h-full rounded-full"
+                            className="w-2.5 h-2.5 rounded-full"
                             style={{
-                              width: `${data.pctOfTotal}%`,
-                              background: "#b5e951",
+                              background: `rgba(181,233,81,${intensity})`,
+                              border: "1px solid rgba(61,122,10,0.4)",
                             }}
                           />
+                          {data.name}
                         </div>
-                        <span className="font-semibold" style={{ color: "#3d7a0a" }}>
-                          {data.pctOfTotal.toFixed(0)}%
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="py-2.5 px-2 text-right">{data.batchCount}</td>
+                      <td className="py-2.5 px-2 text-right font-semibold">
+                        {data.totalKg} kg
+                      </td>
+                      <td className="py-2.5 px-2 text-eco-muted text-[10px]">
+                        {Array.from(data.types).join(", ")}
+                      </td>
+                      <td className="py-2.5 px-2 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <div className="w-12 h-1.5 bg-eco-surface-2 rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full"
+                              style={{
+                                width: `${data.pctOfTotal}%`,
+                                background: "#b5e951",
+                              }}
+                            />
+                          </div>
+                          <span className="font-semibold" style={{ color: "#3d7a0a" }}>
+                            {data.pctOfTotal.toFixed(0)}%
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
             </tbody>
           </table>
         </div>
