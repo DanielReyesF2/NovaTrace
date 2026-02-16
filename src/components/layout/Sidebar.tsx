@@ -43,6 +43,37 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
+  {
+    href: "/analytics",
+    label: "Analytics",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
+      </svg>
+    ),
+  },
+  {
+    href: "/impact",
+    label: "Impacto",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z" />
+        <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+        <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/map",
+    label: "Trazabilidad",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="1,6 1,22 8,18 16,22 23,18 23,2 16,6 8,2" />
+        <line x1="8" y1="2" x2="8" y2="18" />
+        <line x1="16" y1="6" x2="16" y2="22" />
+      </svg>
+    ),
+  },
 ];
 
 export function Sidebar({ user }: SidebarProps) {

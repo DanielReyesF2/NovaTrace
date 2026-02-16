@@ -47,6 +47,36 @@ body {
   box-shadow: 0 0 20px rgba(232, 112, 10, 0.12);
 }
 
+/* Card hover effect */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(39, 57, 73, 0.08);
+}
+
+/* Skeleton shimmer */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #F0ECE4 25%, #FAF8F4 50%, #F0ECE4 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Flow dash animation for SVG */
+.flow-dash {
+  animation: flowDash 1.5s linear infinite;
+}
+
+@keyframes flowDash {
+  to { stroke-dashoffset: -20; }
+}
+
 /* Nova AI Assistant animations */
 @keyframes nova-fadein {
   from { opacity: 0; }

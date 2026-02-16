@@ -486,7 +486,7 @@ export function Dashboard({ batches, recentEvents, lastBatchId, stats }: Dashboa
               <Link
                 key={batch.id}
                 href={`/batch/${batch.id}`}
-                className="group block bg-eco-surface border border-eco-border rounded-xl p-4 md:p-5 hover:border-eco-border-strong hover:shadow-sm transition-all"
+                className="group block bg-eco-surface border border-eco-border rounded-xl p-4 md:p-5 hover:border-eco-border-strong card-hover"
               >
                 <div className="flex items-center justify-between gap-4">
                   <div className="min-w-0 flex-1">

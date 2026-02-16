@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ThermalChart } from "./ThermalChart";
 import { ProcessTimeline } from "./ProcessTimeline";
 import { AIInsights } from "./AIInsights";
+import { BatchScorecard } from "./BatchScorecard";
 
 interface BatchDetailProps {
   batch: {
@@ -289,6 +290,21 @@ export function BatchDetail({ batch }: BatchDetailProps) {
             )}
           </div>
         </div>
+      )}
+
+      {/* ── Batch Scorecard ── */}
+      {batch.status === "COMPLETED" && (
+        <BatchScorecard
+          yieldPercent={batch.yieldPercent}
+          co2Avoided={batch.co2Avoided}
+          co2Baseline={batch.co2Baseline}
+          durationMinutes={batch.durationMinutes}
+          feedstockWeight={batch.feedstockWeight}
+          maxReactorTemp={batch.maxReactorTemp}
+          incidents={batch.events.filter((e) => e.type === "INCIDENT").length}
+          labResults={batch.labResults}
+          readings={batch.readings}
+        />
       )}
 
       {/* ── Nova AI Insights ── */}
