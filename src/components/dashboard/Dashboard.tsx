@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { NovaAISummary } from "./NovaAISummary";
+import { TraceabilityPipeline } from "./TraceabilityPipeline";
 
 /* ── Types ── */
 interface BatchSummary {
@@ -84,51 +85,6 @@ export function Dashboard({ batches, recentEvents, lastBatchId, stats }: Dashboa
   const totalEvents = batches.reduce((s, b) => s + b._count.events, 0);
   const totalCerts = batches.reduce((s, b) => s + b.certificates.length, 0);
 
-  // Process pipeline counts
-  const pipelineSteps = [
-    {
-      label: "Recolectado",
-      value: stats.totalBatches,
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-          <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
-        </svg>
-      ),
-      color: "#273949",
-    },
-    {
-      label: "Procesado",
-      value: `${stats.totalFeedstockKg} kg`,
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-          <circle cx="12" cy="12" r="3" />
-          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
-        </svg>
-      ),
-      color: "#E8700A",
-    },
-    {
-      label: "Producido",
-      value: `${stats.totalOilLiters} L`,
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-          <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z" />
-        </svg>
-      ),
-      color: "#7C5CFC",
-    },
-    {
-      label: "Certificado",
-      value: totalCerts,
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-        </svg>
-      ),
-      color: "#3d7a0a",
-    },
-  ];
-
   return (
     <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
 
@@ -174,32 +130,8 @@ export function Dashboard({ batches, recentEvents, lastBatchId, stats }: Dashboa
         </div>
       </div>
 
-      {/* ═══ PROCESS PIPELINE ═══ */}
-      <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
-        <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase mb-4">
-          Pipeline de trazabilidad
-        </h3>
-        <div className="grid grid-cols-4 gap-0 relative">
-          {/* Connector line */}
-          <div className="absolute top-6 left-[12.5%] right-[12.5%] h-px bg-eco-border z-0" />
-          {pipelineSteps.map((step, i) => (
-            <div key={i} className="relative z-10 flex flex-col items-center text-center">
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center mb-2 border-2"
-                style={{
-                  borderColor: step.color,
-                  backgroundColor: `${step.color}10`,
-                  color: step.color,
-                }}
-              >
-                {step.icon}
-              </div>
-              <div className="font-mono text-sm font-bold text-eco-ink">{step.value}</div>
-              <div className="text-[9px] text-eco-muted uppercase tracking-wider mt-0.5">{step.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* ═══ ANIMATED TRACEABILITY PIPELINE ═══ */}
+      <TraceabilityPipeline stats={stats} totalCerts={totalCerts} />
 
       {/* ═══ TWO-COLUMN: Operational KPIs + Activity Feed ═══ */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
@@ -317,7 +249,7 @@ export function Dashboard({ batches, recentEvents, lastBatchId, stats }: Dashboa
                       <div className="flex items-center gap-2">
                         <span className="text-[10px]" style={{ color: st.color }}>{st.icon}</span>
                         <span className="font-mono text-xs font-semibold text-eco-ink group-hover:text-eco-navy-light transition-colors">
-                          {batch.code.split("-").slice(-2).join("-")}
+                          {batch.code}
                         </span>
                       </div>
                       <div className="flex items-center gap-3 text-[10px] text-eco-muted">
@@ -404,7 +336,7 @@ export function Dashboard({ batches, recentEvents, lastBatchId, stats }: Dashboa
                             href={`/batch/${event.batch.id}`}
                             className="text-[9px] font-mono text-eco-blue hover:underline"
                           >
-                            {event.batch.code.split("-").slice(-2).join("-")}
+                            {event.batch.code}
                           </Link>
                           <span className="text-[9px] text-eco-muted-2">
                             {new Date(event.timestamp).toLocaleString("es-MX", {
@@ -455,7 +387,7 @@ export function Dashboard({ batches, recentEvents, lastBatchId, stats }: Dashboa
                   <div>
                     <span className="text-xs font-semibold text-eco-ink">Ver último lote</span>
                     <span className="text-[9px] text-eco-muted ml-1.5 font-mono">
-                      {batches[0].code.split("-").slice(-2).join("-")}
+                      {batches[0].code}
                     </span>
                   </div>
                 </Link>
@@ -493,7 +425,7 @@ export function Dashboard({ batches, recentEvents, lastBatchId, stats }: Dashboa
                     <div className="flex items-center gap-2.5 mb-1">
                       <span className="text-xs" style={{ color: st.color }}>{st.icon}</span>
                       <span className="font-mono text-sm font-bold text-eco-ink">
-                        {batch.code.split("-").slice(-2).join("-")}
+                        {batch.code}
                       </span>
                       <span
                         className="text-[9px] font-semibold px-2 py-0.5 rounded-full"
