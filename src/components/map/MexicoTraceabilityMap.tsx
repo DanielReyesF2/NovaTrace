@@ -7,6 +7,7 @@ import {
   Geography,
   Marker,
   Line,
+  ZoomableGroup,
 } from "react-simple-maps";
 import {
   STATE_ORIGINS,
@@ -72,6 +73,7 @@ function useMapData(batches: BatchOrigin[]) {
 export function MexicoMapCard({ batches }: { batches: BatchOrigin[] }) {
   const [hoveredState, setHoveredState] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; data: StateAgg } | null>(null);
+  const [position, setPosition] = useState({ coordinates: [-100.5, 20] as [number, number], zoom: 2 });
   const { stateData, maxKg } = useMapData(batches);
 
   const getFill = useCallback(
@@ -118,7 +120,14 @@ export function MexicoMapCard({ batches }: { batches: BatchOrigin[] }) {
     setTooltip(null);
   };
 
-  /* Build flow line paths for animated particles */
+  const handleZoomIn = () => {
+    setPosition((p) => ({ ...p, zoom: Math.min(p.zoom * 1.4, 8) }));
+  };
+
+  const handleZoomOut = () => {
+    setPosition((p) => ({ ...p, zoom: Math.max(p.zoom / 1.4, 0.8) }));
+  };
+
   const flowEntries = useMemo(() => {
     return Array.from(stateData.entries())
       .map(([name, data]) => {
@@ -130,175 +139,144 @@ export function MexicoMapCard({ batches }: { batches: BatchOrigin[] }) {
   }, [stateData]);
 
   return (
-    <div className="bg-eco-surface border border-eco-border rounded-xl p-6 relative">
-      <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase mb-4">
-        Red de Orígenes — México
-      </h3>
+    <div className="bg-eco-surface border border-eco-border rounded-xl p-5 h-full flex flex-col relative">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase">
+          Red de Orígenes
+        </h3>
+        {/* Zoom controls */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleZoomIn}
+            className="w-6 h-6 rounded-md border border-eco-border flex items-center justify-center text-eco-muted hover:text-eco-ink hover:border-eco-border-strong transition-colors text-xs font-mono"
+          >
+            +
+          </button>
+          <button
+            onClick={handleZoomOut}
+            className="w-6 h-6 rounded-md border border-eco-border flex items-center justify-center text-eco-muted hover:text-eco-ink hover:border-eco-border-strong transition-colors text-xs font-mono"
+          >
+            −
+          </button>
+        </div>
+      </div>
 
-      <div className="relative" onMouseMove={handleMouseMove}>
+      <div className="flex-1 relative" onMouseMove={handleMouseMove} style={{ cursor: "grab" }}>
         <ComposableMap
           projection="geoMercator"
-          projectionConfig={{ center: [-100.5, 20.0], scale: 3200 }}
+          projectionConfig={{ center: [-102, 23.5], scale: 1600 }}
           width={800}
-          height={500}
-          style={{ width: "100%", height: "auto", maxHeight: "500px" }}
+          height={520}
+          style={{ width: "100%", height: "auto" }}
         >
-          {/* SVG Defs for glow effects */}
-          <defs>
-            <filter id="neuralGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            <filter id="markerGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            <linearGradient id="flowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#b5e951" stopOpacity={0.8} />
-              <stop offset="100%" stopColor="#3d7a0a" stopOpacity={0.6} />
-            </linearGradient>
-          </defs>
+          <ZoomableGroup
+            center={position.coordinates}
+            zoom={position.zoom}
+            minZoom={0.8}
+            maxZoom={8}
+            onMoveEnd={({ coordinates, zoom }) => setPosition({ coordinates, zoom })}
+          >
+            <Geographies geography={GEO_URL}>
+              {({ geographies }) =>
+                geographies.map((geo) => {
+                  const name = geo.properties.name as string;
+                  return (
+                    <Geography
+                      key={geo.rsmKey}
+                      geography={geo}
+                      fill={getFill(name)}
+                      stroke={getStroke(name)}
+                      strokeWidth={getStrokeWidth(name)}
+                      style={{
+                        default: { outline: "none", transition: "all 0.3s" },
+                        hover: { outline: "none" },
+                        pressed: { outline: "none" },
+                      }}
+                      onMouseEnter={(e) => handleMouseEnter(name, e)}
+                      onMouseLeave={handleMouseLeave}
+                    />
+                  );
+                })
+              }
+            </Geographies>
 
-          <Geographies geography={GEO_URL}>
-            {({ geographies }) =>
-              geographies.map((geo) => {
-                const name = geo.properties.name as string;
-                return (
-                  <Geography
-                    key={geo.rsmKey}
-                    geography={geo}
-                    fill={getFill(name)}
-                    stroke={getStroke(name)}
-                    strokeWidth={getStrokeWidth(name)}
-                    style={{
-                      default: { outline: "none", transition: "all 0.3s" },
-                      hover: { outline: "none" },
-                      pressed: { outline: "none" },
-                    }}
-                    onMouseEnter={(e) => handleMouseEnter(name, e)}
-                    onMouseLeave={handleMouseLeave}
+            {/* Neural flow lines — thin blue glow */}
+            {flowEntries.map(({ name, coords }) => (
+              <Line
+                key={`glow-${name}`}
+                from={coords}
+                to={PLANT_COORDS}
+                stroke="rgba(45,140,240,0.5)"
+                strokeWidth={1.5}
+                className="neural-glow-line"
+              />
+            ))}
+
+            {/* Flow lines — dashed green on top */}
+            {flowEntries.map(({ name, coords }) => (
+              <Line
+                key={`flow-${name}`}
+                from={coords}
+                to={PLANT_COORDS}
+                stroke="rgba(181,233,81,0.5)"
+                strokeWidth={1.2}
+                strokeDasharray="5 3"
+                className="flow-dash"
+              />
+            ))}
+
+            {/* Origin markers */}
+            {flowEntries.map(({ name, data, coords }) => {
+              const isHovered = hoveredState === name;
+              return (
+                <Marker key={`marker-${name}`} coordinates={coords}>
+                  <circle r={10} fill="none" stroke="#b5e951" strokeWidth={0.8} opacity={0.3}>
+                    <animate attributeName="r" values="5;14;5" dur="2.5s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.4;0;0.4" dur="2.5s" repeatCount="indefinite" />
+                  </circle>
+                  <circle r={6} fill="rgba(181,233,81,0.12)" />
+                  <circle
+                    r={isHovered ? 5 : 3.5}
+                    fill="#b5e951" stroke="#3d7a0a" strokeWidth={1.5}
+                    style={{ transition: "all 0.2s" }}
                   />
-                );
-              })
-            }
-          </Geographies>
+                  <text y={-12} textAnchor="middle" fontSize={7}
+                    fontFamily="'JetBrains Mono', monospace" fontWeight={600}
+                    fill="rgba(39,57,73,0.7)">
+                    {name}
+                  </text>
+                  <text y={16} textAnchor="middle" fontSize={6}
+                    fontFamily="'JetBrains Mono', monospace" fontWeight={700}
+                    fill="#3d7a0a">
+                    {data.totalKg} kg
+                  </text>
+                </Marker>
+              );
+            })}
 
-          {/* Neural flow lines — glow layer underneath */}
-          {flowEntries.map(({ name, coords }) => (
-            <Line
-              key={`glow-${name}`}
-              from={coords}
-              to={PLANT_COORDS}
-              stroke="rgba(45,140,240,0.3)"
-              strokeWidth={8}
-              className="neural-glow"
-            />
-          ))}
-
-          {/* Neural flow lines — main dashed lines */}
-          {flowEntries.map(({ name, coords }) => (
-            <Line
-              key={`flow-${name}`}
-              from={coords}
-              to={PLANT_COORDS}
-              stroke="rgba(181,233,81,0.5)"
-              strokeWidth={1.8}
-              strokeDasharray="6 4"
-              className="flow-dash"
-            />
-          ))}
-
-          {/* Animated particles traveling along each flow line */}
-          {flowEntries.map(({ name, coords }) => {
-            const [x1, y1] = coords;
-            const [x2, y2] = PLANT_COORDS;
-            return [0, 1, 2].map((i) => (
-              <Marker key={`particle-${name}-${i}`} coordinates={coords}>
-                <circle r={2.5} fill="#b5e951" opacity={0}>
-                  <animate
-                    attributeName="opacity"
-                    values="0;0.9;0.9;0"
-                    dur={`${2.5 + i * 0.4}s`}
-                    begin={`${i * 0.8}s`}
-                    repeatCount="indefinite"
-                  />
-                  <animateMotion
-                    dur={`${2.5 + i * 0.4}s`}
-                    begin={`${i * 0.8}s`}
-                    repeatCount="indefinite"
-                    path={`M0,0 L${(x2 - x1) * 18},${(y1 - y2) * 18}`}
-                  />
-                </circle>
-              </Marker>
-            ));
-          })}
-
-          {/* Origin markers */}
-          {flowEntries.map(({ name, data, coords }) => {
-            const isHovered = hoveredState === name;
-            return (
-              <Marker key={`marker-${name}`} coordinates={coords}>
-                {/* Outer pulse ring */}
-                <circle r={10} fill="none" stroke="#b5e951" strokeWidth={1} opacity={0.3}>
-                  <animate attributeName="r" values="6;16;6" dur="2.5s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0.4;0;0.4" dur="2.5s" repeatCount="indefinite" />
-                </circle>
-                {/* Second pulse ring (offset) */}
-                <circle r={10} fill="none" stroke="#b5e951" strokeWidth={0.5} opacity={0.2}>
-                  <animate attributeName="r" values="6;14;6" dur="2.5s" begin="1.25s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0.3;0;0.3" dur="2.5s" begin="1.25s" repeatCount="indefinite" />
-                </circle>
-                {/* Glow behind dot */}
-                <circle r={8} fill="rgba(181,233,81,0.15)" filter="url(#markerGlow)" />
-                {/* Main dot */}
-                <circle
-                  r={isHovered ? 6 : 4.5}
-                  fill="#b5e951" stroke="#3d7a0a" strokeWidth={1.5}
-                  style={{ transition: "all 0.2s" }}
-                />
-                <text y={-14} textAnchor="middle" fontSize={8}
-                  fontFamily="'JetBrains Mono', monospace" fontWeight={600}
-                  fill="rgba(39,57,73,0.75)">
-                  {name}
-                </text>
-                <text y={18} textAnchor="middle" fontSize={7}
-                  fontFamily="'JetBrains Mono', monospace" fontWeight={700}
-                  fill="#3d7a0a">
-                  {data.totalKg} kg
-                </text>
-              </Marker>
-            );
-          })}
-
-          {/* Plant marker — larger and more prominent */}
-          <Marker coordinates={PLANT_COORDS}>
-            {/* Plant glow */}
-            <circle r={22} fill="rgba(181,233,81,0.08)" filter="url(#markerGlow)">
-              <animate attributeName="r" values="20;26;20" dur="3s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite" />
-            </circle>
-            <circle r={18} fill="#273949" stroke="#b5e951" strokeWidth={2.5} />
-            <g fill="none" stroke="#b5e951" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <rect x={-8} y={-3} width={16} height={11} rx={0.5} />
-              <path d="M-8,-3 L-5,-7 L-5,-3 L0,-7 L0,-3 L5,-7 L5,-3" />
-              <rect x={6} y={-10} width={3.5} height={7} rx={0.3} />
-              <rect x={-2.5} y={2} width={5} height={6} rx={0.3} fill="rgba(181,233,81,0.3)" />
-            </g>
-            <text textAnchor="middle" y={32} fill="#273949" fontSize={7}
-              fontWeight={700} fontFamily="'JetBrains Mono', monospace">
-              PLANTA ECONOVA
-            </text>
-            <text textAnchor="middle" y={40} fill="rgba(39,57,73,0.5)"
-              fontSize={5.5} fontFamily="'JetBrains Mono', monospace">
-              Lerma, Edo. Méx.
-            </text>
-          </Marker>
+            {/* Plant marker */}
+            <Marker coordinates={PLANT_COORDS}>
+              <circle r={18} fill="rgba(181,233,81,0.06)">
+                <animate attributeName="r" values="16;22;16" dur="3s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.5;1;0.5" dur="3s" repeatCount="indefinite" />
+              </circle>
+              <circle r={14} fill="#273949" stroke="#b5e951" strokeWidth={2} />
+              <g fill="none" stroke="#b5e951" strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round">
+                <rect x={-7} y={-2} width={14} height={9} rx={0.5} />
+                <path d="M-7,-2 L-4,-6 L-4,-2 L0,-6 L0,-2 L4,-6 L4,-2" />
+                <rect x={5} y={-8} width={3} height={6} rx={0.3} />
+                <rect x={-2} y={2} width={4} height={5} rx={0.3} fill="rgba(181,233,81,0.3)" />
+              </g>
+              <text textAnchor="middle" y={26} fill="#273949" fontSize={5.5}
+                fontWeight={700} fontFamily="'JetBrains Mono', monospace">
+                PLANTA ECONOVA
+              </text>
+              <text textAnchor="middle" y={33} fill="rgba(39,57,73,0.5)"
+                fontSize={4.5} fontFamily="'JetBrains Mono', monospace">
+                Lerma, Edo. Méx.
+              </text>
+            </Marker>
+          </ZoomableGroup>
         </ComposableMap>
 
         {/* HTML Tooltip */}
@@ -320,22 +298,22 @@ export function MexicoMapCard({ batches }: { batches: BatchOrigin[] }) {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-5 mt-4 text-[9px] text-eco-muted">
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm" style={{ background: "rgba(181,233,81,0.6)" }} />
-          Origen de material
+      <div className="flex items-center gap-4 mt-3 text-[8px] text-eco-muted">
+        <div className="flex items-center gap-1">
+          <div className="w-2.5 h-2.5 rounded-sm" style={{ background: "rgba(181,233,81,0.5)" }} />
+          Origen
         </div>
-        <div className="flex items-center gap-1.5">
-          <svg width="18" height="6" viewBox="0 0 18 6">
-            <line x1="0" y1="3" x2="18" y2="3" stroke="rgba(181,233,81,0.5)" strokeWidth="1.5" strokeDasharray="4 3" />
-            <circle cx="9" cy="3" r="2" fill="#b5e951" opacity="0.7" />
+        <div className="flex items-center gap-1">
+          <svg width="14" height="4" viewBox="0 0 14 4">
+            <line x1="0" y1="2" x2="14" y2="2" stroke="rgba(45,140,240,0.6)" strokeWidth="1.5" />
           </svg>
-          Flujo neuronal
+          Flujo
         </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm bg-eco-navy" />
-          Planta EcoNova
+        <div className="flex items-center gap-1">
+          <div className="w-2.5 h-2.5 rounded-sm bg-eco-navy" />
+          Planta
         </div>
+        <div className="text-[7px] text-eco-muted/50 ml-auto">scroll para zoom · drag para mover</div>
       </div>
     </div>
   );

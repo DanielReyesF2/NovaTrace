@@ -12,291 +12,252 @@ interface TraceabilityPipelineProps {
   totalCerts: number;
 }
 
-/* Station X positions (7 evenly spaced across 960px) */
-const SX = [68, 205, 342, 479, 616, 753, 890];
-const CY = 78; /* Flow line Y center */
-const R = 27; /* Node radius */
+/* Circle geometry */
+const CX = 200, CY = 180, CR = 100, NR = 18, N = 7;
+
+const STATIONS = [
+  { label: "Recolección", color: "#273949", bg: "rgba(39,57,73,0.03)" },
+  { label: "Transporte", color: "#273949", bg: "rgba(39,57,73,0.03)" },
+  { label: "Planta", color: "#273949", bg: "rgba(39,57,73,0.03)" },
+  { label: "Pirólisis", color: "#E8700A", bg: "rgba(232,112,10,0.04)" },
+  { label: "Aceite", color: "#7C5CFC", bg: "rgba(124,92,252,0.04)" },
+  { label: "Distribución", color: "#7C5CFC", bg: "rgba(124,92,252,0.04)" },
+  { label: "Certificación", color: "#3d7a0a", bg: "rgba(61,122,10,0.04)" },
+];
+
+/* Icon paths (Feather-style) */
+const ICONS: Record<number, JSX.Element> = {
+  0: ( // Package
+    <g transform="translate(-12,-12)">
+      <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
+    </g>
+  ),
+  1: ( // Truck
+    <g transform="translate(-12,-12)">
+      <rect x="1" y="3" width="15" height="13" rx="1" />
+      <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+      <circle cx="5.5" cy="18.5" r="2.5" />
+      <circle cx="18.5" cy="18.5" r="2.5" />
+    </g>
+  ),
+  2: ( // Factory
+    <g transform="translate(-12,-12)">
+      <path d="M2 20V8l5-5v5l5-5v5l5-5v17" />
+      <path d="M2 20h20" />
+      <rect x="17" y="2" width="5" height="8" rx="0.5" />
+    </g>
+  ),
+  3: ( // Flame
+    <g transform="translate(-12,-12)">
+      <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z" />
+    </g>
+  ),
+  4: ( // Droplet
+    <g transform="translate(-12,-12)">
+      <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z" />
+    </g>
+  ),
+  5: ( // Truck (distribution)
+    <g transform="translate(-12,-12)">
+      <rect x="1" y="3" width="15" height="13" rx="1" />
+      <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+      <circle cx="5.5" cy="18.5" r="2.5" />
+      <circle cx="18.5" cy="18.5" r="2.5" />
+    </g>
+  ),
+  6: ( // Shield + Check
+    <g transform="translate(-12,-12)">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <polyline points="9 12 11 14 15 10" />
+    </g>
+  ),
+};
+
+function nodePos(i: number) {
+  const angle = (i * 2 * Math.PI / N) - Math.PI / 2;
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  return {
+    x: CX + CR * cos,
+    y: CY + CR * sin,
+    angle,
+    cos,
+    sin,
+    lx: CX + (CR + 40) * cos,
+    ly: CY + (CR + 40) * sin,
+    anchor: (cos > 0.25 ? "start" : cos < -0.25 ? "end" : "middle") as "start" | "end" | "middle",
+  };
+}
+
+const POS = Array.from({ length: N }, (_, i) => nodePos(i));
 
 export function TraceabilityPipeline({ stats, totalCerts }: TraceabilityPipelineProps) {
+  const values: (null | { val: number; unit: string; color: string })[] = [
+    { val: stats.totalBatches, unit: "lotes", color: "#273949" },
+    null,
+    null,
+    { val: stats.totalFeedstockKg, unit: "kg", color: "#E8700A" },
+    { val: stats.totalOilLiters, unit: "L", color: "#7C5CFC" },
+    null,
+    { val: totalCerts, unit: "certs", color: "#3d7a0a" },
+  ];
+
   return (
-    <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
-      <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase mb-3">
-        Pipeline de trazabilidad
+    <div className="bg-eco-surface border border-eco-border rounded-xl p-5 h-full flex flex-col">
+      <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase mb-1">
+        Ciclo de vida
       </h3>
-      <div className="w-full overflow-x-auto">
-        <svg viewBox="0 0 960 195" className="w-full min-w-[720px]">
+      <div className="flex-1 flex items-center justify-center">
+        <svg viewBox="0 0 400 370" className="w-full max-w-[400px]">
           <defs>
-            <linearGradient id="flowG" x1="0" y1="0" x2="1" y2="0">
+            <linearGradient id="circG" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stopColor="#273949" />
-              <stop offset="40%" stopColor="#E8700A" />
+              <stop offset="45%" stopColor="#E8700A" />
               <stop offset="100%" stopColor="#3d7a0a" />
             </linearGradient>
-            <linearGradient id="trackG" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#273949" stopOpacity="0.06" />
-              <stop offset="40%" stopColor="#E8700A" stopOpacity="0.06" />
-              <stop offset="100%" stopColor="#3d7a0a" stopOpacity="0.06" />
-            </linearGradient>
-            <filter id="ns" x="-20%" y="-15%" width="140%" height="145%">
-              <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#273949" floodOpacity="0.1" />
+            <filter id="cns" x="-25%" y="-20%" width="150%" height="150%">
+              <feDropShadow dx="0" dy="1" stdDeviation="2.5" floodColor="#273949" floodOpacity="0.08" />
             </filter>
-            <linearGradient id="flameG" x1="0" y1="1" x2="0" y2="0">
+            <linearGradient id="cflameG" x1="0" y1="1" x2="0" y2="0">
               <stop offset="0%" stopColor="#E8700A" />
               <stop offset="100%" stopColor="#FBBF24" />
             </linearGradient>
           </defs>
 
-          {/* ═══ FLOW TRACK ═══ */}
-          <line x1={SX[0]} y1={CY} x2={SX[6]} y2={CY}
-            stroke="url(#trackG)" strokeWidth="48" strokeLinecap="round" />
-          <line x1={SX[0]} y1={CY} x2={SX[6]} y2={CY}
-            stroke="url(#flowG)" strokeWidth="2" strokeLinecap="round"
-            strokeDasharray="8 6" className="flow-dash" />
+          {/* Circle track — soft background */}
+          <circle cx={CX} cy={CY} r={CR} fill="none"
+            stroke="rgba(39,57,73,0.04)" strokeWidth="36" />
+
+          {/* Circle track — flowing dashes */}
+          <circle cx={CX} cy={CY} r={CR} fill="none"
+            stroke="url(#circG)" strokeWidth="1.5"
+            strokeDasharray="7 5" className="circle-flow" />
 
           {/* Directional chevrons between nodes */}
-          {SX.slice(0, -1).map((x, i) => {
-            const mx = (x + SX[i + 1]) / 2;
+          {POS.map((p, i) => {
+            const n = POS[(i + 1) % N];
+            const mx = (p.x + n.x) / 2;
+            const my = (p.y + n.y) / 2;
+            const dx = n.x - p.x, dy = n.y - p.y;
+            const len = Math.sqrt(dx * dx + dy * dy);
+            const ux = dx / len, uy = dy / len;
+            const px = -uy, py = ux;
             return (
               <path key={`ch${i}`}
-                d={`M${mx - 5},${CY - 6} L${mx + 3},${CY} L${mx - 5},${CY + 6}`}
-                fill="none" stroke="url(#flowG)" strokeWidth="1.8"
+                d={`M${mx - ux * 4 + px * 4},${my - uy * 4 + py * 4} L${mx + ux * 3},${my + uy * 3} L${mx - ux * 4 - px * 4},${my - uy * 4 - py * 4}`}
+                fill="none" stroke="url(#circG)" strokeWidth="1"
                 strokeLinecap="round" strokeLinejoin="round" opacity="0.2" />
             );
           })}
 
-          {/* Flowing particles along track */}
-          {[0, 1.8, 3.6].map((delay, i) => (
-            <circle key={`pt${i}`} cy={CY} r="3" fill="url(#flowG)">
-              <animate attributeName="cx" from={SX[0]} to={SX[6]}
-                dur="6s" begin={`${delay}s`} repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0;0.45;0.45;0"
-                dur="6s" begin={`${delay}s`} repeatCount="indefinite" />
-            </circle>
+          {/* Flowing particles around the circle */}
+          <g transform={`translate(${CX},${CY})`}>
+            {[0, 2.8, 5.6].map((delay, i) => (
+              <circle key={`cpt${i}`} r="2.5" fill="url(#circG)">
+                <animateMotion
+                  dur="9s" begin={`${delay}s`} repeatCount="indefinite"
+                  path={`M0,${-CR} A${CR},${CR} 0 0,1 0,${CR} A${CR},${CR} 0 0,1 0,${-CR}`}
+                />
+                <animate attributeName="opacity" values="0;0.5;0.5;0"
+                  dur="9s" begin={`${delay}s`} repeatCount="indefinite" />
+              </circle>
+            ))}
+          </g>
+
+          {/* Accent: Reactor heat glow */}
+          <circle cx={POS[3].x} cy={POS[3].y} r={NR}
+            fill="none" stroke="#E8700A" strokeWidth="1.5">
+            <animate attributeName="r" values={`${NR};${NR + 10}`} dur="2s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.3;0" dur="2s" repeatCount="indefinite" />
+          </circle>
+          {/* Mini flames */}
+          {[-5, 1, 7].map((off, fi) => (
+            <path key={`fl${fi}`}
+              d={`M${POS[3].x + off - 2.5},${POS[3].y + NR + 2} Q${POS[3].x + off},${POS[3].y + NR - 4} ${POS[3].x + off + 2.5},${POS[3].y + NR + 2}`}
+              fill="url(#cflameG)">
+              <animate attributeName="opacity" values="0.35;0.85;0.35"
+                dur={`${0.6 + fi * 0.12}s`} begin={`${fi * 0.2}s`} repeatCount="indefinite" />
+            </path>
           ))}
 
-          {/* ═══ ACCENT ANIMATIONS ═══ */}
-
-          {/* Plant: smoke puffs rising */}
-          <circle cx={SX[2] + 2} r="3" fill="#273949">
-            <animate attributeName="cy" values={`${CY - 34};${CY - 56}`} dur="3s" repeatCount="indefinite" />
-            <animate attributeName="r" values="2;6" dur="3s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.12;0" dur="3s" repeatCount="indefinite" />
-          </circle>
-          <circle cx={SX[2] - 4} r="2.5" fill="#273949">
-            <animate attributeName="cy" values={`${CY - 30};${CY - 50}`} dur="3.5s" begin="1.2s" repeatCount="indefinite" />
-            <animate attributeName="r" values="1.5;5" dur="3.5s" begin="1.2s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.1;0" dur="3.5s" begin="1.2s" repeatCount="indefinite" />
+          {/* Accent: Oil drips */}
+          <circle cx={POS[4].x} r="2" fill="#7C5CFC">
+            <animate attributeName="cy" values={`${POS[4].y + NR};${POS[4].y + NR + 12}`}
+              dur="1.5s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0;0.5;0" dur="1.5s" repeatCount="indefinite" />
           </circle>
 
-          {/* Reactor: heat glow ring */}
-          <circle cx={SX[3]} cy={CY} r={R} fill="none" stroke="#E8700A" strokeWidth="2">
-            <animate attributeName="r" values={`${R};${R + 12}`} dur="2s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.35;0" dur="2s" repeatCount="indefinite" />
-          </circle>
-          {/* Reactor: heat shimmer waves */}
-          <path d={`M${SX[3] - 18},${CY - 40} Q${SX[3] - 6},${CY - 48} ${SX[3]},${CY - 40} Q${SX[3] + 6},${CY - 32} ${SX[3] + 18},${CY - 40}`}
-            fill="none" stroke="#E8700A" strokeWidth="0.8" opacity="0.2"
-            style={{ animation: "heatRise 2s ease-in-out infinite" }} />
-          <path d={`M${SX[3] - 12},${CY - 46} Q${SX[3]},${CY - 52} ${SX[3] + 12},${CY - 46}`}
-            fill="none" stroke="#E8700A" strokeWidth="0.6" opacity="0.12"
-            style={{ animation: "heatRise 2.5s ease-in-out infinite 0.5s" }} />
-          {/* Reactor: mini flames below node */}
-          <path d={`M${SX[3] - 10},${CY + R + 4} Q${SX[3] - 7},${CY + R - 4} ${SX[3] - 4},${CY + R + 4}`} fill="url(#flameG)">
-            <animate attributeName="opacity" values="0.5;0.9;0.5" dur="0.7s" repeatCount="indefinite" />
-          </path>
-          <path d={`M${SX[3] - 2},${CY + R + 4} Q${SX[3] + 2},${CY + R - 6} ${SX[3] + 6},${CY + R + 4}`} fill="url(#flameG)">
-            <animate attributeName="opacity" values="0.4;1;0.4" dur="0.9s" begin="0.2s" repeatCount="indefinite" />
-          </path>
-          <path d={`M${SX[3] + 5},${CY + R + 4} Q${SX[3] + 9},${CY + R - 3} ${SX[3] + 13},${CY + R + 4}`} fill="url(#flameG)">
-            <animate attributeName="opacity" values="0.45;0.85;0.45" dur="0.8s" begin="0.5s" repeatCount="indefinite" />
-          </path>
-
-          {/* Oil: drip particles */}
-          <circle cx={SX[4]} r="2.5" fill="#7C5CFC">
-            <animate attributeName="cy" values={`${CY + R + 2};${CY + R + 18}`} dur="1.6s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0;0.6;0" dur="1.6s" repeatCount="indefinite" />
-          </circle>
-          <circle cx={SX[4] + 6} r="2" fill="#7C5CFC">
-            <animate attributeName="cy" values={`${CY + R + 2};${CY + R + 16}`} dur="2s" begin="0.7s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0;0.4;0" dur="2s" begin="0.7s" repeatCount="indefinite" />
+          {/* Accent: Cert pulse */}
+          <circle cx={POS[6].x} cy={POS[6].y} r={NR}
+            fill="none" stroke="#3d7a0a" strokeWidth="1.5">
+            <animate attributeName="r" values={`${NR};${NR + 12}`} dur="2.5s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.3;0" dur="2.5s" repeatCount="indefinite" />
           </circle>
 
-          {/* Cert: pulse ring */}
-          <circle cx={SX[6]} cy={CY} r={R} fill="none" stroke="#3d7a0a" strokeWidth="2">
-            <animate attributeName="r" values={`${R};${R + 16}`} dur="2.5s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.4;0" dur="2.5s" repeatCount="indefinite" />
-          </circle>
-
-          {/* ═══ STATION NODES ═══ */}
-
-          {/* Node 1: Recoleccion */}
-          <circle cx={SX[0]} cy={CY} r={R} fill="white" stroke="#273949" strokeWidth="2.2" filter="url(#ns)" />
-          <circle cx={SX[0]} cy={CY} r={R - 3} fill="rgba(39,57,73,0.03)" stroke="none" />
-          <g transform={`translate(${SX[0]},${CY}) scale(0.65)`} fill="none" stroke="#273949" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <g transform="translate(-12,-12)">
-              <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
-              <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-              <line x1="12" y1="22.08" x2="12" y2="12" />
+          {/* Station nodes */}
+          {STATIONS.map((st, i) => (
+            <g key={`n${i}`}>
+              <circle cx={POS[i].x} cy={POS[i].y} r={NR}
+                fill="white" stroke={st.color} strokeWidth="2" filter="url(#cns)" />
+              <circle cx={POS[i].x} cy={POS[i].y} r={NR - 3}
+                fill={st.bg} stroke="none" />
+              <g transform={`translate(${POS[i].x},${POS[i].y}) scale(0.5)`}
+                fill="none" stroke={st.color} strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round">
+                {ICONS[i]}
+              </g>
             </g>
-          </g>
-
-          {/* Node 2: Transporte Entrada */}
-          <circle cx={SX[1]} cy={CY} r={R} fill="white" stroke="#273949" strokeWidth="2.2" filter="url(#ns)" />
-          <circle cx={SX[1]} cy={CY} r={R - 3} fill="rgba(39,57,73,0.03)" stroke="none" />
-          <g transform={`translate(${SX[1]},${CY}) scale(0.65)`} fill="none" stroke="#273949" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <g transform="translate(-12,-12)">
-              <rect x="1" y="3" width="15" height="13" rx="1" />
-              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
-              <circle cx="5.5" cy="18.5" r="2.5" />
-              <circle cx="18.5" cy="18.5" r="2.5" />
-            </g>
-          </g>
-
-          {/* Node 3: Planta */}
-          <circle cx={SX[2]} cy={CY} r={R} fill="white" stroke="#273949" strokeWidth="2.2" filter="url(#ns)" />
-          <circle cx={SX[2]} cy={CY} r={R - 3} fill="rgba(39,57,73,0.03)" stroke="none" />
-          <g transform={`translate(${SX[2]},${CY}) scale(0.65)`} fill="none" stroke="#273949" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <g transform="translate(-12,-12)">
-              <path d="M2 20V8l5-5v5l5-5v5l5-5v17" />
-              <path d="M2 20h20" />
-              <rect x="17" y="2" width="5" height="8" rx="0.5" />
-            </g>
-          </g>
-
-          {/* Node 4: Pirolisis */}
-          <circle cx={SX[3]} cy={CY} r={R} fill="white" stroke="#E8700A" strokeWidth="2.2" filter="url(#ns)" />
-          <circle cx={SX[3]} cy={CY} r={R - 3} fill="rgba(232,112,10,0.04)" stroke="none" />
-          <g transform={`translate(${SX[3]},${CY}) scale(0.65)`} fill="none" stroke="#E8700A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <g transform="translate(-12,-12)">
-              <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z" />
-            </g>
-          </g>
-
-          {/* Node 5: Aceite */}
-          <circle cx={SX[4]} cy={CY} r={R} fill="white" stroke="#7C5CFC" strokeWidth="2.2" filter="url(#ns)" />
-          <circle cx={SX[4]} cy={CY} r={R - 3} fill="rgba(124,92,252,0.04)" stroke="none" />
-          <g transform={`translate(${SX[4]},${CY}) scale(0.65)`} fill="none" stroke="#7C5CFC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <g transform="translate(-12,-12)">
-              <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z" />
-            </g>
-          </g>
-
-          {/* Node 6: Distribucion */}
-          <circle cx={SX[5]} cy={CY} r={R} fill="white" stroke="#7C5CFC" strokeWidth="2.2" filter="url(#ns)" />
-          <circle cx={SX[5]} cy={CY} r={R - 3} fill="rgba(124,92,252,0.04)" stroke="none" />
-          <g transform={`translate(${SX[5]},${CY}) scale(0.65)`} fill="none" stroke="#7C5CFC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <g transform="translate(-12,-12)">
-              <rect x="1" y="3" width="15" height="13" rx="1" />
-              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
-              <circle cx="5.5" cy="18.5" r="2.5" />
-              <circle cx="18.5" cy="18.5" r="2.5" />
-            </g>
-          </g>
-
-          {/* Node 7: Certificacion */}
-          <circle cx={SX[6]} cy={CY} r={R} fill="white" stroke="#3d7a0a" strokeWidth="2.2" filter="url(#ns)" />
-          <circle cx={SX[6]} cy={CY} r={R - 3} fill="rgba(61,122,10,0.04)" stroke="none" />
-          <g transform={`translate(${SX[6]},${CY}) scale(0.65)`} fill="none" stroke="#3d7a0a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <g transform="translate(-12,-12)">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              <polyline points="9 12 11 14 15 10" />
-            </g>
-          </g>
-
-          {/* ═══ STEP NUMBERS ═══ */}
-          {SX.map((x, i) => (
-            <text key={`sn${i}`} x={x} y={CY - R - 10}
-              textAnchor="middle" fontSize="9" fontWeight="600"
-              fontFamily="'JetBrains Mono', monospace"
-              fill="rgba(39,57,73,0.25)">
-              {`0${i + 1}`}
-            </text>
           ))}
 
-          {/* ═══ LABELS ═══ */}
+          {/* Labels + values */}
+          {STATIONS.map((st, i) => {
+            const p = POS[i];
+            const v = values[i];
+            const foX = p.anchor === "start" ? p.lx : p.anchor === "end" ? p.lx - 85 : p.lx - 42;
+            return (
+              <g key={`lbl${i}`}>
+                <text x={p.lx} y={p.ly}
+                  textAnchor={p.anchor} dominantBaseline="central"
+                  fontSize="7.5" fontWeight="600"
+                  fontFamily="'JetBrains Mono', monospace"
+                  fill={st.color}>
+                  {st.label}
+                </text>
+                {v && (
+                  <foreignObject x={foX} y={p.ly + 5} width="85" height="20">
+                    <div style={{
+                      textAlign: p.anchor === "start" ? "left" : p.anchor === "end" ? "right" : "center",
+                      lineHeight: 1,
+                    }}>
+                      <span style={{ color: v.color }}>
+                        <AnimatedCounter value={v.val} className="font-mono text-[10px] font-bold" />
+                      </span>
+                      <span style={{ fontSize: "7px", color: "rgba(39,57,73,0.4)", marginLeft: "2px" }}>
+                        {v.unit}
+                      </span>
+                    </div>
+                  </foreignObject>
+                )}
+              </g>
+            );
+          })}
 
-          {/* Station 1: Recoleccion */}
-          <foreignObject x={SX[0] - 50} y={CY + R + 10} width="100" height="50">
-            <div style={{ textAlign: "center" }}>
-              <span style={{ color: "#273949" }}>
-                <AnimatedCounter value={stats.totalBatches} className="font-mono text-sm font-bold" />
-              </span>
-              <div style={{ fontSize: "8px", color: "rgba(39,57,73,0.45)", textTransform: "uppercase", letterSpacing: "1.5px", marginTop: "2px" }}>
-                lotes
+          {/* Center — CO₂ metric */}
+          <g>
+            <circle cx={CX} cy={CY} r="28" fill="rgba(61,122,10,0.04)" stroke="rgba(61,122,10,0.1)" strokeWidth="1" />
+            <foreignObject x={CX - 35} y={CY - 16} width="70" height="36">
+              <div style={{ textAlign: "center", lineHeight: 1.2 }}>
+                <span style={{ color: "#3d7a0a" }}>
+                  <AnimatedCounter value={stats.totalCO2Avoided} decimals={1} className="font-mono text-xs font-bold" />
+                </span>
+                <div style={{ fontSize: "6px", color: "rgba(39,57,73,0.4)", marginTop: "2px", letterSpacing: "0.5px" }}>
+                  kg CO₂ evitadas
+                </div>
               </div>
-            </div>
-          </foreignObject>
-
-          {/* Station 2: Transporte */}
-          <foreignObject x={SX[1] - 50} y={CY + R + 10} width="100" height="50">
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "10px", fontWeight: 600, color: "#273949", fontFamily: "'JetBrains Mono', monospace" }}>
-                Transporte
-              </div>
-              <div style={{ fontSize: "8px", color: "rgba(39,57,73,0.45)", textTransform: "uppercase", letterSpacing: "1.5px", marginTop: "2px" }}>
-                entrada
-              </div>
-            </div>
-          </foreignObject>
-
-          {/* Station 3: Planta */}
-          <foreignObject x={SX[2] - 50} y={CY + R + 10} width="100" height="50">
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "10px", fontWeight: 700, color: "#273949", fontFamily: "'JetBrains Mono', monospace" }}>
-                DY-500
-              </div>
-              <div style={{ fontSize: "8px", color: "rgba(39,57,73,0.45)", textTransform: "uppercase", letterSpacing: "1.5px", marginTop: "2px" }}>
-                planta activa
-              </div>
-            </div>
-          </foreignObject>
-
-          {/* Station 4: Pirolisis */}
-          <foreignObject x={SX[3] - 50} y={CY + R + 10} width="100" height="50">
-            <div style={{ textAlign: "center" }}>
-              <span style={{ color: "#E8700A" }}>
-                <AnimatedCounter value={stats.totalFeedstockKg} className="font-mono text-sm font-bold" />
-              </span>
-              <div style={{ fontSize: "8px", color: "rgba(39,57,73,0.45)", textTransform: "uppercase", letterSpacing: "1.5px", marginTop: "2px" }}>
-                kg procesados
-              </div>
-            </div>
-          </foreignObject>
-
-          {/* Station 5: Aceite */}
-          <foreignObject x={SX[4] - 50} y={CY + R + 10} width="100" height="50">
-            <div style={{ textAlign: "center" }}>
-              <span style={{ color: "#7C5CFC" }}>
-                <AnimatedCounter value={stats.totalOilLiters} className="font-mono text-sm font-bold" suffix=" L" />
-              </span>
-              <div style={{ fontSize: "8px", color: "rgba(39,57,73,0.45)", textTransform: "uppercase", letterSpacing: "1.5px", marginTop: "2px" }}>
-                aceite
-              </div>
-            </div>
-          </foreignObject>
-
-          {/* Station 6: Distribucion */}
-          <foreignObject x={SX[5] - 50} y={CY + R + 10} width="100" height="50">
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "10px", fontWeight: 600, color: "#7C5CFC", fontFamily: "'JetBrains Mono', monospace" }}>
-                Distribución
-              </div>
-              <div style={{ fontSize: "8px", color: "rgba(39,57,73,0.45)", textTransform: "uppercase", letterSpacing: "1.5px", marginTop: "2px" }}>
-                diesel verde
-              </div>
-            </div>
-          </foreignObject>
-
-          {/* Station 7: Certificacion */}
-          <foreignObject x={SX[6] - 50} y={CY + R + 10} width="100" height="50">
-            <div style={{ textAlign: "center" }}>
-              <span style={{ color: "#3d7a0a" }}>
-                <AnimatedCounter value={totalCerts} className="font-mono text-sm font-bold" />
-              </span>
-              <div style={{ fontSize: "8px", color: "rgba(39,57,73,0.45)", textTransform: "uppercase", letterSpacing: "1.5px", marginTop: "2px" }}>
-                certificados
-              </div>
-            </div>
-          </foreignObject>
+            </foreignObject>
+          </g>
         </svg>
       </div>
     </div>

@@ -77,13 +77,22 @@ body {
   to { stroke-dashoffset: -20; }
 }
 
-/* Neural flow glow pulse */
-@keyframes neuralPulse {
-  0%, 100% { opacity: 0.15; }
-  50% { opacity: 0.45; }
+/* Neural flow glow — fine blue lines */
+.neural-glow-line {
+  filter: drop-shadow(0 0 2px rgba(45,140,240,0.8)) drop-shadow(0 0 5px rgba(45,140,240,0.35));
+  animation: neuralPulse 3s ease-in-out infinite;
 }
-.neural-glow {
-  animation: neuralPulse 2s ease-in-out infinite;
+@keyframes neuralPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.85; }
+}
+
+/* Circular lifecycle flow */
+@keyframes circleFlow {
+  to { stroke-dashoffset: -628; }
+}
+.circle-flow {
+  animation: circleFlow 12s linear infinite;
 }
 
 /* Nova AI Assistant animations */

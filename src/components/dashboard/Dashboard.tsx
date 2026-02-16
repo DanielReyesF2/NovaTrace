@@ -131,11 +131,11 @@ export function Dashboard({ batches, recentEvents, lastBatchId, stats }: Dashboa
         </div>
       </div>
 
-      {/* ═══ MEXICO ORIGINS MAP ═══ */}
-      <MexicoMapCard batches={batches} />
-
-      {/* ═══ ANIMATED TRACEABILITY PIPELINE ═══ */}
-      <TraceabilityPipeline stats={stats} totalCerts={totalCerts} />
+      {/* ═══ LIFECYCLE + MAP (side by side) ═══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <TraceabilityPipeline stats={stats} totalCerts={totalCerts} />
+        <MexicoMapCard batches={batches} />
+      </div>
 
       {/* ═══ TWO-COLUMN: Operational KPIs + Activity Feed ═══ */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
