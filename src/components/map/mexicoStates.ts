@@ -16,8 +16,8 @@ export const STATE_COORDS: Record<string, [number, number]> = {
   "Puebla": [-98.2, 19.0],
 };
 
-// EcoNova plant location (Michoacán)
-export const PLANT_COORDS: [number, number] = [-101.2, 19.4];
+// EcoNova plant location (Lerma, Edo. México)
+export const PLANT_COORDS: [number, number] = [-99.51, 19.28];
 
 // Active state names (for highlighting)
 export const ACTIVE_STATE_NAMES = new Set([

@@ -78,26 +78,25 @@ export function MexicoTraceabilityMap({ batches }: MexicoTraceabilityMapProps) {
     (name: string): string => {
       const data = stateData.get(name);
       if (!data || maxKg === 0) {
-        return ACTIVE_STATE_NAMES.has(name)
-          ? "rgba(181,233,81,0.18)"
-          : "rgba(39,57,73,0.04)";
+        if (ACTIVE_STATE_NAMES.has(name)) return "rgba(181,233,81,0.15)";
+        return hoveredState === name ? "rgba(39,57,73,0.06)" : "rgba(39,57,73,0.025)";
       }
-      const intensity = 0.25 + (data.totalKg / maxKg) * 0.55;
+      const intensity = 0.2 + (data.totalKg / maxKg) * 0.6;
       return `rgba(181,233,81,${intensity})`;
     },
-    [stateData, maxKg]
+    [stateData, maxKg, hoveredState]
   );
 
   const getStroke = (name: string): string => {
     if (hoveredState === name) return "#3d7a0a";
-    if (ACTIVE_STATE_NAMES.has(name)) return "rgba(61,122,10,0.5)";
-    return "rgba(39,57,73,0.12)";
+    if (ACTIVE_STATE_NAMES.has(name)) return "rgba(61,122,10,0.4)";
+    return "rgba(39,57,73,0.08)";
   };
 
   const getStrokeWidth = (name: string): number => {
     if (hoveredState === name) return 1.8;
-    if (ACTIVE_STATE_NAMES.has(name)) return 0.8;
-    return 0.3;
+    if (ACTIVE_STATE_NAMES.has(name)) return 0.7;
+    return 0.25;
   };
 
   const handleMouseEnter = (name: string, event: React.MouseEvent) => {
@@ -249,37 +248,40 @@ export function MexicoTraceabilityMap({ batches }: MexicoTraceabilityMapProps) {
               );
             })}
 
-            {/* Plant marker */}
+            {/* Plant marker — mini factory icon */}
             <Marker coordinates={PLANT_COORDS}>
-              <rect
-                x={-11}
-                y={-11}
-                width={22}
-                height={22}
-                rx={5}
-                fill="#273949"
-                stroke="#b5e951"
-                strokeWidth={2}
-              />
+              {/* Background circle */}
+              <circle r={14} fill="#273949" stroke="#b5e951" strokeWidth={2} />
+              {/* Factory icon (drawn at center 0,0) */}
+              <g fill="none" stroke="#b5e951" strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round">
+                {/* Building body */}
+                <rect x={-7} y={-2} width={14} height={9} rx={0.5} />
+                {/* Sawtooth roof */}
+                <path d="M-7,-2 L-4,-6 L-4,-2 L0,-6 L0,-2 L4,-6 L4,-2" />
+                {/* Chimney */}
+                <rect x={5} y={-8} width={3} height={6} rx={0.3} />
+                {/* Door */}
+                <rect x={-2} y={2} width={4} height={5} rx={0.3} fill="rgba(181,233,81,0.3)" />
+              </g>
+              {/* Label */}
               <text
                 textAnchor="middle"
-                y={5}
-                fill="#b5e951"
-                fontSize={13}
-                fontWeight="bold"
-                fontFamily="'JetBrains Mono', monospace"
-              >
-                E
-              </text>
-              <text
-                textAnchor="middle"
-                y={24}
+                y={26}
                 fill="#273949"
-                fontSize={6}
+                fontSize={5.5}
                 fontWeight={700}
                 fontFamily="'JetBrains Mono', monospace"
               >
                 PLANTA ECONOVA
+              </text>
+              <text
+                textAnchor="middle"
+                y={33}
+                fill="rgba(39,57,73,0.5)"
+                fontSize={4.5}
+                fontFamily="'JetBrains Mono', monospace"
+              >
+                Lerma, Edo. Méx.
               </text>
             </Marker>
           </ComposableMap>
