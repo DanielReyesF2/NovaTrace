@@ -195,8 +195,8 @@ export function MexicoMapCard({ batches }: { batches: BatchOrigin[] }) {
               key={`glow-${name}`}
               from={coords}
               to={PLANT_COORDS}
-              stroke="rgba(181,233,81,0.15)"
-              strokeWidth={6}
+              stroke="rgba(45,140,240,0.3)"
+              strokeWidth={8}
               className="neural-glow"
             />
           ))}
