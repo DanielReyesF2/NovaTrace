@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { NovaAISummary } from "./NovaAISummary";
 import { TraceabilityPipeline } from "./TraceabilityPipeline";
+import { MexicoMapCard } from "@/components/map/MexicoTraceabilityMap";
 
 /* ── Types ── */
 interface BatchSummary {
@@ -400,96 +401,8 @@ export function Dashboard({ batches, recentEvents, lastBatchId, stats }: Dashboa
         </div>
       </div>
 
-      {/* ═══ BATCH LIST ═══ */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-[10px] tracking-[3px] text-eco-muted uppercase">
-            Todos los lotes
-          </span>
-        </div>
-
-        <div className="space-y-2">
-          {batches.map((batch) => {
-            const st = STATUS_CONFIG[batch.status] || STATUS_CONFIG.TEST;
-            const hasLab = batch.labResults.length > 0;
-            const hasCert = batch.certificates.length > 0;
-
-            return (
-              <Link
-                key={batch.id}
-                href={`/batch/${batch.id}`}
-                className="group block bg-eco-surface border border-eco-border rounded-xl p-4 md:p-5 hover:border-eco-border-strong card-hover"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2.5 mb-1">
-                      <span className="text-xs" style={{ color: st.color }}>{st.icon}</span>
-                      <span className="font-mono text-sm font-bold text-eco-ink">
-                        {batch.code}
-                      </span>
-                      <span
-                        className="text-[9px] font-semibold px-2 py-0.5 rounded-full"
-                        style={{ color: st.color, background: st.bg }}
-                      >
-                        {st.label}
-                      </span>
-                      {/* Tags */}
-                      {batch._count.readings > 0 && (
-                        <span className="hidden md:inline-flex items-center gap-1 text-[9px] text-eco-muted bg-eco-surface-2 px-1.5 py-0.5 rounded-full">
-                          📈 {batch._count.readings}
-                        </span>
-                      )}
-                      {hasLab && (
-                        <span className="hidden md:inline-flex text-[9px] px-1.5 py-0.5 rounded-full"
-                          style={{ color: "#7C5CFC", background: "rgba(124,92,252,0.08)" }}>
-                          Lab
-                        </span>
-                      )}
-                      {hasCert && (
-                        <span className="hidden md:inline-flex text-[9px] px-1.5 py-0.5 rounded-full"
-                          style={{ color: "#3d7a0a", background: "rgba(61,122,10,0.08)" }}>
-                          Cert
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-xs text-eco-muted">
-                      {batch.feedstockWeight} kg {batch.feedstockType} · {batch.feedstockOrigin}
-                      {batch.durationMinutes != null && (
-                        <span> · {Math.floor(batch.durationMinutes / 60)}h {batch.durationMinutes % 60}m</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right flex-shrink-0 flex items-center gap-4">
-                    <div>
-                      {batch.oilOutput != null && batch.oilOutput > 0 && (
-                        <div className="font-mono text-sm text-eco-purple font-bold">
-                          {batch.oilOutput} L
-                        </div>
-                      )}
-                      {batch.co2Avoided != null && batch.co2Avoided > 0 && (
-                        <div className="text-[10px] font-semibold" style={{ color: "#3d7a0a" }}>
-                          ↓ {batch.co2Avoided.toFixed(0)} kg CO₂
-                        </div>
-                      )}
-                      <div className="text-[10px] text-eco-muted-2 mt-0.5">
-                        {new Date(batch.date).toLocaleDateString("es-MX", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </div>
-                    </div>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"
-                      className="text-eco-muted-2 group-hover:text-eco-ink-light transition-colors">
-                      <path d="M9 18l6-6-6-6" />
-                    </svg>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
+      {/* ═══ MEXICO ORIGINS MAP ═══ */}
+      <MexicoMapCard batches={batches} />
     </div>
   );
 }
