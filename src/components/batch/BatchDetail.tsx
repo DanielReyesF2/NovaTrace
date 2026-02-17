@@ -19,9 +19,11 @@ interface BatchDetailProps {
     feedstockCondition: string | null;
     contaminationPct: number | null;
     oilOutput: number | null;
+    oilWeightKg: number | null;
     yieldPercent: number | null;
     durationMinutes: number | null;
     maxReactorTemp: number | null;
+    dieselConsumedL: number | null;
     operators: string[];
     stopReason: string | null;
     notes: string | null;
@@ -71,6 +73,12 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
   INCOMPLETE: { label: "Incompleto", color: "#E8700A", bg: "rgba(232,112,10,0.1)" },
   FAILED: { label: "Fallido", color: "#DC2626", bg: "rgba(220,38,38,0.08)" },
 };
+
+function formatDuration(minutes: number) {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${h}h ${m}m`;
+}
 
 export function BatchDetail({ batch }: BatchDetailProps) {
   const [showRawData, setShowRawData] = useState(false);
@@ -131,22 +139,25 @@ export function BatchDetail({ batch }: BatchDetailProps) {
             {batch.maxReactorTemp != null ? `${batch.maxReactorTemp}°C` : "—"}
           </div>
           <div className="text-[10px] text-eco-muted uppercase tracking-[2px] mt-1.5 font-medium">
-            temp máx reactor
+            temp máx control
           </div>
         </div>
         <div className="bg-white rounded-2xl p-5 shadow-soft border border-black/[0.03] text-center">
-          <div className="font-mono text-2xl font-semibold tracking-tight" style={{ color: "#3d7a0a" }}>
-            {batch.co2Avoided != null && batch.co2Avoided > 0
-              ? `−${batch.co2Avoided.toFixed(1)}`
+          <div className="font-mono text-2xl font-semibold tracking-tight text-eco-ink">
+            {batch.durationMinutes != null
+              ? formatDuration(batch.durationMinutes)
               : "—"}
           </div>
           <div className="text-[10px] text-eco-muted uppercase tracking-[2px] mt-1.5 font-medium">
-            kg CO₂eq evitados
+            duración
           </div>
         </div>
       </div>
 
-      {/* ── Feedstock + Output Side by Side ── */}
+      {/* ── Resumen Ejecutivo — Nova AI (TOP POSITION) ── */}
+      <AIInsights batchId={batch.id} />
+
+      {/* ── Feedstock + Operation Info ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Feedstock */}
         <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
@@ -181,46 +192,49 @@ export function BatchDetail({ batch }: BatchDetailProps) {
           </div>
         </div>
 
-        {/* Output */}
+        {/* Operación */}
         <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
           <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-3">
-            Producto
+            Operación
           </h3>
-          {batch.oilOutput != null && batch.oilOutput > 0 ? (
-            <div className="space-y-2.5 text-sm">
+          <div className="space-y-2.5 text-sm">
+            <div className="flex justify-between">
+              <span className="text-eco-muted">Operadores</span>
+              <span>{batch.operators.join(", ")}</span>
+            </div>
+            {batch.durationMinutes != null && (
               <div className="flex justify-between">
-                <span className="text-eco-muted">Aceite</span>
-                <span className="font-mono font-bold text-eco-purple">
-                  {batch.oilOutput} L
-                </span>
+                <span className="text-eco-muted">Duración</span>
+                <span className="font-mono">{formatDuration(batch.durationMinutes)}</span>
               </div>
-              {batch.yieldPercent != null && (
-                <div className="flex justify-between">
-                  <span className="text-eco-muted">Rendimiento</span>
-                  <span className="font-mono">{batch.yieldPercent}%</span>
-                </div>
-              )}
-              {batch.durationMinutes != null && (
-                <div className="flex justify-between">
-                  <span className="text-eco-muted">Duración</span>
-                  <span className="font-mono">
-                    {Math.floor(batch.durationMinutes / 60)}h{" "}
-                    {batch.durationMinutes % 60}m
-                  </span>
-                </div>
-              )}
-              {batch.stopReason && (
-                <div className="flex justify-between">
-                  <span className="text-eco-muted">Paro</span>
-                  <span className="text-eco-ink-light">{batch.stopReason}</span>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="text-center py-6 text-eco-muted-2 text-sm">
-              {batch.stopReason || "Sin producción"}
-            </div>
-          )}
+            )}
+            {batch.dieselConsumedL != null && (
+              <div className="flex justify-between">
+                <span className="text-eco-muted">Diésel consumido</span>
+                <span className="font-mono">{batch.dieselConsumedL} L</span>
+              </div>
+            )}
+            {batch.oilOutput != null && batch.oilOutput > 0 && (
+              <div className="flex justify-between">
+                <span className="text-eco-muted">Aceite producido</span>
+                <span className="font-mono font-bold text-eco-purple">{batch.oilOutput} L</span>
+              </div>
+            )}
+            {batch.yieldPercent != null && (
+              <div className="flex justify-between">
+                <span className="text-eco-muted">Rendimiento</span>
+                <span className="font-mono">{batch.yieldPercent}%</span>
+              </div>
+            )}
+            {batch.stopReason && (
+              <div>
+                <span className="text-eco-muted text-xs block mb-1">Razón de paro</span>
+                <p className="text-xs text-eco-ink-light leading-relaxed line-clamp-3">
+                  {batch.stopReason}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -306,9 +320,6 @@ export function BatchDetail({ batch }: BatchDetailProps) {
           readings={batch.readings}
         />
       )}
-
-      {/* ── Nova AI Insights ── */}
-      <AIInsights batchId={batch.id} />
 
       {/* ── Process Events Timeline ── */}
       {batch.events.length > 0 && (
@@ -399,18 +410,15 @@ export function BatchDetail({ batch }: BatchDetailProps) {
         const projectWidth = batch.co2Baseline && batch.co2Project
           ? (batch.co2Project / batch.co2Baseline) * 100
           : 10;
-        // Equivalences
-        const treesEquiv = Math.round(batch.co2Avoided / 22); // 1 tree absorbs ~22 kg CO₂/yr
-        const kmEquiv = Math.round(batch.co2Avoided / 0.247); // avg car: 0.247 kg CO₂/km
-        const daysElecEquiv = Math.round(batch.co2Avoided / 2.8); // Mexican household: ~2.8 kg CO₂/day
+        const treesEquiv = Math.round(batch.co2Avoided / 22);
+        const kmEquiv = Math.round(batch.co2Avoided / 0.247);
+        const daysElecEquiv = Math.round(batch.co2Avoided / 2.8);
 
         return (
           <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-6 space-y-6">
             <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium">
               Impacto Ambiental — Ciclo de Vida
             </h3>
-
-            {/* Tier 1: Hero metric */}
             <div className="text-center py-4">
               <div className="inline-flex items-baseline gap-2">
                 <span className="font-mono text-5xl font-semibold tracking-tighter" style={{ color: "#3d7a0a" }}>
@@ -428,10 +436,7 @@ export function BatchDetail({ batch }: BatchDetailProps) {
                 ↓ {reductionPct}% vs quema a cielo abierto
               </span>
             </div>
-
-            {/* Tier 2: Comparison bars */}
             <div className="space-y-3 px-1">
-              {/* Baseline bar */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-[10px] text-eco-muted uppercase tracking-wider">
@@ -451,7 +456,6 @@ export function BatchDetail({ batch }: BatchDetailProps) {
                   />
                 </div>
               </div>
-              {/* Project bar */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-[10px] text-eco-muted uppercase tracking-wider">
@@ -472,39 +476,29 @@ export function BatchDetail({ batch }: BatchDetailProps) {
                 </div>
               </div>
             </div>
-
-            {/* Tier 3: Visual equivalences */}
             <div className="grid grid-cols-3 gap-3">
               <div className="text-center p-4 bg-eco-surface-2/60 rounded-xl">
                 <div className="text-2xl mb-1">🌳</div>
-                <div className="font-mono text-lg font-bold text-eco-ink">
-                  {treesEquiv}
-                </div>
+                <div className="font-mono text-lg font-bold text-eco-ink">{treesEquiv}</div>
                 <div className="text-[10px] text-eco-muted leading-tight mt-0.5">
                   árboles absorbiendo<br />CO₂ por 1 año
                 </div>
               </div>
               <div className="text-center p-4 bg-eco-surface-2/60 rounded-xl">
                 <div className="text-2xl mb-1">🚗</div>
-                <div className="font-mono text-lg font-bold text-eco-ink">
-                  {kmEquiv.toLocaleString()}
-                </div>
+                <div className="font-mono text-lg font-bold text-eco-ink">{kmEquiv.toLocaleString()}</div>
                 <div className="text-[10px] text-eco-muted leading-tight mt-0.5">
                   km sin recorrer<br />en automóvil
                 </div>
               </div>
               <div className="text-center p-4 bg-eco-surface-2/60 rounded-xl">
                 <div className="text-2xl mb-1">💡</div>
-                <div className="font-mono text-lg font-bold text-eco-ink">
-                  {daysElecEquiv}
-                </div>
+                <div className="font-mono text-lg font-bold text-eco-ink">{daysElecEquiv}</div>
                 <div className="text-[10px] text-eco-muted leading-tight mt-0.5">
                   días de electricidad<br />de un hogar mexicano
                 </div>
               </div>
             </div>
-
-            {/* Methodology note */}
             <p className="text-[10px] text-eco-muted-2 italic leading-relaxed border-t border-eco-border pt-3">
               Metodología IPCC 2006 · Baseline: quema a cielo abierto · Incluye combustión eventual como combustible ·
               Consumo energético estimado — requiere medición real
@@ -513,27 +507,17 @@ export function BatchDetail({ batch }: BatchDetailProps) {
         );
       })()}
 
-      {/* ── Operators & Notes ── */}
-      <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
-        <div className="flex items-center gap-6 text-sm flex-wrap">
-          <div>
-            <span className="text-eco-muted text-xs">Operadores: </span>
-            <span>{batch.operators.join(", ")}</span>
-          </div>
-          {batch.durationMinutes != null && (
-            <div>
-              <span className="text-eco-muted text-xs">Duración: </span>
-              <span className="font-mono">
-                {Math.floor(batch.durationMinutes / 60)}h{" "}
-                {batch.durationMinutes % 60}m
-              </span>
-            </div>
-          )}
+      {/* ── Notes ── */}
+      {batch.notes && (
+        <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
+          <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-2">
+            Notas del Lote
+          </h3>
+          <p className="text-xs text-eco-muted italic leading-relaxed whitespace-pre-line">
+            {batch.notes}
+          </p>
         </div>
-        {batch.notes && (
-          <p className="mt-2 text-xs text-eco-muted italic">{batch.notes}</p>
-        )}
-      </div>
+      )}
     </div>
   );
 }
