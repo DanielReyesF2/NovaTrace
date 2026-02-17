@@ -23,8 +23,8 @@ interface ThermalChartProps {
 }
 
 const LINES = [
-  { key: "reactor", name: "Reactor", color: "#E8700A", width: 2.5 },
-  { key: "control", name: "Control", color: "#2D8CF0", width: 1.5 },
+  { key: "reactor", name: "Superficie Reactor", color: "#E8700A", width: 2.5 },
+  { key: "control", name: "Termopar", color: "#2D8CF0", width: 1.5 },
   { key: "steel", name: "Acero", color: "#7C5CFC", width: 1.5 },
   { key: "chain", name: "Cadena", color: "#3d7a0a", width: 1.5 },
 ] as const;
@@ -258,72 +258,6 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
 
       {/* Main chart */}
       <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-4 pt-6">
-        {/* Phase timeline bar above chart */}
-        {chartPhases.length > 0 && (() => {
-          const timeMin = chartData.length > 0 ? chartData[0].timestamp : 0;
-          const timeMax = chartData.length > 0 ? chartData[chartData.length - 1].timestamp : 1;
-          const timeRange = timeMax - timeMin || 1;
-
-          return (
-            <div className="mb-3 mx-[48px] mr-[20px]">
-              {/* Phase bar */}
-              <div className="relative h-8 rounded-lg overflow-hidden flex">
-                {chartPhases.map((phase) => {
-                  const startPct = Math.max(0, ((phase.startTime - timeMin) / timeRange) * 100);
-                  const endPct = Math.min(100, ((phase.endTime - timeMin) / timeRange) * 100);
-                  const widthPct = Math.max(endPct - startPct, 1);
-
-                  return (
-                    <div
-                      key={phase.id}
-                      className="relative h-full flex items-center justify-center overflow-hidden border-r border-white/50 last:border-r-0"
-                      style={{
-                        width: `${widthPct}%`,
-                        backgroundColor: phase.bg,
-                        borderLeft: `2px solid ${phase.color}`,
-                      }}
-                    >
-                      {widthPct > 12 && (
-                        <span
-                          className="text-[9px] font-semibold font-mono truncate px-1"
-                          style={{ color: phase.color }}
-                        >
-                          {phase.icon} {phase.name}
-                        </span>
-                      )}
-                      {widthPct > 8 && widthPct <= 12 && (
-                        <span className="text-[10px]">{phase.icon}</span>
-                      )}
-                      {/* Incident indicator */}
-                      {phase.hasIncidents && (
-                        <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-red-500" />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              {/* Phase time labels */}
-              <div className="relative h-3 mt-0.5">
-                {chartPhases.map((phase, i) => {
-                  const startPct = ((phase.startTime - timeMin) / timeRange) * 100;
-                  const endPct = ((phase.endTime - timeMin) / timeRange) * 100;
-                  const midPct = (startPct + endPct) / 2;
-
-                  return (
-                    <span
-                      key={phase.id}
-                      className="absolute text-[7px] font-mono text-eco-muted-2 -translate-x-1/2"
-                      style={{ left: `${Math.min(Math.max(midPct, 3), 97)}%` }}
-                    >
-                      {formatDurationMin(phase.durationMinutes)}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })()}
-
         <ResponsiveContainer width="100%" height={420}>
           <ComposedChart
             data={chartData}
