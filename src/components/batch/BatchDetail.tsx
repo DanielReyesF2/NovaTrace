@@ -6,7 +6,6 @@ import { ThermalChart } from "./ThermalChart";
 import { ProcessTimeline } from "./ProcessTimeline";
 import { AIInsights } from "./AIInsights";
 import { BatchScorecard } from "./BatchScorecard";
-import { PhotoGallery } from "./PhotoGallery";
 
 interface BatchDetailProps {
   batch: {
@@ -88,8 +87,16 @@ function formatDuration(minutes: number) {
   return `${h}h ${m}m`;
 }
 
+const PHOTO_TYPE_COLORS: Record<string, string> = {
+  FEEDSTOCK: "#E8700A",
+  PROCESS: "#2D8CF0",
+  PRODUCT: "#3d7a0a",
+  LABEL: "#7C5CFC",
+};
+
 export function BatchDetail({ batch }: BatchDetailProps) {
   const [showRawData, setShowRawData] = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const status = STATUS_CONFIG[batch.status] || STATUS_CONFIG.INCOMPLETE;
 
   return (
@@ -112,60 +119,79 @@ export function BatchDetail({ batch }: BatchDetailProps) {
             {status.label}
           </span>
         </div>
-        <span className="text-[13px] text-eco-muted font-light">
-          {new Date(batch.date).toLocaleDateString("es-MX", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-[13px] text-eco-muted font-light">
+            {new Date(batch.date).toLocaleDateString("es-MX", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </span>
+        </div>
       </div>
 
       {/* ── Quick Stats Row ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl p-5 shadow-soft border border-black/[0.03] text-center">
-          <div className="font-mono text-2xl font-semibold tracking-tight text-eco-ink">
-            {batch.feedstockWeight}
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-px bg-eco-border rounded-xl overflow-hidden">
+        {[
+          { label: "Feedstock", value: `${batch.feedstockWeight} kg`, color: "#273949" },
+          {
+            label: "Aceite",
+            value: batch.oilOutput != null && batch.oilOutput > 0 ? `${batch.oilOutput} L` : "—",
+            color: "#7C5CFC",
+          },
+          {
+            label: "Temp máx",
+            value: batch.maxReactorTemp != null ? `${batch.maxReactorTemp}°C` : "—",
+            color: "#E8700A",
+          },
+          {
+            label: "Duración",
+            value: batch.durationMinutes != null ? formatDuration(batch.durationMinutes) : "—",
+            color: "#273949",
+          },
+          {
+            label: "Diésel",
+            value: batch.dieselConsumedL != null ? `${batch.dieselConsumedL} L` : "—",
+            color: "#2D8CF0",
+          },
+          {
+            label: "Operadores",
+            value: batch.operators.join(", "),
+            color: "#273949",
+            small: true,
+          },
+        ].map((s, i) => (
+          <div key={i} className="bg-white p-3.5 text-center">
+            <div
+              className={`font-mono font-bold tracking-tight ${s.small ? "text-xs" : "text-lg"}`}
+              style={{ color: s.color }}
+            >
+              {s.value}
+            </div>
+            <div className="text-[8px] text-eco-muted uppercase tracking-wider mt-1 font-medium">
+              {s.label}
+            </div>
           </div>
-          <div className="text-[10px] text-eco-muted uppercase tracking-[2px] mt-1.5 font-medium">
-            kg feedstock
-          </div>
-        </div>
-        <div className="bg-white rounded-2xl p-5 shadow-soft border border-black/[0.03] text-center">
-          <div className="font-mono text-2xl font-semibold tracking-tight text-eco-purple">
-            {batch.oilOutput != null && batch.oilOutput > 0
-              ? `${batch.oilOutput} L`
-              : "—"}
-          </div>
-          <div className="text-[10px] text-eco-muted uppercase tracking-[2px] mt-1.5 font-medium">
-            aceite producido
-          </div>
-        </div>
-        <div className="bg-white rounded-2xl p-5 shadow-soft border border-black/[0.03] text-center">
-          <div className="font-mono text-2xl font-semibold tracking-tight text-eco-orange">
-            {batch.maxReactorTemp != null ? `${batch.maxReactorTemp}°C` : "—"}
-          </div>
-          <div className="text-[10px] text-eco-muted uppercase tracking-[2px] mt-1.5 font-medium">
-            temp máx control
-          </div>
-        </div>
-        <div className="bg-white rounded-2xl p-5 shadow-soft border border-black/[0.03] text-center">
-          <div className="font-mono text-2xl font-semibold tracking-tight text-eco-ink">
-            {batch.durationMinutes != null
-              ? formatDuration(batch.durationMinutes)
-              : "—"}
-          </div>
-          <div className="text-[10px] text-eco-muted uppercase tracking-[2px] mt-1.5 font-medium">
-            duración
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* ── Resumen Ejecutivo — Nova AI (TOP POSITION) ── */}
-      <AIInsights batchId={batch.id} />
+      {/* ── Stop reason (if any) ── */}
+      {batch.stopReason && (
+        <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl bg-eco-red/[0.03] border border-eco-red/10">
+          <span className="text-eco-red text-xs mt-0.5">⚠</span>
+          <div>
+            <span className="text-[10px] text-eco-red font-semibold uppercase tracking-wider">
+              Razón de paro
+            </span>
+            <p className="text-xs text-eco-ink-light leading-relaxed mt-0.5">
+              {batch.stopReason}
+            </p>
+          </div>
+        </div>
+      )}
 
-      {/* ── Feedstock + Operation Info ── */}
+      {/* ── Feedstock + Photos (side by side) ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Feedstock */}
         <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
@@ -194,62 +220,85 @@ export function BatchDetail({ batch }: BatchDetailProps) {
             {batch.feedstockCondition && (
               <div className="flex justify-between">
                 <span className="text-eco-muted">Condición</span>
-                <span className="text-eco-ink-light">{batch.feedstockCondition}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Operación */}
-        <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
-          <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-3">
-            Operación
-          </h3>
-          <div className="space-y-2.5 text-sm">
-            <div className="flex justify-between">
-              <span className="text-eco-muted">Operadores</span>
-              <span>{batch.operators.join(", ")}</span>
-            </div>
-            {batch.durationMinutes != null && (
-              <div className="flex justify-between">
-                <span className="text-eco-muted">Duración</span>
-                <span className="font-mono">{formatDuration(batch.durationMinutes)}</span>
-              </div>
-            )}
-            {batch.dieselConsumedL != null && (
-              <div className="flex justify-between">
-                <span className="text-eco-muted">Diésel consumido</span>
-                <span className="font-mono">{batch.dieselConsumedL} L</span>
-              </div>
-            )}
-            {batch.oilOutput != null && batch.oilOutput > 0 && (
-              <div className="flex justify-between">
-                <span className="text-eco-muted">Aceite producido</span>
-                <span className="font-mono font-bold text-eco-purple">{batch.oilOutput} L</span>
+                <span className="text-eco-ink-light text-xs text-right max-w-[60%]">
+                  {batch.feedstockCondition}
+                </span>
               </div>
             )}
             {batch.yieldPercent != null && (
-              <div className="flex justify-between">
+              <div className="flex justify-between pt-2 border-t border-eco-border">
                 <span className="text-eco-muted">Rendimiento</span>
-                <span className="font-mono">{batch.yieldPercent}%</span>
-              </div>
-            )}
-            {batch.stopReason && (
-              <div>
-                <span className="text-eco-muted text-xs block mb-1">Razón de paro</span>
-                <p className="text-xs text-eco-ink-light leading-relaxed line-clamp-3">
-                  {batch.stopReason}
-                </p>
+                <span className="font-mono font-bold">{batch.yieldPercent}%</span>
               </div>
             )}
           </div>
         </div>
-      </div>
 
-      {/* ── Photos ── */}
-      {batch.photos.length > 0 && (
-        <PhotoGallery photos={batch.photos} />
-      )}
+        {/* Photos grid 2×2 */}
+        {batch.photos.length > 0 ? (
+          <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
+            <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-3">
+              Registro Fotográfico
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              {batch.photos.slice(0, 4).map((photo, idx) => (
+                <button
+                  key={photo.id}
+                  onClick={() => setLightboxIdx(idx)}
+                  className="group relative aspect-[4/3] rounded-lg overflow-hidden bg-eco-surface-2 hover:shadow-md transition-all"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={photo.url}
+                    alt={photo.caption || "Foto"}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                  {photo.caption && (
+                    <span className="absolute bottom-1.5 left-2 right-2 text-[8px] text-white leading-tight line-clamp-1 font-medium">
+                      {photo.caption}
+                    </span>
+                  )}
+                  <span
+                    className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: PHOTO_TYPE_COLORS[photo.type] || "#273949" }}
+                  />
+                </button>
+              ))}
+            </div>
+            {batch.photos.length > 4 && (
+              <p className="text-[9px] text-eco-muted text-center mt-2">
+                +{batch.photos.length - 4} fotos más
+              </p>
+            )}
+          </div>
+        ) : (
+          /* Empty state — Operación data if no photos */
+          <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
+            <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-3">
+              Operación
+            </h3>
+            <div className="space-y-2.5 text-sm">
+              <div className="flex justify-between">
+                <span className="text-eco-muted">Operadores</span>
+                <span>{batch.operators.join(", ")}</span>
+              </div>
+              {batch.durationMinutes != null && (
+                <div className="flex justify-between">
+                  <span className="text-eco-muted">Duración</span>
+                  <span className="font-mono">{formatDuration(batch.durationMinutes)}</span>
+                </div>
+              )}
+              {batch.dieselConsumedL != null && (
+                <div className="flex justify-between">
+                  <span className="text-eco-muted">Diésel consumido</span>
+                  <span className="font-mono">{batch.dieselConsumedL} L</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* ── Thermal Profile ── */}
       {batch.readings.length > 0 && (
@@ -282,8 +331,8 @@ export function BatchDetail({ batch }: BatchDetailProps) {
                   <thead>
                     <tr className="text-eco-muted border-b border-eco-border">
                       <th className="py-2 text-left">Hora</th>
-                      <th className="py-2 text-right">Reactor</th>
-                      <th className="py-2 text-right">Control</th>
+                      <th className="py-2 text-right">Sup. Reactor</th>
+                      <th className="py-2 text-right">Termopar</th>
                       <th className="py-2 text-right">Acero</th>
                       <th className="py-2 text-right">Cadena</th>
                     </tr>
@@ -380,9 +429,7 @@ export function BatchDetail({ batch }: BatchDetailProps) {
                   },
                   {
                     test: "% Azufre",
-                    value: lab.sulfurPercent
-                      ? `${lab.sulfurPercent}% m/m`
-                      : "—",
+                    value: lab.sulfurPercent ? `${lab.sulfurPercent}% m/m` : "—",
                     method: "ASTM D4951",
                   },
                 ].map((row, i) => (
@@ -392,21 +439,15 @@ export function BatchDetail({ batch }: BatchDetailProps) {
                   >
                     <span className="text-xs">{row.test}</span>
                     <div className="flex items-center gap-4">
-                      <span className="text-[10px] text-eco-muted-2 font-mono">
-                        {row.method}
-                      </span>
-                      <span className="text-sm font-mono font-bold">
-                        {row.value}
-                      </span>
+                      <span className="text-[10px] text-eco-muted-2 font-mono">{row.method}</span>
+                      <span className="text-sm font-mono font-bold">{row.value}</span>
                     </div>
                   </div>
                 ))}
               </div>
               {lab.verdict && (
                 <div className="mt-3 text-center py-2.5 bg-eco-green/5 border border-eco-green/10 rounded-lg">
-                  <span className="text-eco-green text-sm font-semibold">
-                    ✓ {lab.verdict}
-                  </span>
+                  <span className="text-eco-green text-sm font-semibold">✓ {lab.verdict}</span>
                 </div>
               )}
             </div>
@@ -452,65 +493,35 @@ export function BatchDetail({ batch }: BatchDetailProps) {
             <div className="space-y-3 px-1">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[10px] text-eco-muted uppercase tracking-wider">
-                    Sin EcoNova — quema abierta
-                  </span>
-                  <span className="font-mono text-xs font-bold text-eco-red">
-                    {batch.co2Baseline?.toFixed(1)} kg
-                  </span>
+                  <span className="text-[10px] text-eco-muted uppercase tracking-wider">Sin EcoNova — quema abierta</span>
+                  <span className="font-mono text-xs font-bold text-eco-red">{batch.co2Baseline?.toFixed(1)} kg</span>
                 </div>
                 <div className="h-5 rounded-full bg-eco-surface-2 overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{
-                      width: `${baselineWidth}%`,
-                      background: "linear-gradient(90deg, #DC2626 0%, #ef4444 100%)",
-                    }}
-                  />
+                  <div className="h-full rounded-full" style={{ width: `${baselineWidth}%`, background: "linear-gradient(90deg, #DC2626, #ef4444)" }} />
                 </div>
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[10px] text-eco-muted uppercase tracking-wider">
-                    Con EcoNova — pirólisis
-                  </span>
-                  <span className="font-mono text-xs font-bold" style={{ color: "#3d7a0a" }}>
-                    {batch.co2Project?.toFixed(1)} kg
-                  </span>
+                  <span className="text-[10px] text-eco-muted uppercase tracking-wider">Con EcoNova — pirólisis</span>
+                  <span className="font-mono text-xs font-bold" style={{ color: "#3d7a0a" }}>{batch.co2Project?.toFixed(1)} kg</span>
                 </div>
                 <div className="h-5 rounded-full bg-eco-surface-2 overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{
-                      width: `${Math.max(projectWidth, 3)}%`,
-                      background: "linear-gradient(90deg, #3d7a0a 0%, #5a9a1a 100%)",
-                    }}
-                  />
+                  <div className="h-full rounded-full" style={{ width: `${Math.max(projectWidth, 3)}%`, background: "linear-gradient(90deg, #3d7a0a, #5a9a1a)" }} />
                 </div>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <div className="text-center p-4 bg-eco-surface-2/60 rounded-xl">
-                <div className="text-2xl mb-1">🌳</div>
-                <div className="font-mono text-lg font-bold text-eco-ink">{treesEquiv}</div>
-                <div className="text-[10px] text-eco-muted leading-tight mt-0.5">
-                  árboles absorbiendo<br />CO₂ por 1 año
+              {[
+                { emoji: "🌳", value: treesEquiv, label: "árboles absorbiendo\nCO₂ por 1 año" },
+                { emoji: "🚗", value: kmEquiv.toLocaleString(), label: "km sin recorrer\nen automóvil" },
+                { emoji: "💡", value: daysElecEquiv, label: "días de electricidad\nde un hogar mexicano" },
+              ].map((item, i) => (
+                <div key={i} className="text-center p-4 bg-eco-surface-2/60 rounded-xl">
+                  <div className="text-2xl mb-1">{item.emoji}</div>
+                  <div className="font-mono text-lg font-bold text-eco-ink">{item.value}</div>
+                  <div className="text-[10px] text-eco-muted leading-tight mt-0.5 whitespace-pre-line">{item.label}</div>
                 </div>
-              </div>
-              <div className="text-center p-4 bg-eco-surface-2/60 rounded-xl">
-                <div className="text-2xl mb-1">🚗</div>
-                <div className="font-mono text-lg font-bold text-eco-ink">{kmEquiv.toLocaleString()}</div>
-                <div className="text-[10px] text-eco-muted leading-tight mt-0.5">
-                  km sin recorrer<br />en automóvil
-                </div>
-              </div>
-              <div className="text-center p-4 bg-eco-surface-2/60 rounded-xl">
-                <div className="text-2xl mb-1">💡</div>
-                <div className="font-mono text-lg font-bold text-eco-ink">{daysElecEquiv}</div>
-                <div className="text-[10px] text-eco-muted leading-tight mt-0.5">
-                  días de electricidad<br />de un hogar mexicano
-                </div>
-              </div>
+              ))}
             </div>
             <p className="text-[10px] text-eco-muted-2 italic leading-relaxed border-t border-eco-border pt-3">
               Metodología IPCC 2006 · Baseline: quema a cielo abierto · Incluye combustión eventual como combustible ·
@@ -520,6 +531,63 @@ export function BatchDetail({ batch }: BatchDetailProps) {
         );
       })()}
 
+      {/* ── Nova AI Floating Widget ── */}
+      <AIInsights batchId={batch.id} />
+
+      {/* ── Photo Lightbox ── */}
+      {lightboxIdx !== null && batch.photos[lightboxIdx] && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6"
+          onClick={() => setLightboxIdx(null)}
+        >
+          <div
+            className="relative max-w-3xl w-full max-h-[85vh] rounded-2xl overflow-hidden bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={batch.photos[lightboxIdx].url}
+              alt={batch.photos[lightboxIdx].caption || "Foto"}
+              className="w-full max-h-[70vh] object-contain bg-black"
+            />
+            <div className="p-4 flex items-center justify-between">
+              <div>
+                {batch.photos[lightboxIdx].caption && (
+                  <p className="text-sm text-eco-ink font-medium">
+                    {batch.photos[lightboxIdx].caption}
+                  </p>
+                )}
+                <p className="text-[10px] text-eco-muted font-mono mt-0.5">
+                  {batch.photos[lightboxIdx].type} · {lightboxIdx + 1}/{batch.photos.length}
+                </p>
+              </div>
+              <button
+                onClick={() => setLightboxIdx(null)}
+                className="text-eco-muted hover:text-eco-ink text-xl px-3 py-1 rounded-lg hover:bg-eco-surface-2 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            {/* Navigate */}
+            {lightboxIdx > 0 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setLightboxIdx(lightboxIdx - 1); }}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center text-lg"
+              >
+                ‹
+              </button>
+            )}
+            {lightboxIdx < batch.photos.length - 1 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setLightboxIdx(lightboxIdx + 1); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center text-lg"
+              >
+                ›
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
