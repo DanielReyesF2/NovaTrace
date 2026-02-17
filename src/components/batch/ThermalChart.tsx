@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import {
   Line,
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
   ReferenceLine,
   ReferenceArea,
@@ -49,45 +48,15 @@ function formatDurationMin(minutes: number) {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-function CustomTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-
-  // Filter out scatter/event data points
-  const tempPayload = payload.filter(
-    (e: any) => e.value !== null && e.value !== undefined && e.dataKey !== "eventY"
-  );
-
-  return (
-    <div className="bg-white border border-eco-border rounded-xl p-3.5 shadow-xl min-w-[180px]">
-      <p className="text-[10px] text-eco-muted font-mono mb-2 pb-2 border-b border-eco-border">
-        {formatTime(label)}
-      </p>
-      <div className="space-y-1.5">
-        {tempPayload.map((entry: any) => (
-          <div key={entry.dataKey} className="flex items-center justify-between gap-4 text-xs">
-            <div className="flex items-center gap-2">
-              <span
-                className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className="text-eco-muted">{entry.name}</span>
-            </div>
-            <span
-              className="font-mono font-bold tabular-nums"
-              style={{ color: entry.color }}
-            >
-              {entry.value}°C
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+interface HoverInfo {
+  type: "phase" | "event" | "crosshair";
+  x: number;
+  y: number;
+  phase?: Phase;
+  event?: { type: string; detail: string; timestamp: number };
+  temps?: { reactor?: number | null; control?: number | null; steel?: number | null; chain?: number | null; timestamp: number };
 }
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
-// Custom dot renderer for event scatter points
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function EventDot(props: any) {
   const { cx, cy, payload } = props;
@@ -97,7 +66,7 @@ function EventDot(props: any) {
   const r = isIncident ? 6 : 4;
 
   return (
-    <g>
+    <g style={{ cursor: "pointer" }}>
       {isIncident && (
         <circle cx={cx} cy={cy} r={r + 4} fill="#DC2626" opacity={0.15} />
       )}
@@ -116,6 +85,8 @@ function EventDot(props: any) {
 
 export function ThermalChart({ readings, events }: ThermalChartProps) {
   const [hiddenLines, setHiddenLines] = useState<Set<string>>(new Set());
+  const [hover, setHover] = useState<HoverInfo | null>(null);
+  const chartWrapRef = useRef<HTMLDivElement>(null);
 
   // Detect phases
   const phases: Phase[] = useMemo(
@@ -141,33 +112,30 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
     [readings]
   );
 
-  // Event scatter data — positioned at their interpolated CONTROL temp on the Y axis
-  const eventScatterData = useMemo(() => {
+  // Event data with positions
+  const eventItems = useMemo(() => {
     if (!events) return [];
-    const visible = events.filter((e) => CHART_VISIBLE_TYPES.has(e.type));
-
-    return visible.map((event) => {
-      const eventTs = new Date(event.timestamp).getTime();
-
-      // Find closest reading for Y position
-      let closestTemp: number | null = null;
-      let closestDist = Infinity;
-      for (const r of readings) {
-        const rTs = new Date(r.timestamp).getTime();
-        const dist = Math.abs(rTs - eventTs);
-        if (dist < closestDist) {
-          closestDist = dist;
-          closestTemp = r.controlTemp ?? r.reactorTemp ?? null;
+    return events
+      .filter((e) => CHART_VISIBLE_TYPES.has(e.type))
+      .map((event) => {
+        const eventTs = new Date(event.timestamp).getTime();
+        let closestTemp: number | null = null;
+        let closestDist = Infinity;
+        for (const r of readings) {
+          const rTs = new Date(r.timestamp).getTime();
+          const dist = Math.abs(rTs - eventTs);
+          if (dist < closestDist) {
+            closestDist = dist;
+            closestTemp = r.controlTemp ?? r.reactorTemp ?? null;
+          }
         }
-      }
-
-      return {
-        timestamp: eventTs,
-        eventY: closestTemp ?? 0,
-        eventType: event.type,
-        eventDetail: event.detail,
-      };
-    });
+        return {
+          timestamp: eventTs,
+          eventY: closestTemp ?? 0,
+          eventType: event.type,
+          eventDetail: event.detail,
+        };
+      });
   }, [events, readings]);
 
   // Compute thermal stats
@@ -183,7 +151,6 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
       new Date(readings[readings.length - 1].timestamp).getTime() -
       new Date(readings[0].timestamp).getTime();
 
-    // Time above 150°C (production zone)
     let productionMinutes = 0;
     for (let i = 1; i < readings.length; i++) {
       if ((readings[i].reactorTemp ?? 0) >= 150) {
@@ -194,7 +161,6 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
       }
     }
 
-    // Ramp rate to 150°C
     let rampMinutes = 0;
     for (let i = 0; i < readings.length; i++) {
       if ((readings[i].reactorTemp ?? 0) >= 150) {
@@ -224,12 +190,114 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
     });
   };
 
-  // Determine Y domain
+  // Y domain
   const allTemps = chartData.flatMap((d) =>
     [d.reactor, d.control, d.steel, d.chain].filter((t): t is number => t !== null)
   );
   const yMax = Math.max(...allTemps, 200);
   const yDomainMax = Math.ceil(yMax / 50) * 50 + 20;
+
+  // Time domain
+  const timeMin = chartData.length > 0 ? chartData[0].timestamp : 0;
+  const timeMax = chartData.length > 0 ? chartData[chartData.length - 1].timestamp : 1;
+
+  // Find which phase a timestamp belongs to
+  const getPhaseAt = useCallback(
+    (ts: number): Phase | undefined => {
+      return chartPhases.find((p) => ts >= p.startTime && ts <= p.endTime);
+    },
+    [chartPhases]
+  );
+
+  // Find closest event to a position
+  const getEventNear = useCallback(
+    (ts: number, yVal: number): typeof eventItems[0] | undefined => {
+      const timeRange = timeMax - timeMin || 1;
+      const threshold = timeRange * 0.02; // 2% of time range
+      const yThreshold = yDomainMax * 0.06; // 6% of Y range
+
+      let closest: typeof eventItems[0] | undefined;
+      let closestDist = Infinity;
+
+      for (const ev of eventItems) {
+        const tDist = Math.abs(ev.timestamp - ts) / timeRange;
+        const yDist = Math.abs(ev.eventY - yVal) / yDomainMax;
+        const dist = Math.sqrt(tDist * tDist + yDist * yDist);
+        if (
+          Math.abs(ev.timestamp - ts) < threshold &&
+          Math.abs(ev.eventY - yVal) < yThreshold &&
+          dist < closestDist
+        ) {
+          closestDist = dist;
+          closest = ev;
+        }
+      }
+      return closest;
+    },
+    [eventItems, timeMin, timeMax, yDomainMax]
+  );
+
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const handleChartMouseMove = useCallback(
+    (state: any) => {
+      if (!state?.activePayload?.length || !chartWrapRef.current) {
+        return;
+      }
+
+      const payload = state.activePayload[0]?.payload;
+      if (!payload) return;
+
+      const ts = payload.timestamp;
+      const chartRect = chartWrapRef.current.getBoundingClientRect();
+      const mouseX = (state.chartX ?? 0) as number;
+      const mouseY = (state.chartY ?? 0) as number;
+
+      // Calculate approximate Y value from mouse position
+      // Chart area: margin top 20, height 420, margin bottom 8 → usable ~392px
+      const chartAreaTop = 20;
+      const chartAreaHeight = 392;
+      const yFraction = Math.max(0, Math.min(1, (mouseY - chartAreaTop) / chartAreaHeight));
+      const yVal = yDomainMax * (1 - yFraction);
+
+      // Check for nearby event first (highest priority)
+      const nearEvent = getEventNear(ts, yVal);
+      if (nearEvent) {
+        setHover({
+          type: "event",
+          x: mouseX,
+          y: mouseY,
+          event: {
+            type: nearEvent.eventType,
+            detail: nearEvent.eventDetail,
+            timestamp: nearEvent.timestamp,
+          },
+        });
+        return;
+      }
+
+      // Otherwise show phase label + crosshair temps
+      const phase = getPhaseAt(ts);
+      setHover({
+        type: phase ? "phase" : "crosshair",
+        x: mouseX,
+        y: mouseY,
+        phase,
+        temps: {
+          reactor: payload.reactor,
+          control: payload.control,
+          steel: payload.steel,
+          chain: payload.chain,
+          timestamp: ts,
+        },
+      });
+    },
+    [getEventNear, getPhaseAt, yDomainMax]
+  );
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+
+  const handleChartMouseLeave = useCallback(() => {
+    setHover(null);
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -257,14 +325,18 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
       )}
 
       {/* Main chart */}
-      <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-4 pt-6">
+      <div
+        ref={chartWrapRef}
+        className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-4 pt-6 relative"
+      >
         <ResponsiveContainer width="100%" height={420}>
           <ComposedChart
             data={chartData}
             margin={{ top: 20, right: 20, left: 0, bottom: 8 }}
+            onMouseMove={handleChartMouseMove}
+            onMouseLeave={handleChartMouseLeave}
           >
             <defs>
-              {/* Gradient for reactor line area fill */}
               <linearGradient id="reactorGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#E8700A" stopOpacity={0.15} />
                 <stop offset="100%" stopColor="#E8700A" stopOpacity={0.01} />
@@ -275,7 +347,7 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
               </linearGradient>
             </defs>
 
-            {/* ── PHASE BANDS (colored vertical areas) ── */}
+            {/* ── PHASE BANDS ── */}
             {chartPhases.map((phase) => (
               <ReferenceArea
                 key={`phase-band-${phase.id}`}
@@ -284,20 +356,22 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
                 y1={0}
                 y2={yDomainMax}
                 fill={phase.color}
-                fillOpacity={0.06}
+                fillOpacity={
+                  hover?.phase?.id === phase.id ? 0.14 : 0.05
+                }
                 ifOverflow="hidden"
               />
             ))}
 
             {/* Phase boundary lines */}
-            {chartPhases.map((phase, i) => (
+            {chartPhases.map((phase) => (
               <ReferenceLine
                 key={`phase-start-${phase.id}`}
                 x={phase.startTime}
                 stroke={phase.color}
                 strokeDasharray="4 4"
                 strokeWidth={1}
-                strokeOpacity={0.3}
+                strokeOpacity={0.25}
               />
             ))}
 
@@ -309,7 +383,7 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
               strokeWidth={1}
               strokeOpacity={0.5}
               label={{
-                value: "150° — producción",
+                value: "150° producción",
                 position: "insideTopRight",
                 fill: "#3d7a0a",
                 fontSize: 9,
@@ -323,7 +397,7 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
               strokeWidth={1}
               strokeOpacity={0.4}
               label={{
-                value: "180° — riesgo",
+                value: "180° riesgo",
                 position: "insideTopRight",
                 fill: "#DC2626",
                 fontSize: 9,
@@ -362,7 +436,6 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
               width={48}
               tickFormatter={(v) => `${v}°`}
             />
-            <Tooltip content={<CustomTooltip />} />
 
             {/* Area fills under main lines */}
             {!hiddenLines.has("reactor") && (
@@ -394,20 +467,15 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
                 stroke={hiddenLines.has(line.key) ? "transparent" : line.color}
                 strokeWidth={line.width}
                 dot={false}
-                activeDot={{
-                  r: 5,
-                  strokeWidth: 2,
-                  stroke: "#fff",
-                  fill: line.color,
-                }}
+                activeDot={false}
                 connectNulls
               />
             ))}
 
-            {/* ── EVENT DOTS (Scatter overlay) ── */}
-            {eventScatterData.length > 0 && (
+            {/* ── EVENT DOTS ── */}
+            {eventItems.length > 0 && (
               <Scatter
-                data={eventScatterData}
+                data={eventItems}
                 dataKey="eventY"
                 shape={<EventDot />}
                 isAnimationActive={false}
@@ -416,9 +484,121 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
           </ComposedChart>
         </ResponsiveContainer>
 
-        {/* ── Legend: Temperature lines + Phases + Events ── */}
+        {/* ── Custom hover tooltip (positioned near cursor) ── */}
+        {hover && (
+          <div
+            className="absolute pointer-events-none z-20 transition-opacity duration-100"
+            style={{
+              left: hover.x + 48 + 16,
+              top: hover.y + 24 - 8,
+              opacity: 1,
+            }}
+          >
+            {/* EVENT tooltip — small pill showing what the event is */}
+            {hover.type === "event" && hover.event && (() => {
+              const config = EVENT_TYPE_CONFIG[hover.event.type] || EVENT_TYPE_CONFIG.OBSERVATION;
+              return (
+                <div
+                  className="rounded-lg shadow-lg border px-3 py-2 max-w-[220px]"
+                  style={{
+                    backgroundColor: "white",
+                    borderColor: `${config.color}30`,
+                  }}
+                >
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: config.color }}
+                    />
+                    <span
+                      className="text-[9px] font-bold uppercase tracking-wide"
+                      style={{ color: config.color }}
+                    >
+                      {config.label}
+                    </span>
+                    <span className="text-[9px] font-mono text-eco-muted ml-auto">
+                      {formatTime(hover.event.timestamp)}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-eco-ink leading-snug">
+                    {hover.event.detail.length > 100
+                      ? hover.event.detail.slice(0, 97) + "…"
+                      : hover.event.detail}
+                  </p>
+                </div>
+              );
+            })()}
+
+            {/* PHASE tooltip — subtle tag showing phase name */}
+            {hover.type === "phase" && hover.phase && hover.temps && (
+              <div className="space-y-1">
+                {/* Phase label */}
+                <div
+                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 shadow-sm"
+                  style={{
+                    backgroundColor: hover.phase.bg,
+                    border: `1px solid ${hover.phase.color}25`,
+                  }}
+                >
+                  <span className="text-[10px]">{hover.phase.icon}</span>
+                  <span
+                    className="text-[10px] font-semibold"
+                    style={{ color: hover.phase.color }}
+                  >
+                    {hover.phase.name}
+                  </span>
+                  <span
+                    className="text-[8px] font-mono opacity-60"
+                    style={{ color: hover.phase.color }}
+                  >
+                    {formatDurationMin(hover.phase.durationMinutes)}
+                  </span>
+                </div>
+                {/* Temps */}
+                <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm border border-black/[0.06] px-2.5 py-1.5">
+                  <div className="text-[9px] font-mono text-eco-muted mb-1">
+                    {formatTime(hover.temps.timestamp)}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {LINES.map((line) => {
+                      const val = hover.temps?.[line.key as keyof typeof hover.temps];
+                      if (val == null || hiddenLines.has(line.key)) return null;
+                      return (
+                        <span key={line.key} className="text-[10px] font-mono font-bold" style={{ color: line.color }}>
+                          {val}°
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* CROSSHAIR tooltip — just temps, no phase */}
+            {hover.type === "crosshair" && hover.temps && (
+              <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm border border-black/[0.06] px-2.5 py-1.5">
+                <div className="text-[9px] font-mono text-eco-muted mb-1">
+                  {formatTime(hover.temps.timestamp)}
+                </div>
+                <div className="flex items-center gap-3">
+                  {LINES.map((line) => {
+                    const val = hover.temps?.[line.key as keyof typeof hover.temps];
+                    if (val == null || hiddenLines.has(line.key)) return null;
+                    return (
+                      <span key={line.key} className="text-[10px] font-mono font-bold" style={{ color: line.color }}>
+                        {val}°
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Legend ── */}
         <div className="mt-2 pt-3 border-t border-eco-border space-y-2">
-          {/* Temperature lines */}
+          {/* Temperature lines + thresholds */}
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-4">
               {LINES.map((line) => {
@@ -455,49 +635,34 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
             </div>
           </div>
 
-          {/* Phase legend */}
-          {chartPhases.length > 0 && (
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-[9px] text-eco-muted-2 uppercase tracking-wider font-medium">
-                Fases:
-              </span>
+          {/* Phase + Event legend (compact single row) */}
+          {(chartPhases.length > 0 || eventItems.length > 0) && (
+            <div className="flex items-center gap-2.5 flex-wrap text-[9px]">
               {chartPhases.map((phase) => (
-                <div key={phase.id} className="flex items-center gap-1.5 text-[10px]">
+                <div key={phase.id} className="flex items-center gap-1">
                   <span
-                    className="w-3 h-2.5 rounded-sm flex-shrink-0"
-                    style={{ backgroundColor: phase.color, opacity: 0.3 }}
+                    className="w-2.5 h-2 rounded-sm"
+                    style={{ backgroundColor: phase.color, opacity: 0.35 }}
                   />
-                  <span className="text-eco-muted font-medium">
+                  <span className="text-eco-muted">
                     {phase.icon} {phase.name}
                   </span>
-                  <span className="text-eco-muted-2 font-mono text-[8px]">
-                    {formatDurationMin(phase.durationMinutes)}
-                  </span>
-                  {phase.hasIncidents && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                  )}
                 </div>
               ))}
-            </div>
-          )}
-
-          {/* Event type legend */}
-          {eventScatterData.length > 0 && (
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-[9px] text-eco-muted-2 uppercase tracking-wider font-medium">
-                Eventos:
-              </span>
-              {Array.from(new Set(eventScatterData.map((e) => e.eventType))).map((type) => {
+              {chartPhases.length > 0 && eventItems.length > 0 && (
+                <span className="text-eco-muted-2">·</span>
+              )}
+              {Array.from(new Set(eventItems.map((e) => e.eventType))).map((type) => {
                 const config = EVENT_TYPE_CONFIG[type] || EVENT_TYPE_CONFIG.OBSERVATION;
-                const count = eventScatterData.filter((e) => e.eventType === type).length;
+                const count = eventItems.filter((e) => e.eventType === type).length;
                 return (
-                  <div key={type} className="flex items-center gap-1 text-[10px]">
+                  <div key={type} className="flex items-center gap-1">
                     <span
-                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      className="w-1.5 h-1.5 rounded-full"
                       style={{ backgroundColor: config.color }}
                     />
                     <span className="text-eco-muted">{config.label}</span>
-                    <span className="text-eco-muted-2 font-mono text-[8px]">×{count}</span>
+                    <span className="text-eco-muted-2 font-mono">×{count}</span>
                   </div>
                 );
               })}
