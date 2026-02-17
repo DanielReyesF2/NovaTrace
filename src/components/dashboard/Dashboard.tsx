@@ -87,44 +87,44 @@ export function Dashboard({ batches, recentEvents, lastBatchId, stats }: Dashboa
   const totalCerts = batches.reduce((s, b) => s + b.certificates.length, 0);
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+    <div className="max-w-6xl mx-auto px-6 py-10 space-y-8">
 
       {/* ═══ HERO: Environmental Impact Banner ═══ */}
-      <div className="relative overflow-hidden bg-eco-navy rounded-2xl p-6 md:p-8">
-        <div className="absolute inset-0 opacity-[0.03]" style={{
+      <div className="relative overflow-hidden bg-eco-navy rounded-3xl p-8 md:p-10">
+        <div className="absolute inset-0 opacity-[0.02]" style={{
           backgroundImage: `radial-gradient(circle, white 1px, transparent 1px)`,
-          backgroundSize: "40px 40px",
+          backgroundSize: "48px 48px",
         }} />
         <div className="relative">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
             <div>
-              <p className="text-white/40 text-[10px] tracking-[3px] uppercase mb-3">
+              <p className="text-white/30 text-[11px] tracking-[4px] uppercase font-medium mb-4">
                 Impacto ambiental acumulado
               </p>
-              <div className="flex items-baseline gap-2.5">
-                <span className="font-mono text-4xl md:text-5xl font-black text-eco-green">
+              <div className="flex items-baseline gap-3">
+                <span className="font-mono text-5xl md:text-6xl font-semibold tracking-tighter text-eco-green">
                   {stats.totalCO2Avoided.toFixed(1)}
                 </span>
-                <span className="text-white/40 font-mono text-sm">kg CO₂eq</span>
+                <span className="text-white/25 text-sm font-light tracking-tight">kg CO₂eq</span>
               </div>
-              <p className="text-white/30 text-xs mt-1.5">
-                emisiones evitadas · equivalente a <span className="text-eco-green/70 font-semibold">{treesEquiv} árboles</span> absorbiendo CO₂ por un año
+              <p className="text-white/20 text-[13px] font-light mt-3 tracking-wide">
+                emisiones evitadas · equivalente a <span className="text-eco-green/50 font-medium">{treesEquiv} árboles</span> absorbiendo CO₂ por un año
               </p>
             </div>
-            <div className="flex gap-5 md:gap-8">
+            <div className="flex gap-8 md:gap-10">
               <div className="text-center">
-                <div className="font-mono text-2xl font-bold text-white">{stats.totalFeedstockKg}</div>
-                <div className="text-[9px] text-white/30 uppercase tracking-wider mt-0.5">kg plástico</div>
+                <div className="font-mono text-2xl font-semibold tracking-tight text-white">{stats.totalFeedstockKg}</div>
+                <div className="text-[10px] text-white/20 uppercase tracking-[3px] mt-1 font-medium">kg plástico</div>
               </div>
-              <div className="w-px bg-white/10 self-stretch" />
+              <div className="w-px bg-white/[0.06] self-stretch" />
               <div className="text-center">
-                <div className="font-mono text-2xl font-bold text-eco-green">{stats.totalOilLiters}</div>
-                <div className="text-[9px] text-white/30 uppercase tracking-wider mt-0.5">L aceite</div>
+                <div className="font-mono text-2xl font-semibold tracking-tight text-eco-green">{stats.totalOilLiters}</div>
+                <div className="text-[10px] text-white/20 uppercase tracking-[3px] mt-1 font-medium">L aceite</div>
               </div>
-              <div className="w-px bg-white/10 self-stretch" />
+              <div className="w-px bg-white/[0.06] self-stretch" />
               <div className="text-center">
-                <div className="font-mono text-2xl font-bold text-white">{avgYield}<span className="text-base">%</span></div>
-                <div className="text-[9px] text-white/30 uppercase tracking-wider mt-0.5">rendimiento</div>
+                <div className="font-mono text-2xl font-semibold tracking-tight text-white">{avgYield}<span className="text-base font-light">%</span></div>
+                <div className="text-[10px] text-white/20 uppercase tracking-[3px] mt-1 font-medium">rendimiento</div>
               </div>
             </div>
           </div>
@@ -132,37 +132,37 @@ export function Dashboard({ batches, recentEvents, lastBatchId, stats }: Dashboa
       </div>
 
       {/* ═══ LIFECYCLE + MAP (side by side) ═══ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <TraceabilityPipeline stats={stats} totalCerts={totalCerts} />
         <MexicoMapCard batches={batches} />
       </div>
 
       {/* ═══ TWO-COLUMN: Operational KPIs + Activity Feed ═══ */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
         {/* Left: KPI cards (3 cols) */}
-        <div className="lg:col-span-3 space-y-4">
+        <div className="lg:col-span-3 space-y-5">
           {/* KPI Grid */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             {/* Completados */}
-            <div className="bg-eco-surface border border-eco-border rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] text-eco-muted uppercase tracking-wider">Lotes completados</span>
-                <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: "rgba(61,122,10,0.1)" }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3d7a0a" strokeWidth="2.5" strokeLinecap="round">
+            <div className="bg-white rounded-2xl p-5 shadow-soft border border-black/[0.03]">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[11px] text-eco-muted font-medium tracking-wide">Lotes completados</span>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(61,122,10,0.08)" }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3d7a0a" strokeWidth="2.5" strokeLinecap="round">
                     <polyline points="20,6 9,17 4,12" />
                   </svg>
                 </div>
               </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="font-mono text-3xl font-bold" style={{ color: "#3d7a0a" }}>
+              <div className="flex items-baseline gap-2">
+                <span className="font-mono text-3xl font-semibold tracking-tight" style={{ color: "#3d7a0a" }}>
                   {stats.completedBatches}
                 </span>
-                <span className="text-xs text-eco-muted">de {stats.totalBatches}</span>
+                <span className="text-[13px] text-eco-muted font-light">de {stats.totalBatches}</span>
               </div>
-              <div className="mt-3 h-2 bg-eco-surface-2 rounded-full overflow-hidden">
+              <div className="mt-4 h-1.5 bg-eco-surface-2 rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full transition-all duration-500"
+                  className="h-full rounded-full transition-all duration-700 ease-out"
                   style={{
                     width: `${stats.totalBatches > 0 ? (stats.completedBatches / stats.totalBatches) * 100 : 0}%`,
                     background: "linear-gradient(90deg, #3d7a0a, #5a9a1a)",
@@ -172,66 +172,66 @@ export function Dashboard({ batches, recentEvents, lastBatchId, stats }: Dashboa
             </div>
 
             {/* Lecturas térmicas */}
-            <div className="bg-eco-surface border border-eco-border rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] text-eco-muted uppercase tracking-wider">Lecturas térmicas</span>
-                <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: "rgba(45,140,240,0.1)" }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2D8CF0" strokeWidth="2" strokeLinecap="round">
+            <div className="bg-white rounded-2xl p-5 shadow-soft border border-black/[0.03]">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[11px] text-eco-muted font-medium tracking-wide">Lecturas térmicas</span>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(45,140,240,0.08)" }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2D8CF0" strokeWidth="2" strokeLinecap="round">
                     <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
                   </svg>
                 </div>
               </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="font-mono text-3xl font-bold text-eco-blue">{totalReadings}</span>
-                <span className="text-xs text-eco-muted">registros</span>
+              <div className="flex items-baseline gap-2">
+                <span className="font-mono text-3xl font-semibold tracking-tight text-eco-blue">{totalReadings}</span>
+                <span className="text-[13px] text-eco-muted font-light">registros</span>
               </div>
-              <p className="text-[10px] text-eco-muted-2 mt-2">
+              <p className="text-[11px] text-eco-muted-2 mt-3 font-light">
                 {totalEvents} eventos de proceso registrados
               </p>
             </div>
 
             {/* Certificados */}
-            <div className="bg-eco-surface border border-eco-border rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] text-eco-muted uppercase tracking-wider">Certificados</span>
-                <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: "rgba(232,112,10,0.1)" }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#E8700A" strokeWidth="2" strokeLinecap="round">
+            <div className="bg-white rounded-2xl p-5 shadow-soft border border-black/[0.03]">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[11px] text-eco-muted font-medium tracking-wide">Certificados</span>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(232,112,10,0.08)" }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E8700A" strokeWidth="2" strokeLinecap="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   </svg>
                 </div>
               </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="font-mono text-3xl font-bold text-eco-orange">{totalCerts}</span>
-                <span className="text-xs text-eco-muted">emitidos</span>
+              <div className="flex items-baseline gap-2">
+                <span className="font-mono text-3xl font-semibold tracking-tight text-eco-orange">{totalCerts}</span>
+                <span className="text-[13px] text-eco-muted font-light">emitidos</span>
               </div>
-              <p className="text-[10px] text-eco-muted-2 mt-2">
+              <p className="text-[11px] text-eco-muted-2 mt-3 font-light">
                 {batches.filter(b => b.labResults.length > 0).length} con resultados de lab
               </p>
             </div>
 
             {/* CO₂ Reduction */}
-            <div className="bg-eco-surface border border-eco-border rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] text-eco-muted uppercase tracking-wider">Reducción CO₂</span>
-                <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: "rgba(61,122,10,0.1)" }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3d7a0a" strokeWidth="2" strokeLinecap="round">
+            <div className="bg-white rounded-2xl p-5 shadow-soft border border-black/[0.03]">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[11px] text-eco-muted font-medium tracking-wide">Reducción CO₂</span>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(61,122,10,0.08)" }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3d7a0a" strokeWidth="2" strokeLinecap="round">
                     <path d="M23 6l-9.5 9.5-5-5L1 18" />
                     <path d="M17 6h6v6" />
                   </svg>
                 </div>
               </div>
               <div className="flex items-baseline gap-1.5">
-                <span className="font-mono text-3xl font-bold" style={{ color: "#3d7a0a" }}>{reductionPct}%</span>
+                <span className="font-mono text-3xl font-semibold tracking-tight" style={{ color: "#3d7a0a" }}>{reductionPct}%</span>
               </div>
-              <p className="text-[10px] text-eco-muted-2 mt-2">
+              <p className="text-[11px] text-eco-muted-2 mt-3 font-light">
                 vs quema a cielo abierto (IPCC 2006)
               </p>
             </div>
           </div>
 
           {/* Batch-by-batch performance bars */}
-          <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
-            <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase mb-4">
+          <div className="bg-white rounded-2xl p-6 shadow-soft border border-black/[0.03]">
+            <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-5">
               Rendimiento por lote
             </h3>
             <div className="space-y-3">
@@ -295,12 +295,12 @@ export function Dashboard({ batches, recentEvents, lastBatchId, stats }: Dashboa
                 );
               })}
             </div>
-            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-eco-border">
-              <div className="flex items-center gap-1.5 text-[9px] text-eco-muted">
+            <div className="flex items-center gap-4 mt-4 pt-4 border-t border-black/[0.04]">
+              <div className="flex items-center gap-1.5 text-[10px] text-eco-muted font-medium">
                 <div className="w-3 h-1.5 rounded-full bg-eco-muted-2" />
                 Feedstock (kg)
               </div>
-              <div className="flex items-center gap-1.5 text-[9px] text-eco-muted">
+              <div className="flex items-center gap-1.5 text-[10px] text-eco-muted font-medium">
                 <div className="w-3 h-1.5 rounded-full bg-eco-purple" />
                 Aceite (L)
               </div>
@@ -309,10 +309,10 @@ export function Dashboard({ batches, recentEvents, lastBatchId, stats }: Dashboa
         </div>
 
         {/* Right: Activity Feed (2 cols) */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-5">
           {/* Activity timeline */}
-          <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
-            <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase mb-4">
+          <div className="bg-white rounded-2xl p-6 shadow-soft border border-black/[0.03]">
+            <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-5">
               Actividad reciente
             </h3>
             {recentEvents.length > 0 ? (
@@ -365,20 +365,20 @@ export function Dashboard({ batches, recentEvents, lastBatchId, stats }: Dashboa
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
-            <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase mb-3">
+          <div className="bg-white rounded-2xl p-6 shadow-soft border border-black/[0.03]">
+            <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-4">
               Acciones rápidas
             </h3>
             <div className="space-y-2">
               <Link
                 href="/batch/new"
-                className="flex items-center gap-3 p-3 rounded-lg bg-eco-navy text-white hover:bg-eco-navy-light transition-colors"
+                className="flex items-center gap-3 p-3.5 rounded-xl bg-eco-navy text-white hover:bg-eco-navy-light transition-all duration-200"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                <span className="text-xs font-semibold">Nuevo lote de pirólisis</span>
+                <span className="text-[13px] font-medium">Nuevo lote de pirólisis</span>
               </Link>
               {batches.length > 0 && (
                 <Link

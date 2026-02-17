@@ -6,33 +6,43 @@ const config: Config = {
     extend: {
       colors: {
         eco: {
-          // Light theme — crema base
-          bg: "#FAF8F4",
-          "bg-warm": "#F5F1EB",
+          bg: "#FAFAFA",
+          "bg-warm": "#F5F5F7",
           surface: "#FFFFFF",
-          "surface-2": "#F0ECE4",
-          border: "rgba(39,57,73,0.1)",
-          "border-strong": "rgba(39,57,73,0.2)",
+          "surface-2": "#F2F2F7",
+          border: "rgba(0,0,0,0.06)",
+          "border-strong": "rgba(0,0,0,0.12)",
           // Brand
           green: "#b5e951",
-          "green-dim": "rgba(181,233,81,0.12)",
-          navy: "#273949",
-          "navy-light": "#3a5468",
+          "green-dim": "rgba(181,233,81,0.10)",
+          navy: "#1d2b36",
+          "navy-light": "#2e4050",
           // Accents
           orange: "#E8700A",
           purple: "#7C5CFC",
           blue: "#2D8CF0",
           red: "#DC2626",
           // Text
-          ink: "#273949",
-          "ink-light": "#4A6274",
-          muted: "rgba(39,57,73,0.5)",
-          "muted-2": "rgba(39,57,73,0.3)",
+          ink: "#1d1d1f",
+          "ink-light": "#424245",
+          muted: "rgba(0,0,0,0.45)",
+          "muted-2": "rgba(0,0,0,0.25)",
         },
       },
       fontFamily: {
-        mono: ["JetBrains Mono", "Fira Code", "monospace"],
-        display: ["Newsreader", "Georgia", "serif"],
+        sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "SF Mono", "Fira Code", "monospace"],
+        display: ["Inter", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"],
+      },
+      borderRadius: {
+        "2xl": "16px",
+        "3xl": "20px",
+        "4xl": "24px",
+      },
+      boxShadow: {
+        "soft": "0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)",
+        "card": "0 2px 8px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)",
+        "elevated": "0 4px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)",
       },
       animation: {
         "fade-in": "fadeIn 0.5s ease-out",

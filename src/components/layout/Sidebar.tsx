@@ -121,33 +121,33 @@ export function Sidebar({ user }: SidebarProps) {
         className={`
           fixed md:sticky top-0 left-0 h-screen z-40
           flex flex-col
-          bg-eco-navy border-r border-eco-navy-light/20
-          transition-all duration-200 ease-in-out
-          ${collapsed ? "-translate-x-full md:translate-x-0 md:w-16" : "w-64"}
+          bg-eco-navy
+          transition-all duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]
+          ${collapsed ? "-translate-x-full md:translate-x-0 md:w-16" : "w-60"}
           md:translate-x-0
         `}
       >
         {/* Logo */}
-        <div className="px-5 py-5 border-b border-white/8">
+        <div className="px-5 py-6 border-b border-white/[0.06]">
           <Link href="/" className="flex items-center gap-2.5">
             <Image
               src="/logo-econova.png"
               alt="EcoNova"
-              width={collapsed ? 32 : 140}
-              height={collapsed ? 32 : 50}
-              className={`transition-all duration-200 object-contain ${collapsed ? "md:w-8" : "w-[140px]"}`}
+              width={collapsed ? 32 : 130}
+              height={collapsed ? 32 : 46}
+              className={`transition-all duration-300 object-contain ${collapsed ? "md:w-8" : "w-[130px]"}`}
               priority
             />
           </Link>
           {!collapsed && (
-            <span className="text-[8px] tracking-[3px] text-white/35 uppercase mt-1 block pl-1">
+            <span className="text-[8px] tracking-[4px] text-white/25 uppercase mt-1.5 block pl-0.5 font-medium">
               Trace
             </span>
           )}
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-5 space-y-0.5">
           {NAV_ITEMS.map((item) => {
             const active = isActive(item);
             return (
@@ -155,11 +155,11 @@ export function Sidebar({ user }: SidebarProps) {
                 key={item.href}
                 href={item.href === "/batch" ? "/" : item.href}
                 className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium
-                  transition-all duration-150 group relative
+                  flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium
+                  transition-all duration-200 group relative
                   ${active
-                    ? "bg-eco-green/15 text-eco-green"
-                    : "text-white/45 hover:text-white/70 hover:bg-white/5"
+                    ? "bg-white/[0.08] text-eco-green"
+                    : "text-white/40 hover:text-white/65 hover:bg-white/[0.04]"
                   }
                 `}
               >
@@ -190,7 +190,7 @@ export function Sidebar({ user }: SidebarProps) {
         </button>
 
         {/* User section */}
-        <div className="border-t border-white/8 px-3 py-4">
+        <div className="border-t border-white/[0.06] px-3 py-4">
           <div className="flex items-center gap-3">
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold"

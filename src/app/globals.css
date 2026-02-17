@@ -2,15 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Newsreader:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root {
-  --eco-bg: #FAF8F4;
+  --eco-bg: #FAFAFA;
   --eco-surface: #FFFFFF;
-  --eco-surface-2: #F0ECE4;
-  --eco-border: rgba(39, 57, 73, 0.1);
+  --eco-surface-2: #F2F2F7;
+  --eco-border: rgba(0, 0, 0, 0.06);
   --eco-green: #b5e951;
-  --eco-navy: #273949;
+  --eco-navy: #1d2b36;
   --eco-orange: #E8700A;
   --eco-purple: #7C5CFC;
   --eco-blue: #2D8CF0;
@@ -19,41 +19,42 @@
 
 body {
   background: var(--eco-bg);
-  color: #273949;
-  font-family: 'JetBrains Mono', monospace;
+  color: #1d1d1f;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar — Apple-thin */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(39, 57, 73, 0.12);
-  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(39, 57, 73, 0.2);
+  background: rgba(0, 0, 0, 0.18);
 }
 
 /* Glow effects for accent elements */
 .eco-glow-green {
-  box-shadow: 0 0 20px rgba(181, 233, 81, 0.15);
+  box-shadow: 0 0 20px rgba(181, 233, 81, 0.12);
 }
 .eco-glow-orange {
-  box-shadow: 0 0 20px rgba(232, 112, 10, 0.12);
+  box-shadow: 0 0 20px rgba(232, 112, 10, 0.1);
 }
 
-/* Card hover effect */
+/* Card hover effect — subtle Apple lift */
 .card-hover {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.25s ease;
 }
 .card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(39, 57, 73, 0.08);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
 /* Skeleton shimmer */

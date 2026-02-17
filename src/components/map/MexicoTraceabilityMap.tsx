@@ -139,9 +139,9 @@ export function MexicoMapCard({ batches }: { batches: BatchOrigin[] }) {
   }, [stateData]);
 
   return (
-    <div className="bg-eco-surface border border-eco-border rounded-xl p-5 h-full flex flex-col relative">
+    <div className="bg-white rounded-2xl p-5 shadow-soft border border-black/[0.03] h-full flex flex-col relative">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase">
+        <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium">
           Red de Orígenes
         </h3>
         {/* Zoom controls */}
