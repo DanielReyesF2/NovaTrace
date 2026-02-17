@@ -138,6 +138,26 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
       });
   }, [events, readings]);
 
+  // Detect where reactor line cuts off (last non-null reactor reading followed by nulls)
+  const reactorCutoff = useMemo(() => {
+    let lastReactorIdx = -1;
+    for (let i = 0; i < readings.length; i++) {
+      if (readings[i].reactorTemp !== null) lastReactorIdx = i;
+    }
+    // Only mark cutoff if reactor ends before the last reading
+    if (lastReactorIdx >= 0 && lastReactorIdx < readings.length - 3) {
+      const remaining = readings.length - lastReactorIdx - 1;
+      const nullsAfter = readings.slice(lastReactorIdx + 1).filter(r => r.reactorTemp === null).length;
+      if (nullsAfter >= remaining * 0.8) {
+        return {
+          timestamp: new Date(readings[lastReactorIdx].timestamp).getTime(),
+          temp: readings[lastReactorIdx].reactorTemp!,
+        };
+      }
+    }
+    return null;
+  }, [readings]);
+
   // Compute thermal stats
   const stats = useMemo(() => {
     const reactorTemps = readings
@@ -374,6 +394,25 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
                 strokeOpacity={0.25}
               />
             ))}
+
+            {/* Reactor cutoff annotation */}
+            {reactorCutoff && !hiddenLines.has("reactor") && (
+              <ReferenceLine
+                x={reactorCutoff.timestamp}
+                stroke="#E8700A"
+                strokeDasharray="2 3"
+                strokeWidth={1}
+                strokeOpacity={0.5}
+                label={{
+                  value: "✕ Se dejó de medir superficie",
+                  position: "insideTopLeft",
+                  fill: "#E8700A",
+                  fontSize: 8,
+                  fontFamily: "ui-monospace, monospace",
+                  offset: 5,
+                }}
+              />
+            )}
 
             {/* Reference threshold lines */}
             <ReferenceLine
@@ -667,6 +706,14 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
                 );
               })}
             </div>
+          )}
+
+          {/* Reactor cutoff explanation */}
+          {reactorCutoff && !hiddenLines.has("reactor") && (
+            <p className="text-[9px] text-eco-muted-2 italic mt-2 leading-relaxed">
+              ✕ La medición de superficie reactor se suspendió a las {formatTime(reactorCutoff.timestamp)} ({reactorCutoff.temp}°C)
+              — abrir la compuerta del sensor apagaba el quemador, se decidió dejar de medir para no interrumpir el proceso.
+            </p>
           )}
         </div>
       </div>
