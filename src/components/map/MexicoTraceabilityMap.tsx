@@ -325,12 +325,12 @@ export function MexicoTraceabilityMap({ batches }: { batches: BatchOrigin[] }) {
   const [hoveredState, setHoveredState] = useState<string | null>(null);
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+    <div className="max-w-6xl mx-auto px-6 py-10 space-y-8">
       <div>
-        <h1 className="font-display text-2xl font-bold text-eco-ink">
+        <h1 className="text-2xl font-semibold tracking-tight text-eco-ink">
           Trazabilidad
         </h1>
-        <p className="text-xs text-eco-muted mt-1">
+        <p className="text-[13px] text-eco-muted mt-1 font-light">
           Origen de materiales · Red de recolección
         </p>
       </div>
@@ -338,8 +338,8 @@ export function MexicoTraceabilityMap({ batches }: { batches: BatchOrigin[] }) {
       <MexicoMapCard batches={batches} />
 
       {/* Detail Table */}
-      <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
-        <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase mb-4">
+      <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
+        <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-4">
           Detalle por Estado
         </h3>
         <div className="overflow-x-auto">

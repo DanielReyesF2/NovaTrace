@@ -120,15 +120,15 @@ export function BatchScorecard({
   const { grade, color } = getGrade(overallScore);
 
   return (
-    <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
+    <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase">
+        <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium">
           Scorecard del Lote
         </h3>
         <div className="flex items-center gap-2">
           <span className="text-[10px] text-eco-muted">Score general:</span>
           <span
-            className="font-mono text-lg font-black px-2.5 py-0.5 rounded-lg"
+            className="font-mono text-lg font-semibold tracking-tighter px-2.5 py-0.5 rounded-lg"
             style={{ color, background: `${color}12` }}
           >
             {grade}

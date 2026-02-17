@@ -77,18 +77,18 @@ export function BatchDetail({ batch }: BatchDetailProps) {
   const status = STATUS_CONFIG[batch.status] || STATUS_CONFIG.INCOMPLETE;
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-6 space-y-5">
+    <div className="max-w-5xl mx-auto px-6 py-10 space-y-6">
       {/* ── Header ── */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="text-eco-muted hover:text-eco-ink-light text-xs transition-colors"
+            className="text-eco-muted hover:text-eco-ink text-xs transition-colors"
           >
-            ← Lotes
+            ← Dashboard
           </Link>
-          <span className="text-eco-muted-2">|</span>
-          <h1 className="font-mono text-lg font-bold">{batch.code}</h1>
+          <span className="text-eco-muted-2">/</span>
+          <h1 className="font-mono text-xl font-semibold tracking-tight">{batch.code}</h1>
           <span
             className="text-[10px] font-semibold px-2.5 py-1 rounded-full"
             style={{ color: status.color, background: status.bg }}
@@ -96,7 +96,7 @@ export function BatchDetail({ batch }: BatchDetailProps) {
             {status.label}
           </span>
         </div>
-        <span className="text-xs text-eco-muted">
+        <span className="text-[13px] text-eco-muted font-light">
           {new Date(batch.date).toLocaleDateString("es-MX", {
             weekday: "long",
             year: "numeric",
@@ -107,40 +107,40 @@ export function BatchDetail({ batch }: BatchDetailProps) {
       </div>
 
       {/* ── Quick Stats Row ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-eco-surface border border-eco-border rounded-xl p-4 text-center">
-          <div className="font-mono text-xl font-bold text-eco-green">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-2xl p-5 shadow-soft border border-black/[0.03] text-center">
+          <div className="font-mono text-2xl font-semibold tracking-tight text-eco-ink">
             {batch.feedstockWeight}
           </div>
-          <div className="text-[10px] text-eco-muted uppercase tracking-wider mt-1">
+          <div className="text-[10px] text-eco-muted uppercase tracking-[2px] mt-1.5 font-medium">
             kg feedstock
           </div>
         </div>
-        <div className="bg-eco-surface border border-eco-border rounded-xl p-4 text-center">
-          <div className="font-mono text-xl font-bold text-eco-purple">
+        <div className="bg-white rounded-2xl p-5 shadow-soft border border-black/[0.03] text-center">
+          <div className="font-mono text-2xl font-semibold tracking-tight text-eco-purple">
             {batch.oilOutput != null && batch.oilOutput > 0
               ? `${batch.oilOutput} L`
               : "—"}
           </div>
-          <div className="text-[10px] text-eco-muted uppercase tracking-wider mt-1">
+          <div className="text-[10px] text-eco-muted uppercase tracking-[2px] mt-1.5 font-medium">
             aceite producido
           </div>
         </div>
-        <div className="bg-eco-surface border border-eco-border rounded-xl p-4 text-center">
-          <div className="font-mono text-xl font-bold text-eco-orange">
+        <div className="bg-white rounded-2xl p-5 shadow-soft border border-black/[0.03] text-center">
+          <div className="font-mono text-2xl font-semibold tracking-tight text-eco-orange">
             {batch.maxReactorTemp != null ? `${batch.maxReactorTemp}°C` : "—"}
           </div>
-          <div className="text-[10px] text-eco-muted uppercase tracking-wider mt-1">
+          <div className="text-[10px] text-eco-muted uppercase tracking-[2px] mt-1.5 font-medium">
             temp máx reactor
           </div>
         </div>
-        <div className="bg-eco-surface border border-eco-border rounded-xl p-4 text-center">
-          <div className="font-mono text-xl font-bold text-eco-green">
+        <div className="bg-white rounded-2xl p-5 shadow-soft border border-black/[0.03] text-center">
+          <div className="font-mono text-2xl font-semibold tracking-tight" style={{ color: "#3d7a0a" }}>
             {batch.co2Avoided != null && batch.co2Avoided > 0
               ? `−${batch.co2Avoided.toFixed(1)}`
               : "—"}
           </div>
-          <div className="text-[10px] text-eco-muted uppercase tracking-wider mt-1">
+          <div className="text-[10px] text-eco-muted uppercase tracking-[2px] mt-1.5 font-medium">
             kg CO₂eq evitados
           </div>
         </div>
@@ -149,8 +149,8 @@ export function BatchDetail({ batch }: BatchDetailProps) {
       {/* ── Feedstock + Output Side by Side ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Feedstock */}
-        <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
-          <h3 className="text-[10px] tracking-[2px] text-eco-navy uppercase mb-3">
+        <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
+          <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-3">
             Feedstock
           </h3>
           <div className="space-y-2.5 text-sm">
@@ -182,8 +182,8 @@ export function BatchDetail({ batch }: BatchDetailProps) {
         </div>
 
         {/* Output */}
-        <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
-          <h3 className="text-[10px] tracking-[2px] text-eco-purple uppercase mb-3">
+        <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
+          <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-3">
             Producto
           </h3>
           {batch.oilOutput != null && batch.oilOutput > 0 ? (
@@ -227,13 +227,13 @@ export function BatchDetail({ batch }: BatchDetailProps) {
       {/* ── Thermal Profile ── */}
       {batch.readings.length > 0 && (
         <div>
-          <h3 className="text-[10px] tracking-[2px] text-eco-orange uppercase mb-4">
+          <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-4">
             Perfil Térmico
           </h3>
           <ThermalChart readings={batch.readings} events={batch.events} />
 
           {/* Collapsible raw data */}
-          <div className="mt-4 bg-eco-surface border border-eco-border rounded-xl p-4">
+          <div className="mt-4 bg-white rounded-2xl shadow-soft border border-black/[0.03] p-4">
             <button
               onClick={() => setShowRawData(!showRawData)}
               className="flex items-center gap-2 text-[10px] text-eco-muted hover:text-eco-ink-light transition-colors w-full"
@@ -312,8 +312,8 @@ export function BatchDetail({ batch }: BatchDetailProps) {
 
       {/* ── Process Events Timeline ── */}
       {batch.events.length > 0 && (
-        <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
-          <h3 className="text-[10px] tracking-[2px] text-eco-blue uppercase mb-4">
+        <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
+          <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-4">
             Eventos del Proceso — {batch.events.length} eventos
           </h3>
           <ProcessTimeline events={batch.events} />
@@ -322,8 +322,8 @@ export function BatchDetail({ batch }: BatchDetailProps) {
 
       {/* ── Lab Results ── */}
       {batch.labResults.length > 0 && (
-        <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
-          <h3 className="text-[10px] tracking-[2px] text-eco-blue uppercase mb-4">
+        <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
+          <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-4">
             Laboratorio
           </h3>
           {batch.labResults.map((lab) => (
@@ -405,15 +405,15 @@ export function BatchDetail({ batch }: BatchDetailProps) {
         const daysElecEquiv = Math.round(batch.co2Avoided / 2.8); // Mexican household: ~2.8 kg CO₂/day
 
         return (
-          <div className="bg-eco-surface border border-eco-green/10 rounded-xl p-5 space-y-6">
-            <h3 className="text-[10px] tracking-[2px] text-eco-navy uppercase">
+          <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-6 space-y-6">
+            <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium">
               Impacto Ambiental — Ciclo de Vida
             </h3>
 
             {/* Tier 1: Hero metric */}
             <div className="text-center py-4">
               <div className="inline-flex items-baseline gap-2">
-                <span className="font-mono text-5xl font-black" style={{ color: "#3d7a0a" }}>
+                <span className="font-mono text-5xl font-semibold tracking-tighter" style={{ color: "#3d7a0a" }}>
                   {batch.co2Avoided.toFixed(1)}
                 </span>
                 <span className="text-lg text-eco-muted font-mono">kg CO₂eq</span>
@@ -514,7 +514,7 @@ export function BatchDetail({ batch }: BatchDetailProps) {
       })()}
 
       {/* ── Operators & Notes ── */}
-      <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
+      <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
         <div className="flex items-center gap-6 text-sm flex-wrap">
           <div>
             <span className="text-eco-muted text-xs">Operadores: </span>

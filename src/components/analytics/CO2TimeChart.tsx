@@ -25,7 +25,7 @@ export function CO2TimeChart({ data }: CO2TimeChartProps) {
     .map((b) => {
       cumulative += b.co2Avoided!;
       return {
-        name: b.code.split("-").slice(-2).join("-"),
+        name: b.code,
         date: new Date(b.date).toLocaleDateString("es-MX", {
           month: "short",
           day: "numeric",
@@ -36,8 +36,8 @@ export function CO2TimeChart({ data }: CO2TimeChartProps) {
     });
 
   return (
-    <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
-      <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase mb-4">
+    <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
+      <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-4">
         CO₂ Evitado Acumulado
       </h3>
       <ResponsiveContainer width="100%" height={280}>

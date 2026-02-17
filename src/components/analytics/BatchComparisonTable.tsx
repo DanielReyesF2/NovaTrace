@@ -102,8 +102,8 @@ export function BatchComparisonTable({ data }: BatchComparisonTableProps) {
   );
 
   return (
-    <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
-      <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase mb-4">
+    <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
+      <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-4">
         Tabla Comparativa de Lotes
       </h3>
       <div className="overflow-x-auto">
@@ -132,7 +132,7 @@ export function BatchComparisonTable({ data }: BatchComparisonTableProps) {
                     href={`/batch/${batch.id}`}
                     className="text-eco-blue hover:underline font-semibold"
                   >
-                    {batch.code.split("-").slice(-2).join("-")}
+                    {batch.code}
                   </Link>
                 </td>
                 <td className="py-2.5 px-2 text-eco-muted">

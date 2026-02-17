@@ -45,41 +45,41 @@ export function ImpactDashboard({
   const monthlyCO2 = totalCO2Avoided / monthsActive;
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+    <div className="max-w-6xl mx-auto px-6 py-10 space-y-8">
       {/* Header */}
       <div>
-        <h1 className="font-display text-2xl font-bold text-eco-ink">
+        <h1 className="text-2xl font-semibold tracking-tight text-eco-ink">
           Impacto Ambiental
         </h1>
-        <p className="text-xs text-eco-muted mt-1">
+        <p className="text-[13px] text-eco-muted mt-1 font-light">
           Análisis de ciclo de vida · Metodología IPCC 2006
         </p>
       </div>
 
       {/* HERO: Total CO2 Avoided */}
-      <div className="relative overflow-hidden bg-eco-navy rounded-2xl p-8 text-center">
-        <div className="absolute inset-0 opacity-[0.03]" style={{
+      <div className="relative overflow-hidden bg-eco-navy rounded-3xl p-8 md:p-10 text-center">
+        <div className="absolute inset-0 opacity-[0.02]" style={{
           backgroundImage: `radial-gradient(circle, white 1px, transparent 1px)`,
-          backgroundSize: "40px 40px",
+          backgroundSize: "48px 48px",
         }} />
         <div className="relative">
-          <p className="text-white/40 text-[10px] tracking-[3px] uppercase mb-4">
+          <p className="text-white/30 text-[11px] tracking-[4px] uppercase mb-4 font-medium">
             Emisiones totales evitadas
           </p>
           <div className="flex items-baseline justify-center gap-3">
             <AnimatedCounter
               value={totalCO2Avoided}
               decimals={1}
-              className="font-mono text-5xl md:text-6xl font-black text-eco-green"
+              className="font-mono text-5xl md:text-6xl font-semibold tracking-tighter text-eco-green"
               duration={2000}
             />
-            <span className="text-white/40 font-mono text-lg">kg CO₂eq</span>
+            <span className="text-white/25 text-sm font-light tracking-tight">kg CO₂eq</span>
           </div>
-          <div className="mt-3 flex items-center justify-center gap-4">
-            <span className="inline-block font-mono text-xs font-bold px-3 py-1 rounded-full text-eco-green bg-eco-green/15">
+          <div className="mt-4 flex items-center justify-center gap-4">
+            <span className="inline-block font-mono text-xs font-semibold px-3 py-1.5 rounded-full text-eco-green bg-eco-green/10">
               ↓ {reductionPct}% vs quema abierta
             </span>
-            <span className="text-white/30 text-xs">
+            <span className="text-white/20 text-[13px] font-light">
               {completedBatches} lotes completados
             </span>
           </div>
@@ -87,7 +87,7 @@ export function ImpactDashboard({
       </div>
 
       {/* GHG Waterfall + Equivalences */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <GHGWaterfallChart
           baseline={totalCO2Baseline}
           processEmissions={totalProcessEmissions}

@@ -67,19 +67,19 @@ export function AnalyticsDashboard({ batches, summary }: AnalyticsDashboardProps
   const yieldTrend = olderAvgYield > 0 ? ((recentAvgYield - olderAvgYield) / olderAvgYield) * 100 : 0;
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+    <div className="max-w-6xl mx-auto px-6 py-10 space-y-8">
       {/* Header */}
       <div>
-        <h1 className="font-display text-2xl font-bold text-eco-ink">
+        <h1 className="text-2xl font-semibold tracking-tight text-eco-ink">
           Analytics & Performance
         </h1>
-        <p className="text-xs text-eco-muted mt-1">
+        <p className="text-[13px] text-eco-muted mt-1 font-light">
           Rendimiento operativo · Oct 2024 – Feb 2025
         </p>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           title="Total Procesado"
           value={summary.totalFeedstockKg}
@@ -135,7 +135,7 @@ export function AnalyticsDashboard({ batches, summary }: AnalyticsDashboardProps
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <CO2TimeChart data={batches} />
         <ThroughputChart data={batches} />
       </div>

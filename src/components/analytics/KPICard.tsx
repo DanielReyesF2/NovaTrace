@@ -24,14 +24,14 @@ export function KPICard({
   color,
 }: KPICardProps) {
   return (
-    <div className="bg-eco-surface border border-eco-border rounded-xl p-5 card-hover">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-[10px] text-eco-muted uppercase tracking-wider">
+    <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-[11px] text-eco-muted uppercase tracking-wide font-medium">
           {title}
         </span>
         <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{ background: `${color}15` }}
+          className="w-7 h-7 rounded-lg flex items-center justify-center"
+          style={{ background: `${color}10` }}
         >
           {icon}
         </div>
@@ -42,7 +42,7 @@ export function KPICard({
           decimals={decimals}
           prefix={prefix}
           suffix={suffix}
-          className="font-mono text-3xl font-bold"
+          className="font-mono text-3xl font-semibold tracking-tight"
           duration={1400}
         />
       </div>

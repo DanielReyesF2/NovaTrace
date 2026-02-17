@@ -40,65 +40,65 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-eco-bg px-4">
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-[360px]">
         {/* Logo */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-12">
           <Image
             src="/logo-econova-dark.png"
             alt="EcoNova"
-            width={200}
-            height={60}
+            width={180}
+            height={54}
             className="mx-auto"
             priority
           />
-          <p className="text-[10px] tracking-[6px] text-eco-muted-2 uppercase mt-2">
+          <p className="text-[9px] tracking-[6px] text-eco-muted-2 uppercase mt-3 font-medium">
             Trace System
           </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-[10px] tracking-widest text-eco-muted uppercase mb-2">
+            <label className="block text-[11px] tracking-[2px] text-eco-muted uppercase mb-2.5 font-medium">
               Email
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-eco-surface border border-eco-border rounded-lg px-4 py-3 text-sm font-mono text-eco-ink placeholder:text-eco-muted-2 focus:outline-none focus:border-eco-navy/30 transition-colors"
+              className="w-full bg-white border border-black/[0.08] rounded-xl px-4 py-3.5 text-[14px] text-eco-ink placeholder:text-eco-muted-2 focus:outline-none focus:border-eco-navy/20 focus:ring-4 focus:ring-eco-navy/[0.04] transition-all"
               placeholder="daniel@econova.com.mx"
               required
             />
           </div>
           <div>
-            <label className="block text-[10px] tracking-widest text-eco-muted uppercase mb-2">
+            <label className="block text-[11px] tracking-[2px] text-eco-muted uppercase mb-2.5 font-medium">
               Contraseña
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-eco-surface border border-eco-border rounded-lg px-4 py-3 text-sm font-mono text-eco-ink placeholder:text-eco-muted-2 focus:outline-none focus:border-eco-navy/30 transition-colors"
+              className="w-full bg-white border border-black/[0.08] rounded-xl px-4 py-3.5 text-[14px] text-eco-ink placeholder:text-eco-muted-2 focus:outline-none focus:border-eco-navy/20 focus:ring-4 focus:ring-eco-navy/[0.04] transition-all"
               placeholder="••••••••"
               required
             />
           </div>
 
           {error && (
-            <div className="text-eco-red text-xs text-center py-2">{error}</div>
+            <div className="text-eco-red text-[13px] text-center py-2 font-medium">{error}</div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-eco-navy text-white font-bold py-3 rounded-lg text-sm hover:bg-eco-navy-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-eco-navy text-white font-semibold py-3.5 rounded-xl text-[14px] hover:bg-eco-navy-light transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-soft active:scale-[0.98]"
           >
             {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
 
-        <p className="text-center text-[10px] text-eco-muted-2 mt-8">
+        <p className="text-center text-[10px] text-eco-muted-2 mt-10 font-light tracking-wide">
           EcoNova México · Economía circular
         </p>
       </div>

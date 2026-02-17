@@ -8,16 +8,7 @@ interface NovaAISummaryProps {
 
 export function NovaAISummary({ lastBatchId }: NovaAISummaryProps) {
   return (
-    <div
-      className="rounded-xl overflow-hidden"
-      style={{
-        border: "1px solid transparent",
-        backgroundImage:
-          "linear-gradient(#FDFAF5, #FDFAF5), linear-gradient(135deg, rgba(39,57,73,0.2), rgba(61,122,10,0.2))",
-        backgroundOrigin: "border-box",
-        backgroundClip: "padding-box, border-box",
-      }}
-    >
+    <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] overflow-hidden">
       <div className="p-5">
         {/* Header */}
         <div className="flex items-center gap-3 mb-3">
@@ -40,7 +31,7 @@ export function NovaAISummary({ lastBatchId }: NovaAISummaryProps) {
             </svg>
           </div>
           <div>
-            <h3 className="text-sm font-bold text-eco-navy">Nova AI</h3>
+            <h3 className="text-sm font-semibold text-eco-ink">Nova AI</h3>
             <p className="text-[10px] text-eco-muted">
               Inteligencia artificial de EcoNova
             </p>

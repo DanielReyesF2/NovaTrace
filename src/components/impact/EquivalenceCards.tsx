@@ -79,8 +79,8 @@ export function EquivalenceCards({ co2Avoided }: EquivalenceCardsProps) {
   ];
 
   return (
-    <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
-      <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase mb-4">
+    <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
+      <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-4">
         Equivalencias de Impacto
       </h3>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -92,7 +92,7 @@ export function EquivalenceCards({ co2Avoided }: EquivalenceCardsProps) {
             <div className="flex justify-center mb-2">{eq.icon}</div>
             <AnimatedCounter
               value={eq.value}
-              className="font-mono text-xl font-bold text-eco-ink block"
+              className="font-mono text-xl font-semibold text-eco-ink block"
               duration={1500}
             />
             <div className="text-[10px] text-eco-muted leading-tight mt-1 whitespace-pre-line">

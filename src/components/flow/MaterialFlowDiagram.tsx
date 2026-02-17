@@ -38,8 +38,8 @@ export function MaterialFlowDiagram({
   const scale = (kg: number) => Math.max(4, (kg / flows.feedstock) * maxWidth);
 
   return (
-    <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
-      <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase mb-1">
+    <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
+      <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-1">
         Flujo de Materiales
       </h3>
       <p className="text-[10px] text-eco-muted-2 mb-4">

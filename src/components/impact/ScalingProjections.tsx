@@ -41,10 +41,10 @@ export function ScalingProjections({ currentMonthlyCO2 }: ScalingProjectionsProp
     activeScenario === "all" || activeScenario === key;
 
   return (
-    <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
+    <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
       <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
         <div>
-          <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase">
+          <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium">
             Proyecciones de Escalamiento
           </h3>
           <p className="text-[10px] text-eco-muted-2 mt-0.5">

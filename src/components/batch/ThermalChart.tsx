@@ -197,7 +197,7 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
       )}
 
       {/* Main chart */}
-      <div className="bg-eco-surface border border-eco-border rounded-xl p-4 pt-6">
+      <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-4 pt-6">
         <ResponsiveContainer width="100%" height={420}>
           <ComposedChart
             data={chartData}

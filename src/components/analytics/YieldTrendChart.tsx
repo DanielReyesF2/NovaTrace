@@ -24,7 +24,7 @@ export function YieldTrendChart({ data }: YieldTrendChartProps) {
   const chartData = data
     .filter((b) => b.status === "COMPLETED" && b.yieldPercent != null)
     .map((b) => ({
-      name: b.code.split("-").slice(-2).join("-"),
+      name: b.code,
       date: new Date(b.date).toLocaleDateString("es-MX", {
         month: "short",
         day: "numeric",
@@ -33,9 +33,9 @@ export function YieldTrendChart({ data }: YieldTrendChartProps) {
     }));
 
   return (
-    <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
+    <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase">
+        <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium">
           Tendencia de Yield por Lote
         </h3>
         <div className="flex items-center gap-3 text-[9px] text-eco-muted">

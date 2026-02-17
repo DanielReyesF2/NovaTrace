@@ -49,10 +49,10 @@ export function SystemPerformanceScore({
   const { grade, color } = getSystemGrade(overall);
 
   return (
-    <div className="bg-eco-surface border border-eco-border rounded-xl p-5">
+    <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-[10px] tracking-[2px] text-eco-muted uppercase">
+          <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium">
             Performance Score del Sistema
           </h3>
           <p className="text-[10px] text-eco-muted-2 mt-0.5">
@@ -61,7 +61,7 @@ export function SystemPerformanceScore({
         </div>
         <div className="flex items-center gap-2">
           <span
-            className="font-mono text-2xl font-black px-3 py-1 rounded-lg"
+            className="font-mono text-2xl font-semibold tracking-tighter px-3 py-1 rounded-lg"
             style={{ color, background: `${color}12` }}
           >
             {grade}
