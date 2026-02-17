@@ -54,6 +54,13 @@ export const createEventSchema = z.object({
   notes: z.string().optional(),
 });
 
+export const createPhotoSchema = z.object({
+  url: z.string().min(1),
+  type: z.enum(["FEEDSTOCK", "PROCESS", "PRODUCT", "LABEL", "PLANT", "OTHER"]),
+  caption: z.string().optional(),
+  takenAt: z.string().datetime().optional(),
+});
+
 export const createLabResultSchema = z.object({
   labName: z.string().min(1),
   labCertification: z.string().optional(),
