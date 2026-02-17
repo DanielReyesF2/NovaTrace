@@ -33,15 +33,17 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const data = createBatchSchema.parse(body);
 
-    // Generate batch code
+    // Generate batch code: {Year}/{Month}/{Reactor}/{Feedstock}/{Seq}
     const today = new Date();
-    const todayStr = today.toISOString().slice(0, 10);
-    const existingToday = await prisma.batch.count({
-      where: {
-        code: { startsWith: `ECO-DY500-${todayStr.replace(/-/g, "")}` },
-      },
+    const { FEEDSTOCK_CODES } = await import("@/lib/utils");
+    const yearLetter = { 2024: "A", 2025: "B", 2026: "C", 2027: "D" }[today.getFullYear()] ?? "X";
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const feedCode = FEEDSTOCK_CODES[data.feedstockType] ?? "GEN";
+    const prefix = `${yearLetter}/${month}/1/${feedCode}/`;
+    const existingThisMonth = await prisma.batch.count({
+      where: { code: { startsWith: prefix.slice(0, -1) } },
     });
-    const code = generateBatchCode(today, existingToday + 1);
+    const code = generateBatchCode(today, data.feedstockType, existingThisMonth + 1);
 
     const batch = await prisma.batch.create({
       data: {

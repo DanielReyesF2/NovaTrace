@@ -37,10 +37,10 @@ async function main() {
   // BATCH ECO-001 — COMPLETED
   // ============================================
   const batch1 = await prisma.batch.upsert({
-    where: { code: "ECO-DY500-20250119-001" },
+    where: { code: "B/01/1/LDPA/02" },
     update: {},
     create: {
-      code: "ECO-DY500-20250119-001",
+      code: "B/01/1/LDPA/02",
       date: new Date("2025-01-19"),
       status: "COMPLETED",
       feedstockType: "LDPE Agrícola",
@@ -91,10 +91,10 @@ async function main() {
   // BATCH ECO-002 — INCOMPLETE
   // ============================================
   const batch2 = await prisma.batch.upsert({
-    where: { code: "ECO-DY500-20250212-001" },
+    where: { code: "B/02/1/LDPA/02" },
     update: {},
     create: {
-      code: "ECO-DY500-20250212-001",
+      code: "B/02/1/LDPA/02",
       date: new Date("2025-02-12"),
       status: "INCOMPLETE",
       feedstockType: "LDPE Agrícola",

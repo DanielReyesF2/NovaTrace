@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { QRCodeSVG } from "qrcode.react";
 import { ThermalChart } from "./ThermalChart";
 import { ProcessTimeline } from "./ProcessTimeline";
 import { AIInsights } from "./AIInsights";
@@ -128,6 +129,78 @@ export function BatchDetail({ batch }: BatchDetailProps) {
               day: "numeric",
             })}
           </span>
+        </div>
+      </div>
+
+      {/* ── Traceability Passport ── */}
+      <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] overflow-hidden">
+        <div className="flex items-stretch">
+          {/* Left — info */}
+          <div className="flex-1 p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg, #273949, #3d7a0a)" }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M9 12l2 2 4-4" />
+                  <rect x="3" y="3" width="18" height="18" rx="3" />
+                </svg>
+              </div>
+              <span className="text-[9px] uppercase tracking-[3px] text-eco-muted font-semibold">
+                Pasaporte de Trazabilidad
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[11px]">
+              <div className="flex justify-between">
+                <span className="text-eco-muted">Lote</span>
+                <span className="font-mono font-bold text-eco-ink">{batch.code}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-eco-muted">Fecha</span>
+                <span className="font-mono text-eco-ink">
+                  {new Date(batch.date).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-eco-muted">Origen</span>
+                <span className="text-eco-ink">{batch.feedstockOrigin}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-eco-muted">Material</span>
+                <span className="text-eco-ink">{batch.feedstockType}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-eco-muted">Peso</span>
+                <span className="font-mono font-bold text-eco-ink">{batch.feedstockWeight} kg</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-eco-muted">Estado</span>
+                <span className="font-semibold" style={{ color: status.color }}>{status.label}</span>
+              </div>
+            </div>
+            {batch.certificates.length > 0 && (
+              <div className="mt-2 pt-2 border-t border-eco-border">
+                <span className="text-[8px] font-mono text-eco-muted-2">
+                  CERT {batch.certificates[0].code} · SHA-256: {batch.certificates[0].hash.slice(0, 12)}…
+                </span>
+              </div>
+            )}
+          </div>
+          {/* Right — QR */}
+          <div className="flex flex-col items-center justify-center px-5 py-4 bg-eco-surface-2/30 border-l border-eco-border min-w-[140px]">
+            <QRCodeSVG
+              value={
+                batch.certificates.length > 0
+                  ? `${typeof window !== "undefined" ? window.location.origin : ""}/verify/${batch.certificates[0].code}`
+                  : `${typeof window !== "undefined" ? window.location.origin : ""}/batch/${batch.id}`
+              }
+              size={88}
+              level="M"
+              bgColor="transparent"
+              fgColor="#273949"
+            />
+            <span className="text-[7px] text-eco-muted-2 font-mono mt-2 text-center leading-tight">
+              {batch.certificates.length > 0 ? "Verificar certificado" : "Trazabilidad EcoNova"}
+            </span>
+          </div>
         </div>
       </div>
 

@@ -26,9 +26,12 @@ interface BatchDef {
   operators: string[];
 }
 
+// Code format: {Year}/{Month}/{Reactor}/{Feedstock}/{Consecutive}
+// Year: A=2024, B=2025. Reactor: 1=DY-500
+// Feedstock: LDPA, HDPI, LDPF, PPM
 const BATCHES: BatchDef[] = [
   {
-    code: "ECO-DY500-20241015-001",
+    code: "A/10/1/LDPA/01",
     date: "2024-10-15",
     feedstockType: "LDPE Agrícola",
     feedstockOrigin: "Michoacán, MX",
@@ -45,7 +48,7 @@ const BATCHES: BatchDef[] = [
     operators: ["Daniel", "Salvador"],
   },
   {
-    code: "ECO-DY500-20241028-001",
+    code: "A/10/1/LDPA/02",
     date: "2024-10-28",
     feedstockType: "LDPE Agrícola",
     feedstockOrigin: "Michoacán, MX",
@@ -62,7 +65,7 @@ const BATCHES: BatchDef[] = [
     operators: ["Daniel", "Salvador"],
   },
   {
-    code: "ECO-DY500-20241110-001",
+    code: "A/11/1/HDPI/01",
     date: "2024-11-10",
     feedstockType: "HDPE Industrial",
     feedstockOrigin: "Jalisco, MX",
@@ -79,7 +82,7 @@ const BATCHES: BatchDef[] = [
     operators: ["Daniel", "Salvador"],
   },
   {
-    code: "ECO-DY500-20241121-001",
+    code: "A/11/1/LDPF/01",
     date: "2024-11-21",
     feedstockType: "LDPE Film",
     feedstockOrigin: "Edo. México, MX",
@@ -96,7 +99,7 @@ const BATCHES: BatchDef[] = [
     operators: ["Daniel", "Salvador"],
   },
   {
-    code: "ECO-DY500-20241205-001",
+    code: "A/12/1/LDPA/01",
     date: "2024-12-05",
     feedstockType: "LDPE Agrícola",
     feedstockOrigin: "Puebla, MX",
@@ -113,7 +116,7 @@ const BATCHES: BatchDef[] = [
     operators: ["Daniel", "Salvador"],
   },
   {
-    code: "ECO-DY500-20241212-001",
+    code: "A/12/1/HDPI/01",
     date: "2024-12-12",
     feedstockType: "HDPE Industrial",
     feedstockOrigin: "Jalisco, MX",
@@ -130,7 +133,7 @@ const BATCHES: BatchDef[] = [
     operators: ["Daniel", "Salvador"],
   },
   {
-    code: "ECO-DY500-20241220-001",
+    code: "A/12/1/PPM/01",
     date: "2024-12-20",
     feedstockType: "PP Mixto",
     feedstockOrigin: "Guanajuato, MX",
@@ -147,7 +150,7 @@ const BATCHES: BatchDef[] = [
     operators: ["Daniel", "Salvador"],
   },
   {
-    code: "ECO-DY500-20250108-001",
+    code: "B/01/1/LDPA/01",
     date: "2025-01-08",
     feedstockType: "LDPE Agrícola",
     feedstockOrigin: "Michoacán, MX",
@@ -164,7 +167,7 @@ const BATCHES: BatchDef[] = [
     operators: ["Daniel", "Salvador"],
   },
   {
-    code: "ECO-DY500-20250115-001",
+    code: "B/01/1/LDPF/01",
     date: "2025-01-15",
     feedstockType: "LDPE Film",
     feedstockOrigin: "Edo. México, MX",
@@ -181,7 +184,7 @@ const BATCHES: BatchDef[] = [
     operators: ["Daniel", "Salvador"],
   },
   {
-    code: "ECO-DY500-20250125-001",
+    code: "B/01/1/HDPI/01",
     date: "2025-01-25",
     feedstockType: "HDPE Industrial",
     feedstockOrigin: "Puebla, MX",
@@ -198,7 +201,7 @@ const BATCHES: BatchDef[] = [
     operators: ["Daniel", "Salvador"],
   },
   {
-    code: "ECO-DY500-20250205-001",
+    code: "B/02/1/LDPA/01",
     date: "2025-02-05",
     feedstockType: "LDPE Agrícola",
     feedstockOrigin: "Jalisco, MX",
@@ -215,7 +218,7 @@ const BATCHES: BatchDef[] = [
     operators: ["Daniel", "Salvador"],
   },
   {
-    code: "ECO-DY500-20250210-001",
+    code: "B/02/1/PPM/01",
     date: "2025-02-10",
     feedstockType: "PP Mixto",
     feedstockOrigin: "Michoacán, MX",
@@ -602,7 +605,7 @@ async function main() {
       });
 
       if (!existingCert) {
-        const certCode = `CERT-${def.code.replace("ECO-DY500-", "")}`;
+        const certCode = `CERT-${def.code.replace(/\//g, "-")}`;
         const certHash = crypto
           .createHash("sha256")
           .update(`${def.code}-${def.feedstockWeight}-${def.oilOutput}-${ghgResult?.avoided ?? 0}`)

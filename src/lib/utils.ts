@@ -1,14 +1,42 @@
 import { createHash } from "crypto";
 
 /**
- * Generate batch code: ECO-DY500-YYYYMMDD-NNN
+ * Batch code format: {Year}/{Month}/{Reactor}/{Feedstock}/{Consecutive}
+ *
+ * Year:       A=2024, B=2025, C=2026...
+ * Month:      01-12
+ * Reactor:    1=DY-500
+ * Feedstock:  LDPA (LDPE Agrícola), HDPI (HDPE Industrial),
+ *             LDPF (LDPE Film), PPM (PP Mixto), GEN (genérico)
+ * Consecutive: 01, 02... (same feedstock+month)
  */
-export function generateBatchCode(date: Date, sequenceNumber: number): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  const seq = String(sequenceNumber).padStart(3, "0");
-  return `ECO-DY500-${y}${m}${d}-${seq}`;
+
+const YEAR_LETTERS: Record<number, string> = {
+  2024: "A",
+  2025: "B",
+  2026: "C",
+  2027: "D",
+  2028: "E",
+};
+
+export const FEEDSTOCK_CODES: Record<string, string> = {
+  "LDPE Agrícola": "LDPA",
+  "HDPE Industrial": "HDPI",
+  "LDPE Film": "LDPF",
+  "PP Mixto": "PPM",
+};
+
+export function generateBatchCode(
+  date: Date,
+  feedstockType: string,
+  sequenceNumber: number,
+): string {
+  const yearLetter = YEAR_LETTERS[date.getFullYear()] ?? "X";
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const reactor = "1"; // DY-500
+  const feedCode = FEEDSTOCK_CODES[feedstockType] ?? "GEN";
+  const seq = String(sequenceNumber).padStart(2, "0");
+  return `${yearLetter}/${month}/${reactor}/${feedCode}/${seq}`;
 }
 
 /**
