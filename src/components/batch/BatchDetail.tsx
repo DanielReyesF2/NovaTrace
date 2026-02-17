@@ -6,6 +6,7 @@ import { ThermalChart } from "./ThermalChart";
 import { ProcessTimeline } from "./ProcessTimeline";
 import { AIInsights } from "./AIInsights";
 import { BatchScorecard } from "./BatchScorecard";
+import { PhotoGallery } from "./PhotoGallery";
 
 interface BatchDetailProps {
   batch: {
@@ -63,6 +64,13 @@ interface BatchDetailProps {
       id: string;
       code: string;
       hash: string;
+    }>;
+    photos: Array<{
+      id: string;
+      url: string;
+      type: string;
+      caption: string | null;
+      takenAt: string;
     }>;
   };
 }
@@ -237,6 +245,11 @@ export function BatchDetail({ batch }: BatchDetailProps) {
           </div>
         </div>
       </div>
+
+      {/* ── Photos ── */}
+      {batch.photos.length > 0 && (
+        <PhotoGallery photos={batch.photos} />
+      )}
 
       {/* ── Thermal Profile ── */}
       {batch.readings.length > 0 && (
