@@ -507,17 +507,6 @@ export function BatchDetail({ batch }: BatchDetailProps) {
         );
       })()}
 
-      {/* ── Notes ── */}
-      {batch.notes && (
-        <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
-          <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-2">
-            Notas del Lote
-          </h3>
-          <p className="text-xs text-eco-muted italic leading-relaxed whitespace-pre-line">
-            {batch.notes}
-          </p>
-        </div>
-      )}
     </div>
   );
 }

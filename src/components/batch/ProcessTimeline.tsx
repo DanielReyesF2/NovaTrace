@@ -39,24 +39,8 @@ export function ProcessTimeline({ events, readings = [] }: ProcessTimelineProps)
   }, [events, phases]);
 
   // Expand/collapse state
-  const [expanded, setExpanded] = useState<Set<string>>(() => {
-    const initial = new Set<string>();
-    phases.forEach((phase) => {
-      // Expand phases with incidents always
-      if (phase.hasIncidents) {
-        initial.add(phase.id);
-        return;
-      }
-      // Collapse analysis phase by default
-      if (phase.name === "Análisis & Aprendizajes") return;
-      // Collapse phases with only observations
-      const totalObs = phase.counts["OBSERVATION"] || 0;
-      if (totalObs === phase.events.length) return;
-      // Expand everything else
-      initial.add(phase.id);
-    });
-    return initial;
-  });
+  // All phases collapsed by default
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const togglePhase = useCallback((phaseId: string) => {
     setExpanded((prev) => {

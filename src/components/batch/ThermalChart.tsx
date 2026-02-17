@@ -138,6 +138,14 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
       });
   }, [events, readings]);
 
+  // Key events for vertical markers (Paros + Incidents)
+  const keyEvents = useMemo(() => {
+    if (!events) return [];
+    return events.filter(
+      (e) => e.type === "PHASE_CHANGE" || e.type === "INCIDENT"
+    );
+  }, [events]);
+
   // Detect where reactor line cuts off (last non-null reactor reading followed by nulls)
   const reactorCutoff = useMemo(() => {
     let lastReactorIdx = -1;
@@ -413,6 +421,33 @@ export function ThermalChart({ readings, events }: ThermalChartProps) {
                 }}
               />
             )}
+
+            {/* Paro / Incident vertical markers */}
+            {keyEvents.map((event, i) => {
+              const config = EVENT_TYPE_CONFIG[event.type];
+              const eventTs = new Date(event.timestamp).getTime();
+              const label = event.detail.length > 20
+                ? event.detail.slice(0, 18) + "…"
+                : event.detail;
+              return (
+                <ReferenceLine
+                  key={`ev-${i}`}
+                  x={eventTs}
+                  stroke={config?.color || "rgba(39,57,73,0.15)"}
+                  strokeDasharray="3 3"
+                  strokeWidth={1}
+                  strokeOpacity={0.4}
+                  label={{
+                    value: label,
+                    position: "insideTop",
+                    fill: config?.color || "#273949",
+                    fontSize: 7,
+                    fontFamily: "ui-monospace, monospace",
+                    offset: 4 + (i % 3) * 12,
+                  }}
+                />
+              );
+            })}
 
             {/* Reference threshold lines */}
             <ReferenceLine
