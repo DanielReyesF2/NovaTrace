@@ -1,121 +1,185 @@
 "use client";
 
-import { useMemo } from "react";
-import { EVENT_TYPE_CONFIG } from "./eventConfig";
-
-interface ProcessEvent {
-  id: string;
-  timestamp: string;
-  type: string;
-  detail: string;
-  notes: string | null;
-}
+import { useMemo, useState, useCallback } from "react";
+import { detectPhases, type ProcessEvent, type Reading } from "./phaseDetection";
+import { TimelineMiniChart } from "./TimelineMiniChart";
+import { PhaseCard } from "./PhaseCard";
 
 interface ProcessTimelineProps {
   events: ProcessEvent[];
+  readings?: Reading[];
 }
 
-export function ProcessTimeline({ events }: ProcessTimelineProps) {
-  // Compute elapsed time from first event
-  const firstTs = useMemo(
-    () => (events.length > 0 ? new Date(events[0].timestamp).getTime() : 0),
-    [events]
+function formatDuration(minutes: number) {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
+export function ProcessTimeline({ events, readings = [] }: ProcessTimelineProps) {
+  // Detect phases
+  const phases = useMemo(
+    () => detectPhases(events, readings),
+    [events, readings]
   );
 
+  // Compute stats
+  const stats = useMemo(() => {
+    const incidentCount = events.filter((e) => e.type === "INCIDENT").length;
+    const totalMs =
+      events.length >= 2
+        ? new Date(events[events.length - 1].timestamp).getTime() -
+          new Date(events[0].timestamp).getTime()
+        : 0;
+    return {
+      phases: phases.length,
+      events: events.length,
+      incidents: incidentCount,
+      durationMinutes: Math.round(totalMs / 60000),
+    };
+  }, [events, phases]);
+
+  // Expand/collapse state
+  const [expanded, setExpanded] = useState<Set<string>>(() => {
+    const initial = new Set<string>();
+    phases.forEach((phase) => {
+      // Expand phases with incidents always
+      if (phase.hasIncidents) {
+        initial.add(phase.id);
+        return;
+      }
+      // Collapse analysis phase by default
+      if (phase.name === "Análisis & Aprendizajes") return;
+      // Collapse phases with only observations
+      const totalObs = phase.counts["OBSERVATION"] || 0;
+      if (totalObs === phase.events.length) return;
+      // Expand everything else
+      initial.add(phase.id);
+    });
+    return initial;
+  });
+
+  const togglePhase = useCallback((phaseId: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(phaseId)) {
+        next.delete(phaseId);
+      } else {
+        next.add(phaseId);
+      }
+      return next;
+    });
+  }, []);
+
+  const handlePhaseClick = useCallback(
+    (phaseId: string) => {
+      // Expand the phase if not already
+      setExpanded((prev) => {
+        const next = new Set(prev);
+        next.add(phaseId);
+        return next;
+      });
+      // Scroll to phase card
+      setTimeout(() => {
+        document.getElementById(phaseId)?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 50);
+    },
+    []
+  );
+
+  const firstEventTime =
+    events.length > 0 ? new Date(events[0].timestamp).getTime() : 0;
+
+  // Expand/collapse all
+  const allExpanded = expanded.size === phases.length;
+  const toggleAll = useCallback(() => {
+    if (allExpanded) {
+      setExpanded(new Set());
+    } else {
+      setExpanded(new Set(phases.map((p) => p.id)));
+    }
+  }, [allExpanded, phases]);
+
   return (
-    <div className="relative">
-      {/* Vertical connecting line */}
-      <div className="absolute left-[19px] top-0 bottom-0 w-px bg-eco-border" />
-
-      <div className="space-y-1">
-        {events.map((event, i) => {
-          const config = EVENT_TYPE_CONFIG[event.type] || EVENT_TYPE_CONFIG.OBSERVATION;
-          const ts = new Date(event.timestamp);
-          const time = ts.toLocaleTimeString("es-MX", {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-          const elapsed = ts.getTime() - firstTs;
-          const elapsedMin = Math.round(elapsed / 60000);
-          const elapsedStr =
-            elapsedMin >= 60
-              ? `+${Math.floor(elapsedMin / 60)}h ${elapsedMin % 60}m`
-              : `+${elapsedMin}m`;
-
-          const isIncident = event.type === "INCIDENT";
-          const isPhaseChange = event.type === "PHASE_CHANGE";
-
-          return (
+    <div className="space-y-3">
+      {/* ── Summary Strip ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-eco-border rounded-lg overflow-hidden">
+        {[
+          { label: "Fases", value: `${stats.phases}`, color: "#7C5CFC" },
+          { label: "Eventos", value: `${stats.events}`, color: "#273949" },
+          {
+            label: "Incidentes",
+            value: `${stats.incidents}`,
+            color: stats.incidents > 0 ? "#DC2626" : "#3d7a0a",
+          },
+          {
+            label: "Duración",
+            value: formatDuration(stats.durationMinutes),
+            color: "#273949",
+          },
+        ].map((s, i) => (
+          <div key={i} className="bg-eco-surface p-3 text-center">
             <div
-              key={event.id}
-              className={`relative flex gap-3.5 py-2.5 px-2 rounded-lg transition-colors ${
-                isIncident
-                  ? "bg-red-50/50"
-                  : isPhaseChange
-                    ? "bg-eco-surface-2/30"
-                    : "hover:bg-eco-surface-2/20"
-              }`}
+              className="font-mono text-sm font-bold"
+              style={{ color: s.color }}
             >
-              {/* Timeline dot */}
-              <div
-                className="relative z-10 flex-shrink-0 w-[38px] h-[38px] rounded-full border-2 flex items-center justify-center text-xs"
-                style={{
-                  borderColor: config.color,
-                  backgroundColor: config.bg,
-                  color: config.color,
-                }}
-              >
-                {config.icon}
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 min-w-0 py-0.5">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span
-                    className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
-                    style={{ color: config.color, background: config.bg }}
-                  >
-                    {config.label}
-                  </span>
-                  <span className="text-[10px] font-mono text-eco-muted">{time}</span>
-                  {i > 0 && (
-                    <span className="text-[9px] font-mono text-eco-muted-2">{elapsedStr}</span>
-                  )}
-                </div>
-                <p className={`text-sm leading-relaxed mt-1 ${isIncident ? "text-eco-red font-medium" : "text-eco-ink"}`}>
-                  {event.detail}
-                </p>
-                {event.notes && (
-                  <p className="text-xs text-eco-muted mt-1 italic leading-relaxed">
-                    {event.notes}
-                  </p>
-                )}
-              </div>
+              {s.value}
             </div>
-          );
-        })}
+            <div className="text-[8px] text-eco-muted uppercase tracking-wider mt-0.5">
+              {s.label}
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Duration summary */}
-      {events.length >= 2 && (() => {
-        const totalMs =
-          new Date(events[events.length - 1].timestamp).getTime() -
-          new Date(events[0].timestamp).getTime();
-        const totalMin = Math.round(totalMs / 60000);
-        const h = Math.floor(totalMin / 60);
-        const m = totalMin % 60;
+      {/* ── Mini Timeline Chart ── */}
+      {readings.length > 0 && (
+        <TimelineMiniChart
+          readings={readings}
+          events={events}
+          phases={phases}
+          onPhaseClick={handlePhaseClick}
+        />
+      )}
 
-        return (
-          <div className="mt-4 pt-3 border-t border-eco-border flex items-center justify-between">
-            <span className="text-[10px] text-eco-muted">
-              {events.length} eventos registrados
-            </span>
-            <span className="text-[10px] font-mono text-eco-ink-light">
-              Duración total: <strong>{h}h {m}m</strong>
-            </span>
-          </div>
-        );
-      })()}
+      {/* ── Expand/Collapse All ── */}
+      <div className="flex items-center justify-end">
+        <button
+          onClick={toggleAll}
+          className="text-[10px] text-eco-muted hover:text-eco-ink transition-colors"
+        >
+          {allExpanded ? "Colapsar todo" : "Expandir todo"}
+        </button>
+      </div>
+
+      {/* ── Phase Cards ── */}
+      <div className="space-y-2">
+        {phases.map((phase) => (
+          <PhaseCard
+            key={phase.id}
+            phase={phase}
+            isExpanded={expanded.has(phase.id)}
+            onToggle={() => togglePhase(phase.id)}
+            firstEventTime={firstEventTime}
+          />
+        ))}
+      </div>
+
+      {/* ── Total Duration Footer ── */}
+      {events.length >= 2 && (
+        <div className="flex items-center justify-between pt-2 border-t border-eco-border">
+          <span className="text-[10px] text-eco-muted">
+            {events.length} eventos en {phases.length} fases
+          </span>
+          <span className="text-[10px] font-mono text-eco-ink-light">
+            Duración total:{" "}
+            <strong>{formatDuration(stats.durationMinutes)}</strong>
+          </span>
+        </div>
+      )}
     </div>
   );
 }

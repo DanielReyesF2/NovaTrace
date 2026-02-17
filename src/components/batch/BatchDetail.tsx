@@ -316,7 +316,7 @@ export function BatchDetail({ batch }: BatchDetailProps) {
           <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-4">
             Eventos del Proceso — {batch.events.length} eventos
           </h3>
-          <ProcessTimeline events={batch.events} />
+          <ProcessTimeline events={batch.events} readings={batch.readings} />
         </div>
       )}
 

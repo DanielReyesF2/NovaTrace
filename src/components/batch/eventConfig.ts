@@ -39,3 +39,12 @@ export const EVENT_TYPE_CONFIG: Record<
     icon: "\u25CB",
   },
 };
+
+/** Chart-visible event types (filtered from mini timeline to reduce noise) */
+export const CHART_VISIBLE_TYPES = new Set([
+  "INCIDENT",
+  "EQUIPMENT_TOGGLE",
+  "FUEL_ADD",
+  "PHASE_CHANGE",
+  "VALVE_CHANGE",
+]);
