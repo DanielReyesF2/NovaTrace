@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useCallback } from "react";
 import { detectPhases, type ProcessEvent, type Reading } from "./phaseDetection";
-import { TimelineMiniChart } from "./TimelineMiniChart";
 import { PhaseCard } from "./PhaseCard";
 
 interface ProcessTimelineProps {
@@ -134,16 +133,6 @@ export function ProcessTimeline({ events, readings = [] }: ProcessTimelineProps)
           </div>
         ))}
       </div>
-
-      {/* ── Mini Timeline Chart ── */}
-      {readings.length > 0 && (
-        <TimelineMiniChart
-          readings={readings}
-          events={events}
-          phases={phases}
-          onPhaseClick={handlePhaseClick}
-        />
-      )}
 
       {/* ── Expand/Collapse All ── */}
       <div className="flex items-center justify-end">
