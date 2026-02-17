@@ -23,6 +23,7 @@ export default async function AnalyticsPage() {
         co2Project: true,
         co2Avoided: true,
         stopReason: true,
+        notes: true,
         labResults: {
           select: {
             viscosity40C: true,

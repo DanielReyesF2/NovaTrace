@@ -5,6 +5,7 @@ import { CO2TimeChart } from "./CO2TimeChart";
 import { ThroughputChart } from "./ThroughputChart";
 import { YieldTrendChart } from "./YieldTrendChart";
 import { BatchComparisonTable } from "./BatchComparisonTable";
+import { BatchLearnings } from "./BatchLearnings";
 
 interface BatchData {
   id: string;
@@ -24,6 +25,7 @@ interface BatchData {
   co2Project: number | null;
   co2Avoided: number | null;
   stopReason: string | null;
+  notes: string | null;
   labResults: Array<{
     viscosity40C: number | null;
     waterContent: number | null;
@@ -142,6 +144,9 @@ export function AnalyticsDashboard({ batches, summary }: AnalyticsDashboardProps
 
       {/* Yield Trend */}
       <YieldTrendChart data={batches} />
+
+      {/* Base de Conocimiento — Learnings across all batches */}
+      <BatchLearnings batches={batches} />
 
       {/* Batch Comparison Table */}
       <BatchComparisonTable data={batches} />
