@@ -7,6 +7,7 @@ import { ThermalChart } from "./ThermalChart";
 import { ProcessTimeline } from "./ProcessTimeline";
 import { AIInsights } from "./AIInsights";
 import { BatchScorecard } from "./BatchScorecard";
+import { SankeyFlow } from "./SankeyFlow";
 
 interface BatchDetailProps {
   batch: {
@@ -132,78 +133,6 @@ export function BatchDetail({ batch }: BatchDetailProps) {
         </div>
       </div>
 
-      {/* ── Traceability Passport ── */}
-      <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] overflow-hidden">
-        <div className="flex items-stretch">
-          {/* Left — info */}
-          <div className="flex-1 p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg, #273949, #3d7a0a)" }}>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
-                  <path d="M9 12l2 2 4-4" />
-                  <rect x="3" y="3" width="18" height="18" rx="3" />
-                </svg>
-              </div>
-              <span className="text-[9px] uppercase tracking-[3px] text-eco-muted font-semibold">
-                Pasaporte de Trazabilidad
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[11px]">
-              <div className="flex justify-between">
-                <span className="text-eco-muted">Lote</span>
-                <span className="font-mono font-bold text-eco-ink">{batch.code}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-eco-muted">Fecha</span>
-                <span className="font-mono text-eco-ink">
-                  {new Date(batch.date).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-eco-muted">Origen</span>
-                <span className="text-eco-ink">{batch.feedstockOrigin}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-eco-muted">Material</span>
-                <span className="text-eco-ink">{batch.feedstockType}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-eco-muted">Peso</span>
-                <span className="font-mono font-bold text-eco-ink">{batch.feedstockWeight} kg</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-eco-muted">Estado</span>
-                <span className="font-semibold" style={{ color: status.color }}>{status.label}</span>
-              </div>
-            </div>
-            {batch.certificates.length > 0 && (
-              <div className="mt-2 pt-2 border-t border-eco-border">
-                <span className="text-[8px] font-mono text-eco-muted-2">
-                  CERT {batch.certificates[0].code} · SHA-256: {batch.certificates[0].hash.slice(0, 12)}…
-                </span>
-              </div>
-            )}
-          </div>
-          {/* Right — QR */}
-          <div className="flex flex-col items-center justify-center px-5 py-4 bg-eco-surface-2/30 border-l border-eco-border min-w-[140px]">
-            <QRCodeSVG
-              value={
-                batch.certificates.length > 0
-                  ? `${typeof window !== "undefined" ? window.location.origin : ""}/verify/${batch.certificates[0].code}`
-                  : `${typeof window !== "undefined" ? window.location.origin : ""}/batch/${batch.id}`
-              }
-              size={88}
-              level="M"
-              bgColor="transparent"
-              fgColor="#273949"
-            />
-            <span className="text-[7px] text-eco-muted-2 font-mono mt-2 text-center leading-tight">
-              {batch.certificates.length > 0 ? "Verificar certificado" : "Trazabilidad EcoNova"}
-            </span>
-          </div>
-        </div>
-      </div>
-
       {/* ── Quick Stats Row ── */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-px bg-eco-border rounded-xl overflow-hidden">
         {[
@@ -264,113 +193,252 @@ export function BatchDetail({ batch }: BatchDetailProps) {
         </div>
       )}
 
-      {/* ── Feedstock + Photos (side by side) ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Feedstock */}
-        <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
-          <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-3">
-            Feedstock
-          </h3>
-          <div className="space-y-2.5 text-sm">
-            <div className="flex justify-between">
-              <span className="text-eco-muted">Tipo</span>
-              <span>{batch.feedstockType}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-eco-muted">Origen</span>
-              <span>{batch.feedstockOrigin}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-eco-muted">Peso</span>
-              <span className="font-mono font-bold">{batch.feedstockWeight} kg</span>
-            </div>
-            {batch.contaminationPct != null && (
-              <div className="flex justify-between">
-                <span className="text-eco-muted">Contaminación</span>
-                <span className="font-mono">~{batch.contaminationPct}%</span>
-              </div>
-            )}
-            {batch.feedstockCondition && (
-              <div className="flex justify-between">
-                <span className="text-eco-muted">Condición</span>
-                <span className="text-eco-ink-light text-xs text-right max-w-[60%]">
-                  {batch.feedstockCondition}
-                </span>
-              </div>
-            )}
-            {batch.yieldPercent != null && (
-              <div className="flex justify-between pt-2 border-t border-eco-border">
-                <span className="text-eco-muted">Rendimiento</span>
-                <span className="font-mono font-bold">{batch.yieldPercent}%</span>
-              </div>
-            )}
-          </div>
-        </div>
+      {/* ── Traceability Passport + Photos (side by side) ── */}
+      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-4 items-start">
 
-        {/* Photos grid 2×2 */}
-        {batch.photos.length > 0 ? (
-          <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
-            <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-3">
-              Registro Fotográfico
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              {batch.photos.slice(0, 4).map((photo, idx) => (
-                <button
-                  key={photo.id}
-                  onClick={() => setLightboxIdx(idx)}
-                  className="group relative aspect-[4/3] rounded-lg overflow-hidden bg-eco-surface-2 hover:shadow-md transition-all"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={photo.url}
-                    alt={photo.caption || "Foto"}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        {/* Passport — compact document feel */}
+        {(() => {
+          const oilL = batch.oilOutput ?? 0;
+          const oilKg = batch.oilWeightKg ?? oilL * 0.85;
+          const co2AvoidedTotal = batch.co2Avoided ?? 0;
+          const co2PerLiter = oilL > 0 && co2AvoidedTotal > 0 ? co2AvoidedTotal / oilL : 0;
+          const cleanKg = batch.feedstockWeight * (1 - (batch.contaminationPct ?? 0) / 100);
+          const charKg = Math.round(cleanKg * 0.10);
+          const gasKg = Math.round(cleanKg - oilKg - charKg);
+          const processCO2 = batch.co2Project ? Math.max(batch.co2Project - (oilL * 0.85 * 3.15), 0) : 0;
+          const baselinePerL = batch.co2Baseline && oilL > 0 ? batch.co2Baseline / oilL : 0;
+          const projectPerL = batch.co2Project && oilL > 0 ? batch.co2Project / oilL : 0;
+          const hasFlow = oilL > 0 && co2AvoidedTotal > 0;
+
+          return (
+            <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] overflow-hidden">
+              {/* Header */}
+              <div className="px-4 pt-3.5 pb-2.5 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-4.5 h-4.5 rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg, #273949, #3d7a0a)", width: 18, height: 18 }}>
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+                      <path d="M9 12l2 2 4-4" />
+                      <rect x="3" y="3" width="18" height="18" rx="3" />
+                    </svg>
+                  </div>
+                  <span className="text-[8px] uppercase tracking-[2.5px] text-eco-muted font-semibold">
+                    Pasaporte de Trazabilidad
+                  </span>
+                </div>
+                <span className="font-mono text-[9px] text-eco-muted-2">{batch.code}</span>
+              </div>
+
+              {/* Product hero + QR */}
+              <div className="flex items-stretch">
+                <div className="flex-1 px-4 pb-2.5">
+                  {oilL > 0 ? (
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-mono text-2xl font-bold tracking-tight" style={{ color: "#7C5CFC" }}>{oilL}</span>
+                      <span className="text-xs text-eco-muted">litros de aceite pirolítico</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-mono text-lg font-bold tracking-tight text-eco-ink">{batch.feedstockWeight} kg</span>
+                      <span className="text-xs text-eco-muted">{batch.feedstockType}</span>
+                    </div>
+                  )}
+                  <span className="font-semibold text-[11px] mt-0.5 inline-block" style={{ color: status.color }}>{status.label}</span>
+                </div>
+                <div className="flex flex-col items-center justify-center px-4 py-2 bg-eco-surface-2/30 border-l border-eco-border min-w-[90px]">
+                  <QRCodeSVG
+                    value={
+                      batch.certificates.length > 0
+                        ? `${typeof window !== "undefined" ? window.location.origin : ""}/verify/${batch.certificates[0].code}`
+                        : `${typeof window !== "undefined" ? window.location.origin : ""}/batch/${batch.id}`
+                    }
+                    size={52}
+                    level="M"
+                    bgColor="transparent"
+                    fgColor="#273949"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                  {photo.caption && (
-                    <span className="absolute bottom-1.5 left-2 right-2 text-[8px] text-white leading-tight line-clamp-1 font-medium">
-                      {photo.caption}
+                  <span className="text-[6.5px] text-eco-muted-2 font-mono mt-1 text-center leading-tight">
+                    {batch.certificates.length > 0 ? "Verificar certificado" : "Trazabilidad"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Key product info */}
+              <div className="px-4 pb-3">
+                <div className="border-t border-eco-border pt-2.5">
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                    <div>
+                      <div className="text-[7px] uppercase tracking-[1.5px] text-eco-muted-2 mb-0.5">Origen</div>
+                      <div className="text-[12px] font-semibold text-eco-ink">{batch.feedstockOrigin}</div>
+                    </div>
+                    <div>
+                      <div className="text-[7px] uppercase tracking-[1.5px] text-eco-muted-2 mb-0.5">Material</div>
+                      <div className="text-[12px] font-semibold text-eco-ink">{batch.feedstockType}</div>
+                    </div>
+                    <div>
+                      <div className="text-[7px] uppercase tracking-[1.5px] text-eco-muted-2 mb-0.5">Fecha</div>
+                      <div className="text-[12px] font-semibold text-eco-ink">
+                        {new Date(batch.date).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[7px] uppercase tracking-[1.5px] text-eco-muted-2 mb-0.5">Rendimiento</div>
+                      <div className="text-[12px] font-semibold text-eco-ink">
+                        {batch.yieldPercent != null ? `${batch.yieldPercent.toFixed(0)}%` : "—"}
+                        <span className="text-[9px] text-eco-muted font-normal ml-1">({batch.feedstockWeight} kg → {oilL} L)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* CO₂ Impact */}
+              {hasFlow && (
+                <div className="px-4 pb-3">
+                  <div className="border-t border-eco-border pt-2.5">
+                    <span className="text-[7px] uppercase tracking-[2px] text-eco-muted font-semibold block mb-2">
+                      Huella de Carbono
+                    </span>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="text-center p-2 rounded-lg bg-eco-surface-2/60">
+                        <div className="font-mono text-base font-bold" style={{ color: "#3d7a0a" }}>{co2PerLiter.toFixed(2)}</div>
+                        <div className="text-[8px] text-eco-muted mt-0.5">CO₂ evitado / L</div>
+                      </div>
+                      <div className="text-center p-2 rounded-lg bg-eco-surface-2/60">
+                        <div className="font-mono text-base font-bold text-eco-ink">{processCO2.toFixed(1)}</div>
+                        <div className="text-[8px] text-eco-muted mt-0.5">CO₂ proceso</div>
+                      </div>
+                      <div className="text-center p-2 rounded-lg bg-eco-surface-2/60">
+                        <div className="font-mono text-base font-bold" style={{ color: "#3d7a0a" }}>{co2AvoidedTotal.toFixed(0)}</div>
+                        <div className="text-[8px] text-eco-muted mt-0.5">CO₂ evitado total</div>
+                      </div>
+                    </div>
+                    <div className="mt-2 flex items-center gap-2 text-[9px]">
+                      <div className="flex-1 flex items-center justify-between px-2.5 py-1 rounded-md bg-red-50/60">
+                        <span className="text-eco-muted">Quema</span>
+                        <span className="font-mono font-bold text-[#DC2626]">{baselinePerL.toFixed(2)}</span>
+                      </div>
+                      <span className="text-eco-muted-2 text-[9px]">vs</span>
+                      <div className="flex-1 flex items-center justify-between px-2.5 py-1 rounded-md" style={{ background: "rgba(61,122,10,0.05)" }}>
+                        <span className="text-eco-muted">EcoNova</span>
+                        <span className="font-mono font-bold" style={{ color: "#3d7a0a" }}>{projectPerL.toFixed(2)}</span>
+                      </div>
+                      <span className="text-[8px] text-eco-muted-2">kg CO₂/L</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Sankey Flow */}
+              {hasFlow && (
+                <div className="px-4 pb-3">
+                  <div className="border-t border-eco-border pt-2.5">
+                    <SankeyFlow
+                      feedstockKg={batch.feedstockWeight}
+                      feedstockType={batch.feedstockType}
+                      contaminationPct={batch.contaminationPct ?? 0}
+                      oilLiters={oilL}
+                      oilKg={oilKg}
+                      charKg={charKg}
+                      gasKg={gasKg}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Footer */}
+              <div className="px-4 pb-2.5">
+                <div className="border-t border-eco-border pt-1.5 flex items-center justify-between">
+                  <p className="text-[7px] text-eco-muted-2 italic">IPCC 2006 · Residuo → pirólisis → aceite pirolítico</p>
+                  {batch.certificates.length > 0 && (
+                    <span className="text-[7px] font-mono text-eco-muted-2">
+                      {batch.certificates[0].code} · SHA-256: {batch.certificates[0].hash.slice(0, 10)}…
                     </span>
                   )}
-                  <span
-                    className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: PHOTO_TYPE_COLORS[photo.type] || "#273949" }}
-                  />
-                </button>
-              ))}
-            </div>
-            {batch.photos.length > 4 && (
-              <p className="text-[9px] text-eco-muted text-center mt-2">
-                +{batch.photos.length - 4} fotos más
-              </p>
-            )}
-          </div>
-        ) : (
-          /* Empty state — Operación data if no photos */
-          <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
-            <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-3">
-              Operación
-            </h3>
-            <div className="space-y-2.5 text-sm">
-              <div className="flex justify-between">
-                <span className="text-eco-muted">Operadores</span>
-                <span>{batch.operators.join(", ")}</span>
+                </div>
               </div>
-              {batch.durationMinutes != null && (
+            </div>
+          );
+        })()}
+
+        {/* Photos + Feedstock details */}
+        <div className="space-y-4">
+          {/* Photos grid 2×2 */}
+          {batch.photos.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-4">
+              <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-3">
+                Registro Fotográfico
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                {batch.photos.slice(0, 4).map((photo, idx) => (
+                  <button
+                    key={photo.id}
+                    onClick={() => setLightboxIdx(idx)}
+                    className="group relative aspect-[4/3] rounded-lg overflow-hidden bg-eco-surface-2 hover:shadow-md transition-all"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photo.url}
+                      alt={photo.caption || "Foto"}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                    {photo.caption && (
+                      <span className="absolute bottom-1.5 left-2 right-2 text-[8px] text-white leading-tight line-clamp-1 font-medium">
+                        {photo.caption}
+                      </span>
+                    )}
+                    <span
+                      className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: PHOTO_TYPE_COLORS[photo.type] || "#273949" }}
+                    />
+                  </button>
+                ))}
+              </div>
+              {batch.photos.length > 4 && (
+                <p className="text-[9px] text-eco-muted text-center mt-2">+{batch.photos.length - 4} fotos más</p>
+              )}
+            </div>
+          )}
+
+          {/* Feedstock details card */}
+          <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-4">
+            <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-3">
+              Feedstock
+            </h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-eco-muted">Tipo</span>
+                <span>{batch.feedstockType}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-eco-muted">Origen</span>
+                <span>{batch.feedstockOrigin}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-eco-muted">Peso</span>
+                <span className="font-mono font-bold">{batch.feedstockWeight} kg</span>
+              </div>
+              {batch.contaminationPct != null && (
                 <div className="flex justify-between">
-                  <span className="text-eco-muted">Duración</span>
-                  <span className="font-mono">{formatDuration(batch.durationMinutes)}</span>
+                  <span className="text-eco-muted">Contaminación</span>
+                  <span className="font-mono">~{batch.contaminationPct}%</span>
                 </div>
               )}
-              {batch.dieselConsumedL != null && (
+              {batch.feedstockCondition && (
                 <div className="flex justify-between">
-                  <span className="text-eco-muted">Diésel consumido</span>
-                  <span className="font-mono">{batch.dieselConsumedL} L</span>
+                  <span className="text-eco-muted">Condición</span>
+                  <span className="text-eco-ink-light text-xs text-right max-w-[60%]">{batch.feedstockCondition}</span>
+                </div>
+              )}
+              {batch.yieldPercent != null && (
+                <div className="flex justify-between pt-2 border-t border-eco-border">
+                  <span className="text-eco-muted">Rendimiento</span>
+                  <span className="font-mono font-bold">{batch.yieldPercent}%</span>
                 </div>
               )}
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* ── Thermal Profile ── */}
