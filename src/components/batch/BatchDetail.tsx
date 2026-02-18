@@ -28,6 +28,35 @@ interface BatchDetailProps {
     operators: string[];
     stopReason: string | null;
     notes: string | null;
+    // Energy balance
+    electricityKwh: number | null;
+    gasRecirculatedKg: number | null;
+    oilCalorificMJ: number | null;
+    charCalorificMJ: number | null;
+    // Transport
+    transportMode: string | null;
+    transportDistanceKm: number | null;
+    transportFuelL: number | null;
+    transportCo2Kg: number | null;
+    // Emissions
+    emissionsCo2Kg: number | null;
+    emissionsCh4Kg: number | null;
+    emissionsNoxKg: number | null;
+    emissionsSoxKg: number | null;
+    emissionsPmKg: number | null;
+    waterConsumedL: number | null;
+    emissionsWaterL: number | null;
+    // Inputs & waste
+    catalystType: string | null;
+    charDisposition: string | null;
+    wastewaterDisp: string | null;
+    // ISCC+ / Verra
+    massBalancePeriod: string | null;
+    allocMethod: string | null;
+    plasticTypeCode: string | null;
+    baselineScenario: string | null;
+    additionalityProof: string | null;
+    // GHG
     co2Baseline: number | null;
     co2Project: number | null;
     co2Avoided: number | null;
@@ -58,6 +87,9 @@ interface BatchDetailProps {
       viscosity40C: number | null;
       sulfurPercent: number | null;
       waterContent: number | null;
+      flashPoint: number | null;
+      density15C: number | null;
+      calorificMJ: number | null;
       verdict: string | null;
     }>;
     certificates: Array<{
@@ -519,6 +551,21 @@ export function BatchDetail({ batch }: BatchDetailProps) {
                     value: lab.sulfurPercent ? `${lab.sulfurPercent}% m/m` : "—",
                     method: "ASTM D4951",
                   },
+                  ...(lab.flashPoint != null ? [{
+                    test: "Punto de Inflamación",
+                    value: `${lab.flashPoint}°C`,
+                    method: "ASTM D93",
+                  }] : []),
+                  ...(lab.density15C != null ? [{
+                    test: "Densidad @15°C",
+                    value: `${lab.density15C} g/mL`,
+                    method: "ASTM D4052",
+                  }] : []),
+                  ...(lab.calorificMJ != null ? [{
+                    test: "Poder Calorífico",
+                    value: `${lab.calorificMJ} MJ/kg`,
+                    method: "ASTM D240",
+                  }] : []),
                 ].map((row, i) => (
                   <div
                     key={i}
@@ -614,6 +661,235 @@ export function BatchDetail({ batch }: BatchDetailProps) {
               Metodología IPCC 2006 · Baseline: quema a cielo abierto · Incluye combustión eventual como combustible ·
               Consumo energético estimado — requiere medición real
             </p>
+          </div>
+        );
+      })()}
+
+      {/* ── Standards Compliance Summary ── */}
+      {batch.status === "COMPLETED" && (() => {
+        const oilKg = batch.oilWeightKg ?? (batch.oilOutput ?? 0) * 0.85;
+        const cleanKg = batch.feedstockWeight * (1 - (batch.contaminationPct ?? 0) / 100);
+        const charKg = Math.round(cleanKg * 0.10);
+
+        // Energy balance
+        const dieselL = batch.dieselConsumedL ?? 0;
+        const dieselMJ = dieselL * 0.85 * 45.6;
+        const elecKwh = batch.electricityKwh ?? 0;
+        const elecMJ = elecKwh * 3.6;
+        const gasRecKg = batch.gasRecirculatedKg ?? 0;
+        const gasMJ = gasRecKg * 38;
+        const totalIn = dieselMJ + elecMJ + gasMJ;
+
+        const oilMJ = oilKg * (batch.oilCalorificMJ ?? 43.2);
+        const charMJ = charKg * (batch.charCalorificMJ ?? 28.5);
+        const totalOut = oilMJ + charMJ;
+        const ratio = totalIn > 0 ? totalOut / totalIn : 0;
+
+        const hasEnergy = dieselL > 0 || elecKwh > 0;
+        const hasTransport = batch.transportDistanceKm != null;
+        const hasEmissions = batch.emissionsCo2Kg != null;
+
+        if (!hasEnergy && !hasTransport && !hasEmissions) return null;
+
+        return (
+          <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium">
+                Trazabilidad Completa — ISO 14040 · ISCC+ · Verra
+              </h3>
+              <div className="flex gap-1">
+                {["ISO", "ISCC+", "Verra", "DPP"].map((tag) => (
+                  <span key={tag} className="text-[7px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-eco-surface-2 text-eco-muted">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* 3-column metrics row */}
+            <div className="grid grid-cols-3 gap-3">
+              {/* Energy ratio */}
+              {hasEnergy && (
+                <div className="text-center p-4 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(232,112,10,0.05), rgba(232,112,10,0.02))" }}>
+                  <div className="font-mono text-2xl font-bold" style={{ color: "#E8700A" }}>
+                    {ratio.toFixed(1)}:1
+                  </div>
+                  <div className="text-[9px] text-eco-muted mt-1 uppercase tracking-wider font-medium">
+                    Ratio energético
+                  </div>
+                  <div className="text-[8px] text-eco-muted-2 mt-0.5">
+                    {totalIn.toFixed(0)} → {totalOut.toFixed(0)} MJ
+                  </div>
+                </div>
+              )}
+
+              {/* Transport */}
+              {hasTransport && (
+                <div className="text-center p-4 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(45,140,240,0.05), rgba(45,140,240,0.02))" }}>
+                  <div className="font-mono text-2xl font-bold text-eco-blue">
+                    {batch.transportDistanceKm} km
+                  </div>
+                  <div className="text-[9px] text-eco-muted mt-1 uppercase tracking-wider font-medium">
+                    Transporte
+                  </div>
+                  <div className="text-[8px] text-eco-muted-2 mt-0.5">
+                    {batch.transportCo2Kg?.toFixed(1)} kg CO₂
+                  </div>
+                </div>
+              )}
+
+              {/* Process emissions */}
+              {hasEmissions && (
+                <div className="text-center p-4 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(124,92,252,0.05), rgba(124,92,252,0.02))" }}>
+                  <div className="font-mono text-2xl font-bold" style={{ color: "#7C5CFC" }}>
+                    {batch.emissionsCo2Kg} kg
+                  </div>
+                  <div className="text-[9px] text-eco-muted mt-1 uppercase tracking-wider font-medium">
+                    CO₂ directo
+                  </div>
+                  <div className="text-[8px] text-eco-muted-2 mt-0.5">
+                    +{batch.emissionsCh4Kg} CH₄ · {batch.emissionsNoxKg} NOx
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Detail grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Energy balance detail */}
+              {hasEnergy && (
+                <div className="space-y-2">
+                  <h4 className="text-[9px] uppercase tracking-[2px] text-eco-muted font-semibold">
+                    Balance Energético
+                  </h4>
+                  <div className="space-y-1.5 text-xs">
+                    {dieselL > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-eco-muted">Diésel (arranque)</span>
+                        <span className="font-mono">{dieselL} L · {dieselMJ.toFixed(0)} MJ</span>
+                      </div>
+                    )}
+                    {elecKwh > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-eco-muted">Electricidad</span>
+                        <span className="font-mono">{elecKwh.toFixed(1)} kWh · {elecMJ.toFixed(0)} MJ</span>
+                      </div>
+                    )}
+                    {gasRecKg > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-eco-muted">Gas recirculado</span>
+                        <span className="font-mono">{gasRecKg} kg · {gasMJ.toFixed(0)} MJ</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between pt-1.5 border-t border-eco-border font-semibold">
+                      <span className="text-eco-muted">Salida energética</span>
+                      <span className="font-mono">{totalOut.toFixed(0)} MJ</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Emissions + water */}
+              {hasEmissions && (
+                <div className="space-y-2">
+                  <h4 className="text-[9px] uppercase tracking-[2px] text-eco-muted font-semibold">
+                    Emisiones & Agua
+                  </h4>
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-eco-muted">SOx</span>
+                      <span className="font-mono">{batch.emissionsSoxKg} kg</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-eco-muted">Partículas (PM)</span>
+                      <span className="font-mono">{batch.emissionsPmKg} kg</span>
+                    </div>
+                    {batch.waterConsumedL != null && (
+                      <div className="flex justify-between">
+                        <span className="text-eco-muted">Agua consumida</span>
+                        <span className="font-mono">{batch.waterConsumedL} L</span>
+                      </div>
+                    )}
+                    {batch.emissionsWaterL != null && (
+                      <div className="flex justify-between">
+                        <span className="text-eco-muted">Agua residual</span>
+                        <span className="font-mono">{batch.emissionsWaterL} L</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Waste management */}
+              {batch.charDisposition && (
+                <div className="space-y-2">
+                  <h4 className="text-[9px] uppercase tracking-[2px] text-eco-muted font-semibold">
+                    Gestión de Residuos
+                  </h4>
+                  <div className="space-y-1.5 text-xs">
+                    {batch.catalystType && (
+                      <div className="flex justify-between">
+                        <span className="text-eco-muted">Catalizador</span>
+                        <span className="text-right max-w-[60%]">{batch.catalystType}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-eco-muted">Char</span>
+                      <span className="text-right max-w-[60%]">{batch.charDisposition}</span>
+                    </div>
+                    {batch.wastewaterDisp && (
+                      <div className="flex justify-between">
+                        <span className="text-eco-muted">Agua</span>
+                        <span className="text-right max-w-[60%]">{batch.wastewaterDisp}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Standards compliance */}
+              <div className="space-y-2">
+                <h4 className="text-[9px] uppercase tracking-[2px] text-eco-muted font-semibold">
+                  Cumplimiento
+                </h4>
+                <div className="space-y-1.5">
+                  {[
+                    { tag: "ISO 14040", label: "LCA completo", color: "#3d7a0a", done: hasEnergy && hasEmissions },
+                    { tag: "ISCC+", label: batch.allocMethod ?? "Cadena custodia", color: "#2D8CF0", done: !!batch.massBalancePeriod },
+                    { tag: "Verra", label: batch.plasticTypeCode ?? "Plastic credit", color: "#7C5CFC", done: !!batch.baselineScenario },
+                    { tag: "EU DPP", label: "Pasaporte digital", color: "#E8700A", done: true },
+                  ].map((s) => (
+                    <div key={s.tag} className="flex items-center gap-2 text-xs">
+                      <span
+                        className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: s.done ? s.color : "#d1d5db" }}
+                      />
+                      <span className="font-semibold" style={{ color: s.done ? s.color : "#9ca3af" }}>
+                        {s.tag}
+                      </span>
+                      <span className="text-eco-muted-2 text-[10px]">{s.label}</span>
+                      {s.done && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={s.color} strokeWidth="2.5" strokeLinecap="round" className="ml-auto">
+                          <path d="M9 12l2 2 4-4" />
+                        </svg>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Additionality note (Verra) */}
+            {batch.additionalityProof && (
+              <div className="px-3 py-2 bg-eco-surface-2/50 rounded-lg">
+                <p className="text-[9px] text-eco-muted font-semibold uppercase tracking-wider mb-0.5">
+                  Adicionalidad (Verra)
+                </p>
+                <p className="text-[11px] text-eco-ink-light leading-relaxed italic">
+                  {batch.additionalityProof}
+                </p>
+              </div>
+            )}
           </div>
         );
       })()}
