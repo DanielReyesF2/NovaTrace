@@ -224,159 +224,121 @@ export function BatchDetail({ batch }: BatchDetailProps) {
         </div>
       )}
 
-      {/* ── Traceability Passport + Photos (side by side) ── */}
-      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-4 items-start">
+      {/* ── Passport + Feedstock (left) | Photos (right) ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
 
-        {/* Passport — clean summary card */}
-        {(() => {
-          const oilL = batch.oilOutput ?? 0;
-          const co2AvoidedTotal = batch.co2Avoided ?? 0;
-          const certCode = batch.certificates.length > 0 ? batch.certificates[0].code : null;
-          const certHash = batch.certificates.length > 0 ? batch.certificates[0].hash : null;
-          const verifyUrl = certCode
-            ? `${typeof window !== "undefined" ? window.location.origin : ""}/verify/${certCode}`
-            : `${typeof window !== "undefined" ? window.location.origin : ""}/batch/${batch.id}`;
-
-          return (
-            <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] overflow-hidden">
-              {/* Header */}
-              <div className="px-5 pt-4 pb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg, #273949, #3d7a0a)", width: 20, height: 20 }}>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
-                      <path d="M9 12l2 2 4-4" />
-                      <rect x="3" y="3" width="18" height="18" rx="3" />
-                    </svg>
-                  </div>
-                  <span className="text-[9px] uppercase tracking-[3px] text-eco-muted font-semibold">
-                    Pasaporte de Trazabilidad
-                  </span>
-                </div>
-                <span className="font-mono text-[10px] text-eco-muted-2">{batch.code}</span>
-              </div>
-
-              {/* Product hero + QR */}
-              <div className="flex items-stretch">
-                <div className="flex-1 px-5 pb-3">
-                  {oilL > 0 ? (
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-mono text-3xl font-bold tracking-tight" style={{ color: "#7C5CFC" }}>{oilL}</span>
-                      <span className="text-sm text-eco-muted">litros de aceite pirolítico</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-mono text-xl font-bold tracking-tight text-eco-ink">{batch.feedstockWeight} kg</span>
-                      <span className="text-sm text-eco-muted">{batch.feedstockType}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="font-semibold text-xs" style={{ color: status.color }}>{status.label}</span>
-                    {co2AvoidedTotal > 0 && (
-                      <>
-                        <span className="text-eco-muted-2">·</span>
-                        <span className="text-xs font-semibold" style={{ color: "#3d7a0a" }}>
-                          {co2AvoidedTotal.toFixed(0)} kg CO₂ evitados
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <a
-                  href={verifyUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex flex-col items-center justify-center px-5 py-3 bg-eco-surface-2/30 border-l border-eco-border min-w-[110px] hover:bg-eco-surface-2/50 transition-colors group"
-                >
-                  <QRCodeSVG value={verifyUrl} size={60} level="M" bgColor="transparent" fgColor="#273949" />
-                  <span className="text-[7px] text-eco-muted-2 font-mono mt-1.5 text-center leading-tight group-hover:text-eco-ink transition-colors">
-                    Ver pasaporte completo
-                  </span>
-                </a>
-              </div>
-
-              {/* Key info grid */}
-              <div className="px-5 pb-4">
-                <div className="border-t border-eco-border pt-3">
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                    <div>
-                      <div className="text-[8px] uppercase tracking-[1.5px] text-eco-muted-2 mb-0.5">Origen</div>
-                      <div className="text-[13px] font-semibold text-eco-ink">{batch.feedstockOrigin}</div>
-                    </div>
-                    <div>
-                      <div className="text-[8px] uppercase tracking-[1.5px] text-eco-muted-2 mb-0.5">Material</div>
-                      <div className="text-[13px] font-semibold text-eco-ink">{batch.feedstockType}</div>
-                    </div>
-                    <div>
-                      <div className="text-[8px] uppercase tracking-[1.5px] text-eco-muted-2 mb-0.5">Fecha</div>
-                      <div className="text-[13px] font-semibold text-eco-ink">
-                        {new Date(batch.date).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-[8px] uppercase tracking-[1.5px] text-eco-muted-2 mb-0.5">Rendimiento</div>
-                      <div className="text-[13px] font-semibold text-eco-ink">
-                        {batch.yieldPercent != null ? `${batch.yieldPercent.toFixed(0)}%` : "—"}
-                        <span className="text-[10px] text-eco-muted font-normal ml-1">({batch.feedstockWeight} kg → {oilL} L)</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer — cert hash + link */}
-              <div className="px-5 pb-3">
-                <div className="border-t border-eco-border pt-2 flex items-center justify-between">
-                  <p className="text-[8px] text-eco-muted-2 italic">IPCC 2006 · Economía circular</p>
-                  {certHash && (
-                    <span className="text-[8px] font-mono text-eco-muted-2">
-                      SHA-256: {certHash.slice(0, 12)}…
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Photos + Feedstock details */}
+        {/* LEFT COLUMN: Passport + Feedstock stacked */}
         <div className="space-y-4">
-          {/* Photos grid 2×2 */}
-          {batch.photos.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-4">
-              <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-3">
-                Registro Fotográfico
-              </h3>
-              <div className="grid grid-cols-2 gap-2">
-                {batch.photos.slice(0, 4).map((photo, idx) => (
-                  <button
-                    key={photo.id}
-                    onClick={() => setLightboxIdx(idx)}
-                    className="group relative aspect-[4/3] rounded-lg overflow-hidden bg-eco-surface-2 hover:shadow-md transition-all"
+          {/* Passport — clean summary card */}
+          {(() => {
+            const oilL = batch.oilOutput ?? 0;
+            const co2AvoidedTotal = batch.co2Avoided ?? 0;
+            const certCode = batch.certificates.length > 0 ? batch.certificates[0].code : null;
+            const certHash = batch.certificates.length > 0 ? batch.certificates[0].hash : null;
+            const verifyUrl = certCode
+              ? `${typeof window !== "undefined" ? window.location.origin : ""}/verify/${certCode}`
+              : `${typeof window !== "undefined" ? window.location.origin : ""}/batch/${batch.id}`;
+
+            return (
+              <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] overflow-hidden">
+                {/* Header */}
+                <div className="px-5 pt-4 pb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg, #273949, #3d7a0a)", width: 20, height: 20 }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+                        <path d="M9 12l2 2 4-4" />
+                        <rect x="3" y="3" width="18" height="18" rx="3" />
+                      </svg>
+                    </div>
+                    <span className="text-[9px] uppercase tracking-[3px] text-eco-muted font-semibold">
+                      Pasaporte de Trazabilidad
+                    </span>
+                  </div>
+                  <span className="font-mono text-[10px] text-eco-muted-2">{batch.code}</span>
+                </div>
+
+                {/* Product hero + QR */}
+                <div className="flex items-stretch">
+                  <div className="flex-1 px-5 pb-3">
+                    {oilL > 0 ? (
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-mono text-3xl font-bold tracking-tight" style={{ color: "#7C5CFC" }}>{oilL}</span>
+                        <span className="text-sm text-eco-muted">litros de aceite pirolítico</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-mono text-xl font-bold tracking-tight text-eco-ink">{batch.feedstockWeight} kg</span>
+                        <span className="text-sm text-eco-muted">{batch.feedstockType}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="font-semibold text-xs" style={{ color: status.color }}>{status.label}</span>
+                      {co2AvoidedTotal > 0 && (
+                        <>
+                          <span className="text-eco-muted-2">·</span>
+                          <span className="text-xs font-semibold" style={{ color: "#3d7a0a" }}>
+                            {co2AvoidedTotal.toFixed(0)} kg CO₂ evitados
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <a
+                    href={verifyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center justify-center px-5 py-3 bg-eco-surface-2/30 border-l border-eco-border min-w-[110px] hover:bg-eco-surface-2/50 transition-colors group"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={photo.url}
-                      alt={photo.caption || "Foto"}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                    {photo.caption && (
-                      <span className="absolute bottom-1.5 left-2 right-2 text-[8px] text-white leading-tight line-clamp-1 font-medium">
-                        {photo.caption}
+                    <QRCodeSVG value={verifyUrl} size={60} level="M" bgColor="transparent" fgColor="#273949" />
+                    <span className="text-[7px] text-eco-muted-2 font-mono mt-1.5 text-center leading-tight group-hover:text-eco-ink transition-colors">
+                      Ver pasaporte completo
+                    </span>
+                  </a>
+                </div>
+
+                {/* Key info grid */}
+                <div className="px-5 pb-4">
+                  <div className="border-t border-eco-border pt-3">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                      <div>
+                        <div className="text-[8px] uppercase tracking-[1.5px] text-eco-muted-2 mb-0.5">Origen</div>
+                        <div className="text-[13px] font-semibold text-eco-ink">{batch.feedstockOrigin}</div>
+                      </div>
+                      <div>
+                        <div className="text-[8px] uppercase tracking-[1.5px] text-eco-muted-2 mb-0.5">Material</div>
+                        <div className="text-[13px] font-semibold text-eco-ink">{batch.feedstockType}</div>
+                      </div>
+                      <div>
+                        <div className="text-[8px] uppercase tracking-[1.5px] text-eco-muted-2 mb-0.5">Fecha</div>
+                        <div className="text-[13px] font-semibold text-eco-ink">
+                          {new Date(batch.date).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[8px] uppercase tracking-[1.5px] text-eco-muted-2 mb-0.5">Rendimiento</div>
+                        <div className="text-[13px] font-semibold text-eco-ink">
+                          {batch.yieldPercent != null ? `${batch.yieldPercent.toFixed(0)}%` : "—"}
+                          <span className="text-[10px] text-eco-muted font-normal ml-1">({batch.feedstockWeight} kg → {oilL} L)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer — cert hash + link */}
+                <div className="px-5 pb-3">
+                  <div className="border-t border-eco-border pt-2 flex items-center justify-between">
+                    <p className="text-[8px] text-eco-muted-2 italic">IPCC 2006 · Economía circular</p>
+                    {certHash && (
+                      <span className="text-[8px] font-mono text-eco-muted-2">
+                        SHA-256: {certHash.slice(0, 12)}…
                       </span>
                     )}
-                    <span
-                      className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full"
-                      style={{ backgroundColor: PHOTO_TYPE_COLORS[photo.type] || "#273949" }}
-                    />
-                  </button>
-                ))}
+                  </div>
+                </div>
               </div>
-              {batch.photos.length > 4 && (
-                <p className="text-[9px] text-eco-muted text-center mt-2">+{batch.photos.length - 4} fotos más</p>
-              )}
-            </div>
-          )}
+            );
+          })()}
 
           {/* Feedstock details card */}
           <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-4">
@@ -417,7 +379,199 @@ export function BatchDetail({ batch }: BatchDetailProps) {
             </div>
           </div>
         </div>
+
+        {/* RIGHT COLUMN: Photos — large grid filling full height */}
+        {batch.photos.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-4 h-full">
+            <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-3">
+              Registro Fotográfico
+            </h3>
+            <div className="grid grid-cols-2 gap-2.5">
+              {batch.photos.slice(0, 4).map((photo, idx) => (
+                <button
+                  key={photo.id}
+                  onClick={() => setLightboxIdx(idx)}
+                  className="group relative aspect-square rounded-xl overflow-hidden bg-eco-surface-2 hover:shadow-md transition-all"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={photo.url}
+                    alt={photo.caption || "Foto"}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                  {photo.caption && (
+                    <span className="absolute bottom-2 left-2.5 right-2.5 text-[9px] text-white leading-tight line-clamp-2 font-medium">
+                      {photo.caption}
+                    </span>
+                  )}
+                  <span
+                    className="absolute top-2 left-2 w-2 h-2 rounded-full"
+                    style={{ backgroundColor: PHOTO_TYPE_COLORS[photo.type] || "#273949" }}
+                  />
+                </button>
+              ))}
+            </div>
+            {batch.photos.length > 4 && (
+              <p className="text-[9px] text-eco-muted text-center mt-2.5">+{batch.photos.length - 4} fotos más</p>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* ── Standards Compliance Summary ── */}
+      {batch.status === "COMPLETED" && (() => {
+        const oilKg = batch.oilWeightKg ?? (batch.oilOutput ?? 0) * 0.85;
+        const cleanKg = batch.feedstockWeight * (1 - (batch.contaminationPct ?? 0) / 100);
+        const charKg = Math.round(cleanKg * 0.10);
+
+        // Energy balance
+        const dieselL = batch.dieselConsumedL ?? 0;
+        const dieselMJ = dieselL * 0.85 * 45.6;
+        const elecKwh = batch.electricityKwh ?? 0;
+        const elecMJ = elecKwh * 3.6;
+        const gasRecKg = batch.gasRecirculatedKg ?? 0;
+        const gasMJ = gasRecKg * 38;
+        const totalIn = dieselMJ + elecMJ + gasMJ;
+
+        const oilMJ = oilKg * (batch.oilCalorificMJ ?? 43.2);
+        const charMJ = charKg * (batch.charCalorificMJ ?? 28.5);
+        const totalOut = oilMJ + charMJ;
+        const ratio = totalIn > 0 ? totalOut / totalIn : 0;
+
+        const hasEnergy = dieselL > 0 || elecKwh > 0;
+        const hasTransport = batch.transportDistanceKm != null;
+        const hasEmissions = batch.emissionsCo2Kg != null;
+
+        if (!hasEnergy && !hasTransport && !hasEmissions) return null;
+
+        return (
+          <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium">
+                Trazabilidad Completa — ISO 14040 · ISCC+ · Verra
+              </h3>
+              <div className="flex gap-1">
+                {["ISO", "ISCC+", "Verra", "DPP"].map((tag) => (
+                  <span key={tag} className="text-[7px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-eco-surface-2 text-eco-muted">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* 3-column metrics row */}
+            <div className="grid grid-cols-3 gap-3">
+              {hasEnergy && (
+                <div className="text-center p-4 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(232,112,10,0.05), rgba(232,112,10,0.02))" }}>
+                  <div className="font-mono text-2xl font-bold" style={{ color: "#E8700A" }}>
+                    {ratio.toFixed(1)}:1
+                  </div>
+                  <div className="text-[9px] text-eco-muted mt-1 uppercase tracking-wider font-medium">Ratio energético</div>
+                  <div className="text-[8px] text-eco-muted-2 mt-0.5">{totalIn.toFixed(0)} → {totalOut.toFixed(0)} MJ</div>
+                </div>
+              )}
+              {hasTransport && (
+                <div className="text-center p-4 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(45,140,240,0.05), rgba(45,140,240,0.02))" }}>
+                  <div className="font-mono text-2xl font-bold text-eco-blue">{batch.transportDistanceKm} km</div>
+                  <div className="text-[9px] text-eco-muted mt-1 uppercase tracking-wider font-medium">Transporte</div>
+                  <div className="text-[8px] text-eco-muted-2 mt-0.5">{batch.transportCo2Kg?.toFixed(1)} kg CO₂</div>
+                </div>
+              )}
+              {hasEmissions && (
+                <div className="text-center p-4 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(124,92,252,0.05), rgba(124,92,252,0.02))" }}>
+                  <div className="font-mono text-2xl font-bold" style={{ color: "#7C5CFC" }}>{batch.emissionsCo2Kg} kg</div>
+                  <div className="text-[9px] text-eco-muted mt-1 uppercase tracking-wider font-medium">CO₂ directo</div>
+                  <div className="text-[8px] text-eco-muted-2 mt-0.5">+{batch.emissionsCh4Kg} CH₄ · {batch.emissionsNoxKg} NOx</div>
+                </div>
+              )}
+            </div>
+
+            {/* Detail grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {hasEnergy && (
+                <div className="space-y-2">
+                  <h4 className="text-[9px] uppercase tracking-[2px] text-eco-muted font-semibold">Balance Energético</h4>
+                  <div className="space-y-1.5 text-xs">
+                    {dieselL > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-eco-muted">Diésel (arranque)</span>
+                        <span className="font-mono">{dieselL} L · {dieselMJ.toFixed(0)} MJ</span>
+                      </div>
+                    )}
+                    {elecKwh > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-eco-muted">Electricidad</span>
+                        <span className="font-mono">{elecKwh.toFixed(1)} kWh · {elecMJ.toFixed(0)} MJ</span>
+                      </div>
+                    )}
+                    {gasRecKg > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-eco-muted">Gas recirculado</span>
+                        <span className="font-mono">{gasRecKg} kg · {gasMJ.toFixed(0)} MJ</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between pt-1.5 border-t border-eco-border font-semibold">
+                      <span className="text-eco-muted">Salida energética</span>
+                      <span className="font-mono">{totalOut.toFixed(0)} MJ</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {hasEmissions && (
+                <div className="space-y-2">
+                  <h4 className="text-[9px] uppercase tracking-[2px] text-eco-muted font-semibold">Emisiones & Agua</h4>
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between"><span className="text-eco-muted">SOx</span><span className="font-mono">{batch.emissionsSoxKg} kg</span></div>
+                    <div className="flex justify-between"><span className="text-eco-muted">Partículas (PM)</span><span className="font-mono">{batch.emissionsPmKg} kg</span></div>
+                    {batch.waterConsumedL != null && <div className="flex justify-between"><span className="text-eco-muted">Agua consumida</span><span className="font-mono">{batch.waterConsumedL} L</span></div>}
+                    {batch.emissionsWaterL != null && <div className="flex justify-between"><span className="text-eco-muted">Agua residual</span><span className="font-mono">{batch.emissionsWaterL} L</span></div>}
+                  </div>
+                </div>
+              )}
+              {batch.charDisposition && (
+                <div className="space-y-2">
+                  <h4 className="text-[9px] uppercase tracking-[2px] text-eco-muted font-semibold">Gestión de Residuos</h4>
+                  <div className="space-y-1.5 text-xs">
+                    {batch.catalystType && <div className="flex justify-between"><span className="text-eco-muted">Catalizador</span><span className="text-right max-w-[60%]">{batch.catalystType}</span></div>}
+                    <div className="flex justify-between"><span className="text-eco-muted">Char</span><span className="text-right max-w-[60%]">{batch.charDisposition}</span></div>
+                    {batch.wastewaterDisp && <div className="flex justify-between"><span className="text-eco-muted">Agua</span><span className="text-right max-w-[60%]">{batch.wastewaterDisp}</span></div>}
+                  </div>
+                </div>
+              )}
+              <div className="space-y-2">
+                <h4 className="text-[9px] uppercase tracking-[2px] text-eco-muted font-semibold">Cumplimiento</h4>
+                <div className="space-y-1.5">
+                  {[
+                    { tag: "ISO 14040", label: "LCA completo", color: "#3d7a0a", done: hasEnergy && hasEmissions },
+                    { tag: "ISCC+", label: batch.allocMethod ?? "Cadena custodia", color: "#2D8CF0", done: !!batch.massBalancePeriod },
+                    { tag: "Verra", label: batch.plasticTypeCode ?? "Plastic credit", color: "#7C5CFC", done: !!batch.baselineScenario },
+                    { tag: "EU DPP", label: "Pasaporte digital", color: "#E8700A", done: true },
+                  ].map((s) => (
+                    <div key={s.tag} className="flex items-center gap-2 text-xs">
+                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: s.done ? s.color : "#d1d5db" }} />
+                      <span className="font-semibold" style={{ color: s.done ? s.color : "#9ca3af" }}>{s.tag}</span>
+                      <span className="text-eco-muted-2 text-[10px]">{s.label}</span>
+                      {s.done && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={s.color} strokeWidth="2.5" strokeLinecap="round" className="ml-auto">
+                          <path d="M9 12l2 2 4-4" />
+                        </svg>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {batch.additionalityProof && (
+              <div className="px-3 py-2 bg-eco-surface-2/50 rounded-lg">
+                <p className="text-[9px] text-eco-muted font-semibold uppercase tracking-wider mb-0.5">Adicionalidad (Verra)</p>
+                <p className="text-[11px] text-eco-ink-light leading-relaxed italic">{batch.additionalityProof}</p>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* ── Thermal Profile ── */}
       {batch.readings.length > 0 && (
@@ -661,235 +815,6 @@ export function BatchDetail({ batch }: BatchDetailProps) {
               Metodología IPCC 2006 · Baseline: quema a cielo abierto · Incluye combustión eventual como combustible ·
               Consumo energético estimado — requiere medición real
             </p>
-          </div>
-        );
-      })()}
-
-      {/* ── Standards Compliance Summary ── */}
-      {batch.status === "COMPLETED" && (() => {
-        const oilKg = batch.oilWeightKg ?? (batch.oilOutput ?? 0) * 0.85;
-        const cleanKg = batch.feedstockWeight * (1 - (batch.contaminationPct ?? 0) / 100);
-        const charKg = Math.round(cleanKg * 0.10);
-
-        // Energy balance
-        const dieselL = batch.dieselConsumedL ?? 0;
-        const dieselMJ = dieselL * 0.85 * 45.6;
-        const elecKwh = batch.electricityKwh ?? 0;
-        const elecMJ = elecKwh * 3.6;
-        const gasRecKg = batch.gasRecirculatedKg ?? 0;
-        const gasMJ = gasRecKg * 38;
-        const totalIn = dieselMJ + elecMJ + gasMJ;
-
-        const oilMJ = oilKg * (batch.oilCalorificMJ ?? 43.2);
-        const charMJ = charKg * (batch.charCalorificMJ ?? 28.5);
-        const totalOut = oilMJ + charMJ;
-        const ratio = totalIn > 0 ? totalOut / totalIn : 0;
-
-        const hasEnergy = dieselL > 0 || elecKwh > 0;
-        const hasTransport = batch.transportDistanceKm != null;
-        const hasEmissions = batch.emissionsCo2Kg != null;
-
-        if (!hasEnergy && !hasTransport && !hasEmissions) return null;
-
-        return (
-          <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-6 space-y-5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium">
-                Trazabilidad Completa — ISO 14040 · ISCC+ · Verra
-              </h3>
-              <div className="flex gap-1">
-                {["ISO", "ISCC+", "Verra", "DPP"].map((tag) => (
-                  <span key={tag} className="text-[7px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-eco-surface-2 text-eco-muted">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* 3-column metrics row */}
-            <div className="grid grid-cols-3 gap-3">
-              {/* Energy ratio */}
-              {hasEnergy && (
-                <div className="text-center p-4 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(232,112,10,0.05), rgba(232,112,10,0.02))" }}>
-                  <div className="font-mono text-2xl font-bold" style={{ color: "#E8700A" }}>
-                    {ratio.toFixed(1)}:1
-                  </div>
-                  <div className="text-[9px] text-eco-muted mt-1 uppercase tracking-wider font-medium">
-                    Ratio energético
-                  </div>
-                  <div className="text-[8px] text-eco-muted-2 mt-0.5">
-                    {totalIn.toFixed(0)} → {totalOut.toFixed(0)} MJ
-                  </div>
-                </div>
-              )}
-
-              {/* Transport */}
-              {hasTransport && (
-                <div className="text-center p-4 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(45,140,240,0.05), rgba(45,140,240,0.02))" }}>
-                  <div className="font-mono text-2xl font-bold text-eco-blue">
-                    {batch.transportDistanceKm} km
-                  </div>
-                  <div className="text-[9px] text-eco-muted mt-1 uppercase tracking-wider font-medium">
-                    Transporte
-                  </div>
-                  <div className="text-[8px] text-eco-muted-2 mt-0.5">
-                    {batch.transportCo2Kg?.toFixed(1)} kg CO₂
-                  </div>
-                </div>
-              )}
-
-              {/* Process emissions */}
-              {hasEmissions && (
-                <div className="text-center p-4 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(124,92,252,0.05), rgba(124,92,252,0.02))" }}>
-                  <div className="font-mono text-2xl font-bold" style={{ color: "#7C5CFC" }}>
-                    {batch.emissionsCo2Kg} kg
-                  </div>
-                  <div className="text-[9px] text-eco-muted mt-1 uppercase tracking-wider font-medium">
-                    CO₂ directo
-                  </div>
-                  <div className="text-[8px] text-eco-muted-2 mt-0.5">
-                    +{batch.emissionsCh4Kg} CH₄ · {batch.emissionsNoxKg} NOx
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Detail grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Energy balance detail */}
-              {hasEnergy && (
-                <div className="space-y-2">
-                  <h4 className="text-[9px] uppercase tracking-[2px] text-eco-muted font-semibold">
-                    Balance Energético
-                  </h4>
-                  <div className="space-y-1.5 text-xs">
-                    {dieselL > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-eco-muted">Diésel (arranque)</span>
-                        <span className="font-mono">{dieselL} L · {dieselMJ.toFixed(0)} MJ</span>
-                      </div>
-                    )}
-                    {elecKwh > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-eco-muted">Electricidad</span>
-                        <span className="font-mono">{elecKwh.toFixed(1)} kWh · {elecMJ.toFixed(0)} MJ</span>
-                      </div>
-                    )}
-                    {gasRecKg > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-eco-muted">Gas recirculado</span>
-                        <span className="font-mono">{gasRecKg} kg · {gasMJ.toFixed(0)} MJ</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between pt-1.5 border-t border-eco-border font-semibold">
-                      <span className="text-eco-muted">Salida energética</span>
-                      <span className="font-mono">{totalOut.toFixed(0)} MJ</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Emissions + water */}
-              {hasEmissions && (
-                <div className="space-y-2">
-                  <h4 className="text-[9px] uppercase tracking-[2px] text-eco-muted font-semibold">
-                    Emisiones & Agua
-                  </h4>
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-eco-muted">SOx</span>
-                      <span className="font-mono">{batch.emissionsSoxKg} kg</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-eco-muted">Partículas (PM)</span>
-                      <span className="font-mono">{batch.emissionsPmKg} kg</span>
-                    </div>
-                    {batch.waterConsumedL != null && (
-                      <div className="flex justify-between">
-                        <span className="text-eco-muted">Agua consumida</span>
-                        <span className="font-mono">{batch.waterConsumedL} L</span>
-                      </div>
-                    )}
-                    {batch.emissionsWaterL != null && (
-                      <div className="flex justify-between">
-                        <span className="text-eco-muted">Agua residual</span>
-                        <span className="font-mono">{batch.emissionsWaterL} L</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Waste management */}
-              {batch.charDisposition && (
-                <div className="space-y-2">
-                  <h4 className="text-[9px] uppercase tracking-[2px] text-eco-muted font-semibold">
-                    Gestión de Residuos
-                  </h4>
-                  <div className="space-y-1.5 text-xs">
-                    {batch.catalystType && (
-                      <div className="flex justify-between">
-                        <span className="text-eco-muted">Catalizador</span>
-                        <span className="text-right max-w-[60%]">{batch.catalystType}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-eco-muted">Char</span>
-                      <span className="text-right max-w-[60%]">{batch.charDisposition}</span>
-                    </div>
-                    {batch.wastewaterDisp && (
-                      <div className="flex justify-between">
-                        <span className="text-eco-muted">Agua</span>
-                        <span className="text-right max-w-[60%]">{batch.wastewaterDisp}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Standards compliance */}
-              <div className="space-y-2">
-                <h4 className="text-[9px] uppercase tracking-[2px] text-eco-muted font-semibold">
-                  Cumplimiento
-                </h4>
-                <div className="space-y-1.5">
-                  {[
-                    { tag: "ISO 14040", label: "LCA completo", color: "#3d7a0a", done: hasEnergy && hasEmissions },
-                    { tag: "ISCC+", label: batch.allocMethod ?? "Cadena custodia", color: "#2D8CF0", done: !!batch.massBalancePeriod },
-                    { tag: "Verra", label: batch.plasticTypeCode ?? "Plastic credit", color: "#7C5CFC", done: !!batch.baselineScenario },
-                    { tag: "EU DPP", label: "Pasaporte digital", color: "#E8700A", done: true },
-                  ].map((s) => (
-                    <div key={s.tag} className="flex items-center gap-2 text-xs">
-                      <span
-                        className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: s.done ? s.color : "#d1d5db" }}
-                      />
-                      <span className="font-semibold" style={{ color: s.done ? s.color : "#9ca3af" }}>
-                        {s.tag}
-                      </span>
-                      <span className="text-eco-muted-2 text-[10px]">{s.label}</span>
-                      {s.done && (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={s.color} strokeWidth="2.5" strokeLinecap="round" className="ml-auto">
-                          <path d="M9 12l2 2 4-4" />
-                        </svg>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Additionality note (Verra) */}
-            {batch.additionalityProof && (
-              <div className="px-3 py-2 bg-eco-surface-2/50 rounded-lg">
-                <p className="text-[9px] text-eco-muted font-semibold uppercase tracking-wider mb-0.5">
-                  Adicionalidad (Verra)
-                </p>
-                <p className="text-[11px] text-eco-ink-light leading-relaxed italic">
-                  {batch.additionalityProof}
-                </p>
-              </div>
-            )}
           </div>
         );
       })()}
