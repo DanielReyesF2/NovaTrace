@@ -32,38 +32,6 @@ const NAV_ITEMS = [
     ),
   },
   {
-    href: "/batch",
-    label: "Lotes",
-    matchPrefix: true,
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-        <rect x="9" y="3" width="6" height="4" rx="1" />
-        <path d="M9 14l2 2 4-4" />
-      </svg>
-    ),
-  },
-  {
-    href: "/analytics",
-    label: "Analytics",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
-      </svg>
-    ),
-  },
-  {
-    href: "/impact",
-    label: "Impacto",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z" />
-        <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-        <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
-      </svg>
-    ),
-  },
-  {
     href: "/map",
     label: "Trazabilidad",
     icon: (
@@ -84,7 +52,6 @@ export function Sidebar({ user }: SidebarProps) {
 
   const isActive = (item: (typeof NAV_ITEMS)[number]) => {
     if (item.href === "/") return pathname === "/";
-    if (item.matchPrefix) return pathname.startsWith(item.href);
     return pathname === item.href;
   };
 
@@ -153,7 +120,7 @@ export function Sidebar({ user }: SidebarProps) {
             return (
               <Link
                 key={item.href}
-                href={item.href === "/batch" ? "/" : item.href}
+                href={item.href}
                 className={`
                   flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium
                   transition-all duration-200 group relative
