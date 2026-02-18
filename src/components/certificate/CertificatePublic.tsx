@@ -1,5 +1,9 @@
 "use client";
 
+import { QRCodeSVG } from "qrcode.react";
+import { SankeyFlow } from "@/components/batch/SankeyFlow";
+
+// ─── Types ──────────────────────────────────────────────────────
 interface CertificatePublicProps {
   certificate: {
     code: string;
@@ -14,6 +18,10 @@ interface CertificatePublicProps {
       feedstockWeight: number;
       contaminationPct: number | null;
       oilOutput: number | null;
+      oilWeightKg: number | null;
+      yieldPercent: number | null;
+      durationMinutes: number | null;
+      maxReactorTemp: number | null;
       co2Baseline: number | null;
       co2Project: number | null;
       co2Avoided: number | null;
@@ -22,106 +30,280 @@ interface CertificatePublicProps {
         labCertification: string | null;
         sulfurPercent: number | null;
         waterContent: number | null;
+        flashPoint: number | null;
+        density: number | null;
+        viscosity: number | null;
         verdict: string | null;
       }>;
     };
   };
 }
 
+// ─── Section wrapper ────────────────────────────────────────────
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <h3 className="text-[9px] tracking-[2.5px] text-[#3d5c0e] font-bold uppercase mb-2.5">
+        {title}
+      </h3>
+      {children}
+    </section>
+  );
+}
+
+// ─── Data row ───────────────────────────────────────────────────
+function Row({ label, value, bold }: { label: string; value: string | number | null; bold?: boolean }) {
+  if (value == null || value === "") return null;
+  return (
+    <div className="flex justify-between items-baseline py-1 border-b border-gray-100 last:border-0">
+      <span className="text-gray-500 text-xs">{label}</span>
+      <span className={`text-xs text-right ${bold ? "font-mono font-bold text-gray-900" : "text-gray-700"}`}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+// ─── Component ──────────────────────────────────────────────────
 export function CertificatePublic({ certificate }: CertificatePublicProps) {
   const { batch } = certificate;
+  const oilL = batch.oilOutput ?? 0;
+  const oilKg = batch.oilWeightKg ?? oilL * 0.85;
+  const co2Avoided = batch.co2Avoided ?? 0;
+  const cleanKg = batch.feedstockWeight * (1 - (batch.contaminationPct ?? 0) / 100);
+  const charKg = Math.round(cleanKg * 0.10);
+  const gasKg = Math.round(cleanKg - oilKg - charKg);
+  const co2PerLiter = oilL > 0 && co2Avoided > 0 ? co2Avoided / oilL : 0;
+  const baselinePerL = batch.co2Baseline && oilL > 0 ? batch.co2Baseline / oilL : 0;
+  const projectPerL = batch.co2Project && oilL > 0 ? batch.co2Project / oilL : 0;
+  const reductionPct = batch.co2Baseline && batch.co2Baseline > 0
+    ? ((batch.co2Baseline - (batch.co2Project ?? 0)) / batch.co2Baseline * 100)
+    : 0;
+
+  const verifyUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/verify/${certificate.code}`
+    : `/verify/${certificate.code}`;
+
+  const lab = batch.labResults.length > 0 ? batch.labResults[0] : null;
 
   return (
-    <div className="min-h-screen bg-eco-bg-warm flex items-center justify-center p-4">
-      <div className="w-full max-w-lg bg-[#FAFAF9] rounded-2xl p-10 text-gray-900 shadow-2xl">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <p className="text-[10px] tracking-[5px] text-gray-400 uppercase mb-2">
-            Certificado de Trazabilidad
-          </p>
-          <h1 className="text-3xl font-bold text-[#3d5c0e] font-mono tracking-tighter">
-            ECONOVA
-          </h1>
-          <p className="text-[9px] tracking-[4px] text-gray-400 uppercase">
-            Economía Circular · México
-          </p>
-          <div className="w-12 h-px bg-[#3d5c0e]/30 mx-auto mt-4" />
-          <p className="font-mono text-xs text-[#3d5c0e] mt-3">{batch.code}</p>
-          <p className="text-xs text-gray-400">
-            {new Date(batch.date).toLocaleDateString("es-MX", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          </p>
-        </div>
+    <div className="min-h-screen bg-[#F5F3EE] flex items-center justify-center p-4 sm:p-8">
+      <div className="w-full max-w-xl">
 
-        {/* Sections */}
-        <div className="space-y-5 text-xs">
-          <section>
-            <h3 className="text-[9px] tracking-[2px] text-[#3d5c0e] font-bold uppercase mb-1">
-              Origen del Residuo
-            </h3>
-            <p className="text-gray-600">{batch.feedstockType} · {batch.feedstockOrigin}</p>
-            <p className="text-gray-600">{batch.feedstockWeight} kg · Contaminación ~{batch.contaminationPct}%</p>
-          </section>
+        {/* ═══ PASSPORT CARD ═══ */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
 
-          {batch.oilOutput != null && batch.oilOutput > 0 && (
-            <section>
-              <h3 className="text-[9px] tracking-[2px] text-[#3d5c0e] font-bold uppercase mb-1">
-                Producto
-              </h3>
-              <p className="text-gray-600">~{batch.oilOutput} litros aceite pirolítico</p>
-            </section>
-          )}
-
-          {batch.labResults.length > 0 && (
-            <section>
-              <h3 className="text-[9px] tracking-[2px] text-[#3d5c0e] font-bold uppercase mb-1">
-                Control de Calidad — {batch.labResults[0].labName}
-              </h3>
-              <p className="text-gray-600">
-                Azufre: {batch.labResults[0].sulfurPercent}% · Agua: {batch.labResults[0].waterContent} PPM
-              </p>
-              {batch.labResults[0].verdict && (
-                <p className="text-[#4a6d10] font-medium mt-1">✓ {batch.labResults[0].verdict}</p>
-              )}
-            </section>
-          )}
-
-          {batch.co2Avoided != null && (
-            <section>
-              <h3 className="text-[9px] tracking-[2px] text-[#3d5c0e] font-bold uppercase mb-1">
-                Impacto Ambiental — Ciclo de Vida
-              </h3>
-              <p className="text-gray-600">
-                Sin EcoNova: {batch.co2Baseline?.toFixed(1)} kg CO₂eq (quema abierta)
-              </p>
-              <p className="text-gray-600">
-                Con EcoNova: {batch.co2Project?.toFixed(1)} kg CO₂eq (pirólisis)
-              </p>
-              <p className="text-[#4a6d10] font-bold mt-1">
-                {batch.co2Avoided.toFixed(1)} kg CO₂eq evitados
-              </p>
-            </section>
-          )}
-        </div>
-
-        {/* Verification */}
-        <div className="border-t border-gray-200 pt-5 mt-6 text-center">
-          <div className="w-20 h-20 bg-gray-100 border border-gray-200 rounded-lg mx-auto mb-3 flex items-center justify-center text-[9px] text-gray-400">
-            QR
+          {/* ── Header band ── */}
+          <div className="px-6 sm:px-8 pt-6 pb-4" style={{ background: "linear-gradient(135deg, #1a2e1a 0%, #2d4a1a 50%, #1a2e1a 100%)" }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[9px] tracking-[4px] text-white/40 uppercase mb-1">
+                  Pasaporte Digital de Producto
+                </p>
+                <h1 className="text-2xl font-bold text-white font-mono tracking-tight">
+                  ECONOVA
+                </h1>
+                <p className="text-[8px] tracking-[3px] text-white/35 uppercase mt-0.5">
+                  Economía Circular · México
+                </p>
+              </div>
+              <div className="bg-white/10 rounded-xl p-2.5 backdrop-blur-sm">
+                <QRCodeSVG value={verifyUrl} size={64} level="M" bgColor="transparent" fgColor="#ffffff" />
+              </div>
+            </div>
           </div>
-          <p className="font-mono text-[9px] text-gray-300">
-            SHA-256: {certificate.hash.slice(0, 16)}...{certificate.hash.slice(-8)}
-          </p>
-          <p className="text-[10px] text-gray-400 mt-1">
-            trace.econova.com.mx/verify/{certificate.code}
-          </p>
+
+          {/* ── Product hero ── */}
+          <div className="px-6 sm:px-8 py-5 border-b border-gray-100">
+            <div className="flex items-baseline gap-2 mb-1">
+              {oilL > 0 ? (
+                <>
+                  <span className="font-mono text-4xl font-bold tracking-tight" style={{ color: "#7C5CFC" }}>{oilL}</span>
+                  <span className="text-sm text-gray-500">litros de aceite pirolítico</span>
+                </>
+              ) : (
+                <>
+                  <span className="font-mono text-3xl font-bold tracking-tight text-gray-900">{batch.feedstockWeight}</span>
+                  <span className="text-sm text-gray-500">kg {batch.feedstockType}</span>
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              <span className="font-mono">{batch.code}</span>
+              <span>·</span>
+              <span>
+                {new Date(batch.date).toLocaleDateString("es-MX", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </span>
+            </div>
+          </div>
+
+          {/* ── Content sections ── */}
+          <div className="px-6 sm:px-8 py-6 space-y-6">
+
+            {/* 1. Origen del Residuo */}
+            <Section title="Origen del Residuo">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                <Row label="Material" value={batch.feedstockType} bold />
+                <Row label="Origen" value={batch.feedstockOrigin} bold />
+                <Row label="Peso bruto" value={`${batch.feedstockWeight} kg`} />
+                <Row label="Contaminación" value={batch.contaminationPct != null ? `~${batch.contaminationPct}%` : null} />
+              </div>
+            </Section>
+
+            {/* 2. Proceso */}
+            <Section title="Proceso de Transformación">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                <Row label="Tecnología" value="Pirólisis catalítica" />
+                <Row label="Reactor" value="DY-500" />
+                {batch.maxReactorTemp != null && <Row label="Temp. máxima" value={`${batch.maxReactorTemp}°C`} bold />}
+                {batch.durationMinutes != null && (
+                  <Row label="Duración" value={`${Math.floor(batch.durationMinutes / 60)}h ${batch.durationMinutes % 60}m`} />
+                )}
+                {oilL > 0 && <Row label="Producción" value={`${oilL} litros`} bold />}
+                {batch.yieldPercent != null && <Row label="Rendimiento" value={`${batch.yieldPercent.toFixed(1)}%`} bold />}
+              </div>
+            </Section>
+
+            {/* 3. Balance de masa — Sankey */}
+            {oilL > 0 && (
+              <Section title="Balance de Masa">
+                <div className="bg-gray-50/80 rounded-xl p-3 -mx-1">
+                  <SankeyFlow
+                    feedstockKg={batch.feedstockWeight}
+                    feedstockType={batch.feedstockType}
+                    contaminationPct={batch.contaminationPct ?? 0}
+                    oilLiters={oilL}
+                    oilKg={oilKg}
+                    charKg={charKg}
+                    gasKg={gasKg}
+                  />
+                </div>
+              </Section>
+            )}
+
+            {/* 4. Control de Calidad */}
+            {lab && (
+              <Section title={`Control de Calidad — ${lab.labName}`}>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                  {lab.labCertification && <Row label="Certificación" value={lab.labCertification} />}
+                  <Row label="Azufre" value={lab.sulfurPercent != null ? `${lab.sulfurPercent}%` : null} />
+                  <Row label="Contenido de agua" value={lab.waterContent != null ? `${lab.waterContent} PPM` : null} />
+                  <Row label="Punto de inflamación" value={lab.flashPoint != null ? `${lab.flashPoint}°C` : null} />
+                  <Row label="Densidad" value={lab.density != null ? `${lab.density} g/mL` : null} />
+                  <Row label="Viscosidad" value={lab.viscosity != null ? `${lab.viscosity} cSt` : null} />
+                </div>
+                {lab.verdict && (
+                  <div className="mt-2 flex items-center gap-1.5 text-[#3d5c0e]">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <path d="M9 12l2 2 4-4" />
+                      <circle cx="12" cy="12" r="10" />
+                    </svg>
+                    <span className="text-xs font-semibold">{lab.verdict}</span>
+                  </div>
+                )}
+              </Section>
+            )}
+
+            {/* 5. Impacto Ambiental */}
+            {co2Avoided > 0 && (
+              <Section title="Impacto Ambiental — Ciclo de Vida">
+                {/* Big number */}
+                <div className="text-center py-3 mb-3 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(61,122,10,0.06), rgba(61,122,10,0.02))" }}>
+                  <div className="font-mono text-3xl font-bold" style={{ color: "#3d5c0e" }}>
+                    {co2Avoided.toFixed(0)}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-0.5">kg CO₂eq evitados en este lote</div>
+                  {reductionPct > 0 && (
+                    <div className="text-[10px] font-semibold mt-1" style={{ color: "#3d5c0e" }}>
+                      ↓ {reductionPct.toFixed(0)}% reducción vs quema abierta
+                    </div>
+                  )}
+                </div>
+
+                {/* Comparison bars */}
+                <div className="space-y-2">
+                  <div>
+                    <div className="flex justify-between text-[10px] mb-1">
+                      <span className="text-gray-500">Quema abierta (baseline)</span>
+                      <span className="font-mono font-bold text-red-600">{baselinePerL.toFixed(2)} kg CO₂/L</span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-red-400/70" style={{ width: "100%" }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-[10px] mb-1">
+                      <span className="text-gray-500">EcoNova pirólisis</span>
+                      <span className="font-mono font-bold" style={{ color: "#3d5c0e" }}>{projectPerL.toFixed(2)} kg CO₂/L</span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${baselinePerL > 0 ? (projectPerL / baselinePerL) * 100 : 50}%`,
+                          background: "linear-gradient(90deg, #3d7a0a, #6abf2a)",
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Per-liter metric */}
+                {co2PerLiter > 0 && (
+                  <div className="mt-3 text-center text-[11px] text-gray-500">
+                    Cada litro de aceite pirolítico evita{" "}
+                    <span className="font-mono font-bold" style={{ color: "#3d5c0e" }}>{co2PerLiter.toFixed(2)} kg CO₂</span>{" "}
+                    vs la quema abierta
+                  </div>
+                )}
+
+                <p className="text-[8px] text-gray-400 italic mt-2">
+                  Metodología: IPCC 2006 · Residuo → pirólisis → aceite pirolítico
+                </p>
+              </Section>
+            )}
+          </div>
+
+          {/* ── Verification footer ── */}
+          <div className="px-6 sm:px-8 py-4 bg-gray-50/60 border-t border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[8px] tracking-[2px] text-gray-400 uppercase font-semibold mb-1">
+                  Verificación Digital
+                </p>
+                <p className="font-mono text-[9px] text-gray-400 break-all leading-relaxed">
+                  SHA-256: {certificate.hash}
+                </p>
+                <p className="text-[9px] text-gray-400 mt-1">
+                  Certificado: {certificate.code}
+                  {certificate.verifiedAt && (
+                    <span className="ml-2 text-[#3d5c0e]">
+                      ✓ Verificado
+                    </span>
+                  )}
+                </p>
+              </div>
+              <div className="flex-shrink-0 ml-4">
+                <QRCodeSVG value={verifyUrl} size={48} level="M" bgColor="transparent" fgColor="#64748b" />
+              </div>
+            </div>
+          </div>
+
+          {/* ── Branding footer ── */}
+          <div className="px-6 sm:px-8 py-3 text-center" style={{ background: "linear-gradient(135deg, #1a2e1a, #2d4a1a)" }}>
+            <p className="text-[8px] tracking-[3px] text-white/30 uppercase">
+              EcoNova México · Economía Circular · econova.com.mx
+            </p>
+          </div>
         </div>
 
-        <p className="text-center text-[9px] text-gray-300 mt-6">
-          EcoNova México · econova.com.mx
+        {/* Powered by footer */}
+        <p className="text-center text-[9px] text-gray-400 mt-4">
+          Pasaporte Digital de Producto conforme a estándares EU DPP (ESPR)
         </p>
       </div>
     </div>
