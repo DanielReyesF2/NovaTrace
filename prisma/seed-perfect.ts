@@ -33,6 +33,20 @@ const GAS_RECIRCULATED_KG = Math.round(CLEAN_PLASTIC_KG * 0.15); // ~15% of clea
 const OIL_CALORIFIC_MJ = 43.2; // MJ/kg — lab-tested, comparable to diesel
 const CHAR_CALORIFIC_MJ = 28.5; // MJ/kg — high carbon char
 
+// Transporte & Logística
+const TRANSPORT_DISTANCE_KM = 45; // Michoacán campos → planta EcoNova
+const TRANSPORT_FUEL_L = 8; // litros diésel pickup ida y vuelta
+const TRANSPORT_CO2_KG = TRANSPORT_FUEL_L * 0.85 * 3.15; // ~21.4 kg CO2
+
+// Emisiones de proceso (estimaciones DY-500)
+const EMISSIONS_CO2_KG = 12; // CO2 directas del quemador durante arranque
+const EMISSIONS_CH4_KG = 0.3; // CH4 fugitivas mínimas (sellado optimizado)
+const EMISSIONS_NOX_KG = 0.15; // NOx del quemador diésel
+const EMISSIONS_SOX_KG = 0.02; // SOx mínimo (plástico agrícola bajo S)
+const EMISSIONS_PM_KG = 0.08; // Partículas — quemador controlado
+const WATER_CONSUMED_L = 350; // agua de enfriamiento (recircula parcialmente)
+const EMISSIONS_WATER_L = 50; // agua residual neta (evaporación absorbe la mayoría)
+
 // ============================================
 // THERMAL READING GENERATOR — Perfect S-curve
 // ============================================
@@ -453,6 +467,42 @@ async function main() {
     gasRecirculatedKg: GAS_RECIRCULATED_KG,
     oilCalorificMJ: OIL_CALORIFIC_MJ,
     charCalorificMJ: CHAR_CALORIFIC_MJ,
+
+    // Transporte (ISO 14040 / ISCC+)
+    transportMode: "Pickup Toyota Hilux",
+    transportDistanceKm: TRANSPORT_DISTANCE_KM,
+    transportFuelType: "Diésel",
+    transportFuelL: TRANSPORT_FUEL_L,
+    transportCo2Kg: Math.round(TRANSPORT_CO2_KG * 100) / 100,
+
+    // Emisiones (ISO 14040)
+    emissionsCo2Kg: EMISSIONS_CO2_KG,
+    emissionsCh4Kg: EMISSIONS_CH4_KG,
+    emissionsNoxKg: EMISSIONS_NOX_KG,
+    emissionsSoxKg: EMISSIONS_SOX_KG,
+    emissionsPmKg: EMISSIONS_PM_KG,
+    emissionsWaterL: EMISSIONS_WATER_L,
+    waterConsumedL: WATER_CONSUMED_L,
+
+    // Catalizadores & Insumos
+    catalystType: "Ninguno — pirólisis térmica pura",
+    catalystKg: 0,
+    chemicalsUsed: "Ninguno",
+
+    // Disposición de residuos
+    charDisposition: "Secuestro en suelo agrícola — recarbonatación",
+    ashDisposition: "Disposición controlada en relleno sanitario",
+    wastewaterDisp: "Recirculación en torre de enfriamiento",
+
+    // ISCC+ Chain of Custody
+    massBalancePeriod: "Por lote (batch-level)",
+    allocMethod: "Energético (contenido calórico)",
+
+    // Verra Plastic Credits
+    plasticTypeCode: "4-LDPE",
+    baselineScenario: "Quema abierta en campo agrícola",
+    additionalityProof: "Sin infraestructura de reciclaje en la región. El plástico agrícola se quema en 95%+ de los casos en Michoacán.",
+
     stopReason: "Completado — lote perfecto, rendimiento récord",
     notes: [
       "═══════════════════════════════════════════════════════",

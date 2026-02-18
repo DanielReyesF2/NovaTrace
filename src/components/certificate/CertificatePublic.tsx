@@ -27,6 +27,37 @@ interface CertificatePublicProps {
       gasRecirculatedKg: number | null;
       oilCalorificMJ: number | null;
       charCalorificMJ: number | null;
+      // Transporte
+      transportMode: string | null;
+      transportDistanceKm: number | null;
+      transportFuelType: string | null;
+      transportFuelL: number | null;
+      transportCo2Kg: number | null;
+      // Emisiones
+      emissionsCo2Kg: number | null;
+      emissionsCh4Kg: number | null;
+      emissionsNoxKg: number | null;
+      emissionsSoxKg: number | null;
+      emissionsPmKg: number | null;
+      emissionsWaterL: number | null;
+      waterConsumedL: number | null;
+      // Insumos
+      catalystType: string | null;
+      catalystKg: number | null;
+      chemicalsUsed: string | null;
+      // Residuos
+      charDisposition: string | null;
+      ashDisposition: string | null;
+      wastewaterDisp: string | null;
+      // ISCC+
+      sustainabilityCertId: string | null;
+      massBalancePeriod: string | null;
+      allocMethod: string | null;
+      // Verra
+      plasticTypeCode: string | null;
+      baselineScenario: string | null;
+      additionalityProof: string | null;
+      // GHG
       co2Baseline: number | null;
       co2Project: number | null;
       co2Avoided: number | null;
@@ -364,6 +395,110 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                 </p>
               </Section>
             )}
+
+            {/* 7. Transporte & Logística (ISO 14040 / ISCC+) */}
+            {batch.transportDistanceKm != null && (
+              <Section title="Transporte del Feedstock">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                  <Row label="Modo" value={batch.transportMode} />
+                  <Row label="Distancia" value={`${batch.transportDistanceKm} km`} bold />
+                  <Row label="Combustible" value={batch.transportFuelType} />
+                  <Row label="Consumo" value={batch.transportFuelL != null ? `${batch.transportFuelL} L` : null} />
+                  <Row label="CO₂ transporte" value={batch.transportCo2Kg != null ? `${batch.transportCo2Kg} kg` : null} bold />
+                </div>
+                <p className="text-[8px] text-gray-400 italic mt-1.5">
+                  Ruta: {batch.feedstockOrigin} → Planta EcoNova
+                </p>
+              </Section>
+            )}
+
+            {/* 8. Emisiones de Proceso (ISO 14040) */}
+            {batch.emissionsCo2Kg != null && (
+              <Section title="Emisiones del Proceso">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                  <Row label="CO₂ directo" value={`${batch.emissionsCo2Kg} kg`} bold />
+                  <Row label="CH₄ fugitivas" value={batch.emissionsCh4Kg != null ? `${batch.emissionsCh4Kg} kg` : null} />
+                  <Row label="NOx" value={batch.emissionsNoxKg != null ? `${batch.emissionsNoxKg} kg` : null} />
+                  <Row label="SOx" value={batch.emissionsSoxKg != null ? `${batch.emissionsSoxKg} kg` : null} />
+                  <Row label="Partículas (PM)" value={batch.emissionsPmKg != null ? `${batch.emissionsPmKg} kg` : null} />
+                </div>
+                <div className="mt-1 pt-1 border-t border-gray-100">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                    <Row label="Agua consumida" value={batch.waterConsumedL != null ? `${batch.waterConsumedL} L` : null} />
+                    <Row label="Agua residual" value={batch.emissionsWaterL != null ? `${batch.emissionsWaterL} L` : null} />
+                  </div>
+                </div>
+              </Section>
+            )}
+
+            {/* 9. Gestión de Residuos & Insumos */}
+            {(batch.catalystType || batch.charDisposition) && (
+              <Section title="Insumos & Gestión de Residuos">
+                <div className="grid grid-cols-1 gap-y-1">
+                  <Row label="Catalizador" value={batch.catalystType} />
+                  {batch.catalystKg != null && batch.catalystKg > 0 && (
+                    <Row label="Cantidad catalizador" value={`${batch.catalystKg} kg`} />
+                  )}
+                  <Row label="Otros insumos" value={batch.chemicalsUsed} />
+                </div>
+                <div className="mt-2 pt-1.5 border-t border-gray-100">
+                  <p className="text-[8px] uppercase tracking-[1.5px] text-gray-400 font-semibold mb-1">Disposición</p>
+                  <div className="grid grid-cols-1 gap-y-1">
+                    <Row label="Char / carbón" value={batch.charDisposition} />
+                    <Row label="Cenizas" value={batch.ashDisposition} />
+                    <Row label="Agua residual" value={batch.wastewaterDisp} />
+                  </div>
+                </div>
+              </Section>
+            )}
+
+            {/* 10. Cumplimiento Normativo */}
+            <Section title="Cumplimiento Normativo">
+              <div className="space-y-2">
+                {/* ISO 14040 */}
+                <div className="flex items-start gap-2">
+                  <div className="w-1 h-1 rounded-full bg-[#3d5c0e] mt-1.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-700">ISO 14040/14044 — Análisis de Ciclo de Vida</p>
+                    <p className="text-[8px] text-gray-400">Balance de masa, energético, emisiones, transporte, disposición de residuos</p>
+                  </div>
+                </div>
+                {/* ISCC+ */}
+                <div className="flex items-start gap-2">
+                  <div className="w-1 h-1 rounded-full bg-[#2D8CF0] mt-1.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-700">ISCC PLUS — Cadena de Custodia</p>
+                    <p className="text-[8px] text-gray-400">
+                      Balance: {batch.massBalancePeriod ?? "Por lote"} · Asignación: {batch.allocMethod ?? "Energético"}
+                      {batch.sustainabilityCertId && ` · Cert: ${batch.sustainabilityCertId}`}
+                    </p>
+                  </div>
+                </div>
+                {/* Verra */}
+                <div className="flex items-start gap-2">
+                  <div className="w-1 h-1 rounded-full bg-[#7C5CFC] mt-1.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-700">Verra Plastic Credit Standard (PWRM0002)</p>
+                    <p className="text-[8px] text-gray-400">
+                      Resina: {batch.plasticTypeCode ?? batch.feedstockType} · Baseline: {batch.baselineScenario ?? "Quema abierta"}
+                    </p>
+                    {batch.additionalityProof && (
+                      <p className="text-[8px] text-gray-400 italic mt-0.5">
+                        Adicionalidad: {batch.additionalityProof}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {/* EU DPP */}
+                <div className="flex items-start gap-2">
+                  <div className="w-1 h-1 rounded-full bg-[#E8700A] mt-1.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-700">EU Digital Product Passport (ESPR 2024/1781)</p>
+                    <p className="text-[8px] text-gray-400">Trazabilidad completa: origen → proceso → producto → impacto</p>
+                  </div>
+                </div>
+              </div>
+            </Section>
           </div>
 
           {/* ── Verification footer ── */}
