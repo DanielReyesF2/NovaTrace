@@ -380,17 +380,6 @@ export function Dashboard({ batches, recentEvents, lastBatchId, stats }: Dashboa
                 </svg>
                 <span className="text-[13px] font-medium">Nuevo lote de pirólisis</span>
               </Link>
-              <Link
-                href="/batch/new"
-                className="flex items-center gap-3 p-3.5 rounded-xl border-2 border-eco-green/20 bg-eco-green/[0.04] text-eco-ink hover:border-eco-green/40 hover:bg-eco-green/[0.08] transition-all duration-200"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3d7a0a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
-                  <polyline points="17,21 17,13 7,13 7,21" />
-                  <polyline points="7,3 7,8 15,8" />
-                </svg>
-                <span className="text-[13px] font-medium" style={{ color: "#3d7a0a" }}>Registro Diario</span>
-              </Link>
               {batches.length > 0 && (
                 <Link
                   href={`/batch/${batches[0].id}`}
