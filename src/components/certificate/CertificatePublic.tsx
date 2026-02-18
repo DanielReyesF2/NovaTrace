@@ -22,6 +22,11 @@ interface CertificatePublicProps {
       yieldPercent: number | null;
       durationMinutes: number | null;
       maxReactorTemp: number | null;
+      dieselConsumedL: number | null;
+      electricityKwh: number | null;
+      gasRecirculatedKg: number | null;
+      oilCalorificMJ: number | null;
+      charCalorificMJ: number | null;
       co2Baseline: number | null;
       co2Project: number | null;
       co2Avoided: number | null;
@@ -31,8 +36,11 @@ interface CertificatePublicProps {
         sulfurPercent: number | null;
         waterContent: number | null;
         flashPoint: number | null;
-        density: number | null;
-        viscosity: number | null;
+        density15C: number | null;
+        viscosity40C: number | null;
+        carbonResidue: number | null;
+        ashContent: number | null;
+        calorificMJ: number | null;
         verdict: string | null;
       }>;
     };
@@ -79,6 +87,23 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
   const reductionPct = batch.co2Baseline && batch.co2Baseline > 0
     ? ((batch.co2Baseline - (batch.co2Project ?? 0)) / batch.co2Baseline * 100)
     : 0;
+
+  // Energy balance calculations
+  const dieselL = batch.dieselConsumedL ?? 0;
+  const dieselMJ = dieselL * 0.85 * 45.6; // kg × MJ/kg (diesel LHV)
+  const elecKwh = batch.electricityKwh ?? 0;
+  const elecMJ = elecKwh * 3.6; // kWh → MJ
+  const gasRecKg = batch.gasRecirculatedKg ?? 0;
+  const gasMJ = gasRecKg * 38; // syngas ~38 MJ/kg
+  const totalEnergyIn = dieselMJ + elecMJ + gasMJ;
+
+  const oilMJperKg = batch.oilCalorificMJ ?? 43.2;
+  const charMJperKg = batch.charCalorificMJ ?? 28.5;
+  const oilEnergyMJ = oilKg * oilMJperKg;
+  const charEnergyMJ = charKg * charMJperKg;
+  const totalEnergyOut = oilEnergyMJ + charEnergyMJ;
+  const energyRatio = totalEnergyIn > 0 ? totalEnergyOut / totalEnergyIn : 0;
+  const hasEnergyData = dieselL > 0 || elecKwh > 0;
 
   const verifyUrl = typeof window !== "undefined"
     ? `${window.location.origin}/verify/${certificate.code}`
@@ -185,7 +210,77 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
               </Section>
             )}
 
-            {/* 4. Control de Calidad */}
+            {/* 4. Balance Energético (ISO 14040 / ISCC+) */}
+            {hasEnergyData && (
+              <Section title="Balance Energético">
+                {/* Energy ratio hero */}
+                <div className="text-center py-2.5 mb-3 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(232,112,10,0.06), rgba(232,112,10,0.02))" }}>
+                  <div className="font-mono text-2xl font-bold" style={{ color: "#E8700A" }}>
+                    {energyRatio.toFixed(1)}:1
+                  </div>
+                  <div className="text-[10px] text-gray-500 mt-0.5">relación energía producida / consumida</div>
+                </div>
+
+                {/* Inputs */}
+                <div className="mb-2">
+                  <p className="text-[8px] uppercase tracking-[1.5px] text-gray-400 font-semibold mb-1.5">Entradas</p>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                    {dieselL > 0 && <Row label="Diésel (arranque)" value={`${dieselL} L → ${dieselMJ.toFixed(0)} MJ`} />}
+                    {elecKwh > 0 && <Row label="Electricidad" value={`${elecKwh.toFixed(1)} kWh → ${elecMJ.toFixed(0)} MJ`} />}
+                    {gasRecKg > 0 && <Row label="Gas recirculado" value={`${gasRecKg} kg → ${gasMJ.toFixed(0)} MJ`} />}
+                  </div>
+                  <div className="mt-1 pt-1 border-t border-gray-100">
+                    <Row label="Total energía entrada" value={`${totalEnergyIn.toFixed(0)} MJ`} bold />
+                  </div>
+                </div>
+
+                {/* Outputs */}
+                <div className="mb-2">
+                  <p className="text-[8px] uppercase tracking-[1.5px] text-gray-400 font-semibold mb-1.5">Salidas (contenido energético)</p>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                    <Row label={`Aceite (${oilMJperKg} MJ/kg)`} value={`${Math.round(oilKg)} kg → ${oilEnergyMJ.toFixed(0)} MJ`} />
+                    <Row label={`Char (${charMJperKg} MJ/kg)`} value={`${charKg} kg → ${charEnergyMJ.toFixed(0)} MJ`} />
+                  </div>
+                  <div className="mt-1 pt-1 border-t border-gray-100">
+                    <Row label="Total energía salida" value={`${totalEnergyOut.toFixed(0)} MJ`} bold />
+                  </div>
+                </div>
+
+                {/* Visual bar comparison */}
+                <div className="space-y-1.5 mt-2">
+                  <div>
+                    <div className="flex justify-between text-[10px] mb-0.5">
+                      <span className="text-gray-500">Entrada</span>
+                      <span className="font-mono text-[#E8700A] font-bold">{totalEnergyIn.toFixed(0)} MJ</span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${totalEnergyOut > 0 ? Math.min(100, (totalEnergyIn / totalEnergyOut) * 100) : 50}%`,
+                          background: "linear-gradient(90deg, #E8700A, #f59e0b)",
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-[10px] mb-0.5">
+                      <span className="text-gray-500">Salida</span>
+                      <span className="font-mono text-[#7C5CFC] font-bold">{totalEnergyOut.toFixed(0)} MJ</span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-[#7C5CFC]/70" style={{ width: "100%" }} />
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-[8px] text-gray-400 italic mt-2">
+                  Balance conforme a ISO 14040 · Entradas: combustible + electricidad · Salidas: contenido energético productos
+                </p>
+              </Section>
+            )}
+
+            {/* 5. Control de Calidad */}
             {lab && (
               <Section title={`Control de Calidad — ${lab.labName}`}>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1">
@@ -193,8 +288,11 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                   <Row label="Azufre" value={lab.sulfurPercent != null ? `${lab.sulfurPercent}%` : null} />
                   <Row label="Contenido de agua" value={lab.waterContent != null ? `${lab.waterContent} PPM` : null} />
                   <Row label="Punto de inflamación" value={lab.flashPoint != null ? `${lab.flashPoint}°C` : null} />
-                  <Row label="Densidad" value={lab.density != null ? `${lab.density} g/mL` : null} />
-                  <Row label="Viscosidad" value={lab.viscosity != null ? `${lab.viscosity} cSt` : null} />
+                  <Row label="Densidad" value={lab.density15C != null ? `${lab.density15C} g/mL` : null} />
+                  <Row label="Viscosidad" value={lab.viscosity40C != null ? `${lab.viscosity40C} mm²/s` : null} />
+                  <Row label="Residuo carbón" value={lab.carbonResidue != null ? `${lab.carbonResidue}%` : null} />
+                  <Row label="Cenizas" value={lab.ashContent != null ? `${lab.ashContent}%` : null} />
+                  <Row label="Poder calorífico" value={lab.calorificMJ != null ? `${lab.calorificMJ} MJ/kg` : null} />
                 </div>
                 {lab.verdict && (
                   <div className="mt-2 flex items-center gap-1.5 text-[#3d5c0e]">
@@ -208,7 +306,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
               </Section>
             )}
 
-            {/* 5. Impacto Ambiental */}
+            {/* 6. Impacto Ambiental */}
             {co2Avoided > 0 && (
               <Section title="Impacto Ambiental — Ciclo de Vida">
                 {/* Big number */}
@@ -262,7 +360,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                 )}
 
                 <p className="text-[8px] text-gray-400 italic mt-2">
-                  Metodología: IPCC 2006 · Residuo → pirólisis → aceite pirolítico
+                  Metodología: IPCC 2006 Vol. 2 &amp; 5 · IEA México 2023 · GWP: IPCC AR5
                 </p>
               </Section>
             )}
@@ -301,9 +399,9 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
           </div>
         </div>
 
-        {/* Powered by footer */}
-        <p className="text-center text-[9px] text-gray-400 mt-4">
-          Pasaporte Digital de Producto conforme a estándares EU DPP (ESPR)
+        {/* Standards footer */}
+        <p className="text-center text-[9px] text-gray-400 mt-4 leading-relaxed">
+          Pasaporte Digital de Producto · EU DPP (ESPR) · ISO 14040/14044 LCA · ISCC+ Ready
         </p>
       </div>
     </div>

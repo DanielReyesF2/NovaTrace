@@ -1,0 +1,12 @@
+-- AlterTable
+ALTER TABLE "Batch" ADD COLUMN     "charCalorificMJ" DOUBLE PRECISION,
+ADD COLUMN     "electricityKwh" DOUBLE PRECISION,
+ADD COLUMN     "gasRecirculatedKg" DOUBLE PRECISION,
+ADD COLUMN     "oilCalorificMJ" DOUBLE PRECISION;
+
+-- AlterTable
+ALTER TABLE "LabResult" ADD COLUMN     "ashContent" DOUBLE PRECISION,
+ADD COLUMN     "calorificMJ" DOUBLE PRECISION,
+ADD COLUMN     "carbonResidue" DOUBLE PRECISION,
+ADD COLUMN     "density15C" DOUBLE PRECISION,
+ADD COLUMN     "flashPoint" DOUBLE PRECISION;

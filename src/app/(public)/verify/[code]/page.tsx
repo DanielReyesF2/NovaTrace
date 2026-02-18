@@ -13,7 +13,9 @@ export default async function VerifyPage({
     where: { code },
     include: {
       batch: {
-        include: { labResults: true },
+        include: {
+          labResults: true,
+        },
       },
     },
   });

@@ -27,6 +27,12 @@ const DURATION_MIN = 540; // 9 horas — proceso completo grande
 const MAX_REACTOR_TEMP = 520;
 const MAX_CONTROL_TEMP = 340;
 
+// Energy Balance (ISO 14040 / ISCC+)
+const ELECTRICITY_KWH = 10.75 * (DURATION_MIN / 60); // POWER_KW × hours = 96.75 kWh
+const GAS_RECIRCULATED_KG = Math.round(CLEAN_PLASTIC_KG * 0.15); // ~15% of clean input → ~62 kg gas recirculated
+const OIL_CALORIFIC_MJ = 43.2; // MJ/kg — lab-tested, comparable to diesel
+const CHAR_CALORIFIC_MJ = 28.5; // MJ/kg — high carbon char
+
 // ============================================
 // THERMAL READING GENERATOR — Perfect S-curve
 // ============================================
@@ -443,6 +449,10 @@ async function main() {
     durationMinutes: DURATION_MIN,
     maxReactorTemp: MAX_REACTOR_TEMP,
     dieselConsumedL: DIESEL_L,
+    electricityKwh: ELECTRICITY_KWH,
+    gasRecirculatedKg: GAS_RECIRCULATED_KG,
+    oilCalorificMJ: OIL_CALORIFIC_MJ,
+    charCalorificMJ: CHAR_CALORIFIC_MJ,
     stopReason: "Completado — lote perfecto, rendimiento récord",
     notes: [
       "═══════════════════════════════════════════════════════",
@@ -585,6 +595,11 @@ async function main() {
       color: "Ámbar dorado",
       waterContent: 42,
       sulfurPercent: 0.001,
+      flashPoint: 68,
+      density15C: 0.838,
+      carbonResidue: 0.09,
+      ashContent: 0.004,
+      calorificMJ: 43.2,
       additionalTests: {
         "Punto de inflamación (°C)": "68",
         "Densidad 15°C (g/mL)": "0.838",

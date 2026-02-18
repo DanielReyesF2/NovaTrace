@@ -56,6 +56,12 @@ model Batch {
   maxReactorTemp  Float? // °C máxima alcanzada
   dieselConsumedL Float? // litros diesel consumidos
 
+  // Energy Balance (ISO 14040 / ISCC+)
+  electricityKwh    Float? // kWh de electricidad consumida
+  gasRecirculatedKg Float? // kg de gas pirolítico recirculado como combustible
+  oilCalorificMJ    Float? // poder calorífico del aceite en MJ/kg
+  charCalorificMJ   Float? // poder calorífico del char en MJ/kg
+
   // Resultado
   stopReason String? // "Completado", "Tapón en sistema"
   notes      String?
@@ -177,6 +183,11 @@ model LabResult {
   color         String? // "Café"
   waterContent  Float?  // PPM — ASTM D6304
   sulfurPercent Float?  // % m/m — ASTM D4951
+  flashPoint    Float?  // °C — ASTM D93
+  density15C    Float?  // g/mL a 15°C — ASTM D4052
+  carbonResidue Float?  // % — ASTM D4530
+  ashContent    Float?  // % — ASTM D482
+  calorificMJ   Float?  // MJ/kg — poder calorífico
 
   additionalTests Json?   // Flexible field for extra tests
   verdict         String? // "Cumple con las especificaciones"
