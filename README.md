@@ -10,7 +10,8 @@ Registra la cadena completa: **origen del residuo → pirólisis → producto �
 - **Frontend:** React + Tailwind CSS
 - **Database:** PostgreSQL + Prisma
 - **Auth:** JWT (jose, edge-compatible)
-- **Deploy:** Railway
+- **Database hosting:** Neon PostgreSQL
+- **Deploy:** Vercel / Railway
 
 ## Setup Local
 
@@ -38,16 +39,21 @@ Abrir [http://localhost:3000](http://localhost:3000)
 - Email: `daniel@econova.com.mx`
 - Password: `change-me-on-first-login` ← cambiar después del primer login
 
-## Deploy en Railway
+## Deploy
 
-1. Crear proyecto en Railway
-2. Agregar PostgreSQL addon
-3. Conectar repo de GitHub
-4. Configurar variables de entorno:
-   - `DATABASE_URL` (auto de Railway PostgreSQL)
+### Base de datos (Neon)
+
+1. Crear proyecto en [Neon](https://neon.tech)
+2. Copiar la connection string (`DATABASE_URL`)
+
+### Aplicación (Vercel / Railway)
+
+1. Conectar repo de GitHub
+2. Configurar variables de entorno:
+   - `DATABASE_URL` (connection string de Neon)
    - `JWT_SECRET` (generar: `openssl rand -base64 32`)
    - `NEXT_PUBLIC_APP_URL` = `https://trace.econova.com.mx`
-5. Custom domain: `trace.econova.com.mx`
+3. Custom domain: `trace.econova.com.mx`
 
 ## API Routes
 
