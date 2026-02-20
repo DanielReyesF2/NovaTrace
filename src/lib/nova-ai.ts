@@ -273,6 +273,9 @@ async function callNovaGateway(
   }
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 120000); // 2 min timeout
+
     const res = await fetch(`${NOVA_GATEWAY_URL}/chat`, {
       method: "POST",
       headers: {
@@ -285,7 +288,10 @@ async function callNovaGateway(
         user_id: "novatrace-system",
         page_context: "novatrace-batch-analysis",
       }),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeout);
 
     if (!res.ok) {
       console.error(
@@ -297,7 +303,11 @@ async function callNovaGateway(
     const data = await res.json();
     return data as NovaRawResponse;
   } catch (error) {
-    console.error("[Nova AI] Gateway request failed:", error);
+    if ((error as Error).name === "AbortError") {
+      console.error("[Nova AI] Gateway request timed out (120s)");
+    } else {
+      console.error("[Nova AI] Gateway request failed:", error);
+    }
     return null;
   }
 }
@@ -410,47 +420,17 @@ function buildLabComparisonMessage(
   });
 
   return [
-    `Soy ingeniero de EcoNova. Necesito un ANÁLISIS PROFUNDO de estos ${labResults.length} resultados de laboratorio del lote ${batchCode} de pirólisis de plástico agrícola.`,
+    `Analiza ${labResults.length} resultados de lab del lote ${batchCode} (pirólisis LDPE agrícola, EcoNova México).`,
+    `Explica la química, normaliza métodos ASTM, evalúa seguridad, y haz preguntas proactivas.`,
     "",
-    `NO quiero solo una comparación — quiero que me EXPLIQUES qué significan estos números. Imagina que soy un ingeniero que necesita tomar decisiones comerciales y de seguridad basadas en estos resultados. Necesito entender la QUÍMICA detrás de cada valor.`,
+    `IMPORTANTE: Responde SOLO con JSON puro, sin backticks, sin markdown, sin texto extra. Sé CONCISO en cada campo (máximo 2-3 oraciones por finding/insight).`,
     "",
-    `Responde con un JSON válido (sin markdown, sin backticks) con esta estructura:`,
-    `{`,
-    `  "summary": "3-4 oraciones de panorama general: qué productos son, cómo se comparan entre sí, y qué implicaciones tienen para EcoNova",`,
-    `  "findings": [{"type":"positive|warning|critical|neutral","title":"título corto","detail":"explicación técnica DETALLADA con contexto químico — por qué importa este hallazgo, qué significa para el uso del producto, cómo se compara con productos petroleros convencionales"}],`,
-    `  "normalization": "Párrafo explicando las diferencias de métodos entre laboratorios (temperatura de medición, tipo de copa, unidades) y LOS VALORES NORMALIZADOS CALCULADOS para poder comparar manzanas con manzanas. Incluye los cálculos específicos.",`,
-    `  "productCharacterization": "Párrafo técnico sobre qué tipo de producto es cada muestra: fracción pesada vs ligera, rango de destilación estimado (C5-C12 vs C12-C20 etc), comparación con productos petroleros convencionales (gasolina, diésel, queroseno, nafta), posibles usos comerciales ESPECÍFICOS y mercados potenciales.",`,
-    `  "safetyAssessment": "Párrafo sobre las implicaciones de SEGURIDAD: clasificación de peligrosidad (NFPA, GHS), requerimientos de almacenamiento, transporte, manipulación, EPP necesario, incompatibilidades químicas. Si hay punto de inflamación <23°C, ENFATIZAR que es un líquido inflamable Categoría 1-2 y las precauciones específicas.",`,
-    `  "proactiveInsights": [{"question":"Una pregunta que el usuario NO sabe que debería hacer pero que es CRÍTICA para su operación","answer":"La respuesta detallada con contexto técnico","importance":"high|medium|low"}],`,
-    `  "recommendations": ["recomendación accionable y específica"]`,
-    `}`,
+    `{"summary":"3 oraciones panorama","findings":[{"type":"positive|warning|critical|neutral","title":"corto","detail":"explicación con contexto químico"}],"normalization":"diferencias ASTM y valores normalizados","productCharacterization":"tipo producto, fracción, usos comerciales","safetyAssessment":"NFPA/GHS, flash point, almacenamiento, EPP","proactiveInsights":[{"question":"pregunta crítica","answer":"respuesta técnica","importance":"high|medium|low"}],"recommendations":["acción específica"]}`,
     "",
-    `CONTEXTO TÉCNICO PARA TU ANÁLISIS:`,
-    `- EcoNova hace pirólisis de plástico agrícola (LDPE/HDPE) para producir combustibles alternativos`,
-    `- Los laboratorios usan DIFERENTES métodos ASTM — necesitas normalizar antes de comparar:`,
-    `  * Densidad a 15°C vs 20°C: disminuye ~0.0007 g/mL por °C. 0.838 g/mL @15°C ≈ 0.8345 @20°C`,
-    `  * Viscosidad cinemática (mm²/s, @40°C) vs dinámica (cP, @20°C): ν = μ/ρ. A 20°C el fluido es más viscoso que a 40°C`,
-    `  * Flash point copa cerrada (D93) vs copa abierta (D92): copa abierta da valores MÁS BAJOS (±5-10°C)`,
-    `  * Poder calorífico: 1 Cal/g × 4.184 = kJ/kg; 10830 Cal/g = 45.31 MJ/kg`,
-    `  * Agua: PPM vs % — 133 PPM = 0.0133%; 0.1399% = 1399 PPM`,
+    `Contexto: Densidad 15°C vs 20°C (-0.0007/°C), visc cinemática vs dinámica (ν=μ/ρ), flash cerrada vs abierta (+5-10°C), 1 Cal/g=4.184 kJ/kg, PPM vs %.`,
+    `Flash <5°C=nafta C5-C10; Flash 68°C=diésel C10-C20.`,
     "",
-    `- Si flash point <5°C → fracción MUY ligera tipo nafta/gasolina (C5-C10, ~70°C-170°C range de destilación)`,
-    `- Si flash point 68°C → fracción media tipo diésel/queroseno (C10-C20, ~170°C-370°C)`,
-    `- La pirólisis de LDPE típicamente produce: ~60-70% líquidos, 15-25% gases, 10-15% char`,
-    `- Los líquidos de pirólisis pueden contener olefinas, parafinas, nafténicos y aromáticos`,
-    "",
-    `GENERA:`,
-    `- 5 a 7 findings (hallazgos con peso técnico real, no observaciones obvias)`,
-    `- 4 a 6 proactiveInsights — estas son las PREGUNTAS QUE EL USUARIO NO SABE QUE DEBE HACER. Ejemplos:`,
-    `  * ¿Necesitan una licencia especial para almacenar un líquido con flash point <5°C?`,
-    `  * ¿Qué pruebas adicionales deberían solicitar (destilación ASTM D86, corrosión al cobre, estabilidad oxidativa)?`,
-    `  * ¿Cómo afecta la presencia de olefinas a la estabilidad del producto en almacenamiento?`,
-    `  * ¿Es necesario hacer una cromatografía de gases para verificar composición?`,
-    `  * ¿Qué normatividad mexicana aplica (NOM-016-CRE, NOM-005-STPS)?`,
-    `  * ¿Deberían considerar fraccionamiento/destilación para separar las fracciones y obtener más valor?`,
-    `  * ¿Cómo se compara el contenido energético con el costo de producción?`,
-    `  * ¿Qué implicaciones tiene para la certificación ISCC+ que están buscando?`,
-    `- 3 a 5 recomendaciones técnicas accionables y ESPECÍFICAS para EcoNova`,
+    `Genera: 5 findings, 4 proactiveInsights (licencias, pruebas adicionales, normatividad NOM, fraccionamiento), 3 recommendations.`,
     "",
     ...labSections,
   ].join("\n");
@@ -520,69 +500,124 @@ export async function generateLabAnalysis(
 }
 
 function parseLabAnalysis(responseText: string): NovaLabAnalysis | null {
-  // Step 1: Strip markdown code fences (```json ... ```)
-  let cleaned = responseText.trim();
-  if (cleaned.startsWith("```")) {
-    // Remove opening ```json or ``` and closing ```
-    cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "").trim();
-  }
+  console.log("[Nova AI Parser] Input length:", responseText.length);
 
-  // Step 2: Try direct JSON parse on cleaned text
-  try {
-    const parsed = JSON.parse(cleaned);
-    if (parsed.summary && Array.isArray(parsed.findings)) {
-      return parsed;
+  // Helper: validate parsed object has required fields
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isValid = (obj: any): obj is NovaLabAnalysis =>
+    obj && typeof obj.summary === "string" && Array.isArray(obj.findings);
+
+  // Strategy 1 (PRIMARY): String-aware balanced braces — most robust
+  // Finds the first { and its matching }, correctly handling braces inside JSON strings
+  const firstBrace = responseText.indexOf("{");
+  if (firstBrace !== -1) {
+    let depth = 0;
+    let inString = false;
+    let escape = false;
+    let end = -1;
+
+    for (let i = firstBrace; i < responseText.length; i++) {
+      const ch = responseText[i];
+      if (escape) {
+        escape = false;
+        continue;
+      }
+      if (ch === "\\") {
+        if (inString) { escape = true; }
+        continue;
+      }
+      if (ch === '"') {
+        inString = !inString;
+        continue;
+      }
+      if (inString) continue;
+      if (ch === "{") depth++;
+      if (ch === "}") {
+        depth--;
+        if (depth === 0) { end = i; break; }
+      }
     }
-  } catch {
-    // Step 3: Try regex extraction (greedy match for JSON object)
-    const jsonMatch = cleaned.match(/\{[\s\S]*"summary"[\s\S]*\}/);
-    if (jsonMatch) {
+
+    if (end > firstBrace) {
+      const extracted = responseText.substring(firstBrace, end + 1);
+      console.log("[Nova AI Parser] Balanced extraction, length:", extracted.length, "firstBrace:", firstBrace, "end:", end);
       try {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (parsed.summary && Array.isArray(parsed.findings)) {
+        const parsed = JSON.parse(extracted);
+        if (isValid(parsed)) {
+          console.log("[Nova AI Parser] ✅ Parsed via balanced braces, findings:", parsed.findings?.length, "safety:", (parsed.safetyAssessment as string)?.length || 0);
           return parsed;
         }
-      } catch {
-        // Step 4: Try to find balanced braces
-        const start = cleaned.indexOf("{");
-        if (start !== -1) {
-          let depth = 0;
-          let end = -1;
-          for (let i = start; i < cleaned.length; i++) {
-            if (cleaned[i] === "{") depth++;
-            if (cleaned[i] === "}") depth--;
-            if (depth === 0) { end = i; break; }
-          }
-          if (end > start) {
-            try {
-              const parsed = JSON.parse(cleaned.substring(start, end + 1));
-              if (parsed.summary && Array.isArray(parsed.findings)) {
-                return parsed;
-              }
-            } catch {
-              // fall through
-            }
-          }
+      } catch (e) {
+        const err = e as SyntaxError & { message: string };
+        console.log("[Nova AI Parser] Balanced parse failed:", err.message);
+        // Log area around error for debugging
+        const posMatch = err.message.match(/position (\d+)/);
+        if (posMatch) {
+          const pos = parseInt(posMatch[1]);
+          console.log("[Nova AI Parser] Error context:", JSON.stringify(extracted.substring(Math.max(0, pos - 50), pos + 50)));
         }
+      }
+    } else {
+      console.log("[Nova AI Parser] Balanced braces: no closing found, depth:", depth, "scanned:", responseText.length - firstBrace, "chars");
+    }
+  }
+
+  // Strategy 2: Strip outermost ``` fences and try JSON.parse
+  // Handles ```json\n{...}\n``` wrapping, using lastIndexOf for the closing fence
+  const trimmed = responseText.trim();
+  if (trimmed.startsWith("```")) {
+    const openEnd = trimmed.indexOf("\n");
+    const closingFence = trimmed.lastIndexOf("```", trimmed.length - 1);
+    if (openEnd > 0 && closingFence > openEnd) {
+      const inner = trimmed.substring(openEnd + 1, closingFence).trim();
+      console.log("[Nova AI Parser] Fence-stripped content length:", inner.length);
+      try {
+        const parsed = JSON.parse(inner);
+        if (isValid(parsed)) {
+          console.log("[Nova AI Parser] ✅ Parsed from fence-stripped content");
+          return parsed;
+        }
+      } catch (e) {
+        console.log("[Nova AI Parser] Fence-stripped parse failed:", (e as Error).message);
       }
     }
   }
 
+  // Strategy 3: Direct JSON parse (response is raw JSON)
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (isValid(parsed)) {
+      console.log("[Nova AI Parser] ✅ Parsed directly");
+      return parsed;
+    }
+  } catch {
+    // continue
+  }
+
+  console.error("[Nova AI Parser] ❌ All strategies failed. First 500 chars:", responseText.substring(0, 500));
+
+  // Fallback: return degraded analysis
   if (responseText && responseText.length > 50) {
+    // Try to extract just the summary value from the raw text
+    const summaryMatch = responseText.match(/"summary"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+    const displaySummary = summaryMatch
+      ? summaryMatch[1].replace(/\\"/g, '"').replace(/\\n/g, " ").slice(0, 400)
+      : responseText.replace(/```(?:json)?/g, "").replace(/[{}[\]]/g, " ").trim().slice(0, 400);
+
     return {
-      summary: responseText.slice(0, 400),
+      summary: displaySummary,
       findings: [
         {
           type: "neutral",
           title: "Análisis completado",
-          detail: responseText.slice(0, 300),
+          detail: "Nova generó un análisis pero no se pudo estructurar completamente. Los resultados principales se muestran arriba.",
         },
       ],
       normalization: "No se pudo estructurar el análisis de normalización.",
       productCharacterization: "No se pudo estructurar la caracterización.",
       safetyAssessment: "",
       proactiveInsights: [],
-      recommendations: ["Revisar el análisis completo."],
+      recommendations: ["Intentar regenerar el análisis para obtener resultados completos."],
     };
   }
   return null;
