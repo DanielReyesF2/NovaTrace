@@ -25,28 +25,28 @@ const FINDING_STYLES: Record<
   { icon: string; bg: string; border: string; color: string; label: string }
 > = {
   positive: {
-    icon: "\u2713",
+    icon: "✓",
     bg: "rgba(61,122,10,0.04)",
     border: "rgba(61,122,10,0.15)",
     color: "#3d7a0a",
     label: "Positivo",
   },
   warning: {
-    icon: "\u26A0",
+    icon: "⚠",
     bg: "rgba(232,112,10,0.04)",
     border: "rgba(232,112,10,0.15)",
     color: "#E8700A",
-    label: "Atenci\u00F3n",
+    label: "Atención",
   },
   critical: {
-    icon: "\u26D4",
+    icon: "⛔",
     bg: "rgba(220,38,38,0.04)",
     border: "rgba(220,38,38,0.12)",
     color: "#DC2626",
-    label: "Cr\u00EDtico",
+    label: "Crítico",
   },
   neutral: {
-    icon: "\u2139",
+    icon: "ℹ",
     bg: "rgba(45,140,240,0.04)",
     border: "rgba(45,140,240,0.15)",
     color: "#2D8CF0",
@@ -98,8 +98,8 @@ export function NovaLabAnalysis() {
             </svg>
           </div>
           <div>
-            <h3 className="text-white text-sm font-bold">An&aacute;lisis Profundo Nova AI</h3>
-            <p className="text-white/40 text-[10px]">Qu&iacute;mica, seguridad, normalizaci&oacute;n y preguntas que no sab&iacute;as que deb&iacute;as hacer</p>
+            <h3 className="text-white text-sm font-bold">Análisis Profundo Nova AI</h3>
+            <p className="text-white/40 text-[10px]">Química, seguridad, normalización y preguntas que no sabías que debías hacer</p>
           </div>
         </div>
         {state !== "loading" && (
@@ -107,7 +107,7 @@ export function NovaLabAnalysis() {
             onClick={analyze}
             className="text-[10px] font-semibold px-4 py-2 rounded-lg bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors"
           >
-            {state === "loaded" ? "\u21BB Regenerar" : "\u2726 Analizar"}
+            {state === "loaded" ? "↻ Regenerar" : "✦ Analizar"}
           </button>
         )}
       </div>
@@ -123,10 +123,10 @@ export function NovaLabAnalysis() {
                 <line x1="8" y1="3" x2="16" y2="3" />
               </svg>
             </div>
-            <p className="text-sm text-eco-ink font-medium mb-1">An&aacute;lisis profundo de laboratorio</p>
+            <p className="text-sm text-eco-ink font-medium mb-1">Análisis profundo de laboratorio</p>
             <p className="text-xs text-eco-muted mb-4 max-w-md mx-auto leading-relaxed">
-              Nova analizar&aacute; la qu&iacute;mica detr&aacute;s de cada resultado, normalizar&aacute; m&eacute;todos ASTM,
-              evaluar&aacute; seguridad y te dir&aacute; cosas que no sab&iacute;as que necesitabas preguntar.
+              Nova analizará la química detrás de cada resultado, normalizará métodos ASTM,
+              evaluará seguridad y te dirá cosas que no sabías que necesitabas preguntar.
             </p>
             <button
               onClick={analyze}
@@ -136,7 +136,7 @@ export function NovaLabAnalysis() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z" />
               </svg>
-              Iniciar an&aacute;lisis con Nova
+              Iniciar análisis con Nova
             </button>
           </div>
         )}
@@ -156,7 +156,7 @@ export function NovaLabAnalysis() {
             <div>
               <p className="text-sm text-eco-ink font-medium">Nova analizando resultados...</p>
               <p className="text-[10px] text-eco-muted mt-1">
-                Analizando qu&iacute;mica, normalizando temperaturas, evaluando seguridad, generando insights
+                Analizando química, normalizando temperaturas, evaluando seguridad, generando insights
               </p>
             </div>
           </div>
@@ -166,7 +166,7 @@ export function NovaLabAnalysis() {
         {state === "error" && (
           <div className="py-8 text-center space-y-3">
             <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-eco-red/5 border border-eco-red/10">
-              <span className="text-eco-red text-sm">{"\u26A0"}</span>
+              <span className="text-eco-red text-sm">⚠</span>
               <span className="text-xs text-eco-red">{errorMsg}</span>
             </div>
             <div>
@@ -236,7 +236,7 @@ export function NovaLabAnalysis() {
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                     <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
                   </svg>
-                  Normalizaci&oacute;n de M&eacute;todos
+                  Normalización de Métodos
                 </h4>
                 <div className="p-4 rounded-xl bg-eco-blue/[0.03] border border-eco-blue/10">
                   <p className="text-[11px] text-eco-ink leading-relaxed whitespace-pre-line">{analysis.normalization}</p>
@@ -251,7 +251,7 @@ export function NovaLabAnalysis() {
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                     <path d="M9 3v7.4a2 2 0 01-.4 1.2L4 18.6a1 1 0 00.8 1.4h14.4a1 1 0 00.8-1.4l-4.6-7a2 2 0 01-.4-1.2V3" />
                   </svg>
-                  Caracterizaci&oacute;n del Producto
+                  Caracterización del Producto
                 </h4>
                 <div className="p-4 rounded-xl" style={{ background: "rgba(124,92,252,0.03)", border: "1px solid rgba(124,92,252,0.10)" }}>
                   <p className="text-[11px] text-eco-ink leading-relaxed whitespace-pre-line">{analysis.productCharacterization}</p>
@@ -266,7 +266,7 @@ export function NovaLabAnalysis() {
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   </svg>
-                  Evaluaci&oacute;n de Seguridad
+                  Evaluación de Seguridad
                 </h4>
                 <div className="p-4 rounded-xl" style={{ background: "rgba(220,38,38,0.02)", border: "1px solid rgba(220,38,38,0.10)" }}>
                   <p className="text-[11px] text-eco-ink leading-relaxed whitespace-pre-line">{analysis.safetyAssessment}</p>
@@ -283,10 +283,10 @@ export function NovaLabAnalysis() {
                     <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
                     <line x1="12" y1="17" x2="12.01" y2="17" />
                   </svg>
-                  Lo Que No Sab&iacute;as Que Deb&iacute;as Preguntar
+                  Lo Que No Sabías Que Debías Preguntar
                 </h4>
                 <p className="text-[9px] text-eco-muted mb-3">
-                  Nova identific&oacute; estas preguntas cr&iacute;ticas que podr&iacute;an impactar tu operaci&oacute;n
+                  Nova identificó estas preguntas críticas que podrían impactar tu operación
                 </p>
                 <div className="space-y-3">
                   {analysis.proactiveInsights.map((insight, i) => {
@@ -347,13 +347,13 @@ export function NovaLabAnalysis() {
             {/* Footer */}
             <div className="pt-4 border-t border-eco-border flex items-center justify-between">
               <p className="text-[8px] text-eco-muted-2 italic">
-                An&aacute;lisis generado por Nova AI &middot; Los resultados son orientativos y no sustituyen el criterio profesional
+                Análisis generado por Nova AI · Los resultados son orientativos y no sustituyen el criterio profesional
               </p>
               <button
                 onClick={analyze}
                 className="text-[10px] text-eco-muted hover:text-eco-blue transition-colors"
               >
-                {"\u21BB"} Regenerar
+                ↻ Regenerar
               </button>
             </div>
           </div>
