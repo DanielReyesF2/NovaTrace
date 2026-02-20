@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { NovaLabAnalysis } from "./NovaLabAnalysis";
 
 /* ── Types ── */
 interface LabResultFull {
@@ -122,6 +123,9 @@ export function LabDashboard({ labResults, stats }: LabDashboardProps) {
           <p className="text-sm">No hay resultados de laboratorio</p>
         </div>
       )}
+
+      {/* ── Nova AI Analysis ── */}
+      {labResults.length >= 2 && <NovaLabAnalysis />}
 
       {/* ── Comparison table (parameters aligned) ── */}
       {labResults.length >= 2 && <ComparisonTable results={labResults} />}
