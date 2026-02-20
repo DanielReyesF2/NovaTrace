@@ -153,7 +153,7 @@ export function Sidebar({ user }: SidebarProps) {
             return (
               <Link
                 key={item.href}
-                href={item.href === "/batch" ? "/" : item.href}
+                href={item.href}
                 className={`
                   flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium
                   transition-all duration-200 group relative
