@@ -125,7 +125,9 @@ export function LabDashboard({ labResults, stats }: LabDashboardProps) {
       )}
 
       {/* ── Nova AI Analysis ── */}
-      {labResults.length >= 2 && <NovaLabAnalysis />}
+      {labResults.length >= 2 && (
+        <NovaLabAnalysis />
+      )}
 
       {/* ── Comparison table (parameters aligned) ── */}
       {labResults.length >= 2 && <ComparisonTable results={labResults} />}
