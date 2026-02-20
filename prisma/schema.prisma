@@ -212,7 +212,10 @@ model LabResult {
   lotNumber        String? // "12022026"
   reportDate       DateTime
 
-  // Test results
+  // Clasificación del producto
+  productClassification String? // "Aceite pirolítico", "Solvente", "Combustible alterno"
+
+  // Test results — Lab 1 style (Diamond Internacional)
   crepitation   String? // "Negativo"
   appearance    String? // "Clara y Brillante"
   viscosity40C  Float?  // mm²/s — ASTM D7042
@@ -225,6 +228,16 @@ model LabResult {
   ashContent    Float?  // % — ASTM D482
   calorificMJ   Float?  // MJ/kg — poder calorífico
 
+  // Test results — Lab 2 style (general)
+  density20C       Float?  // Kg/L a 20°C — ASTM D1298
+  viscDynamic20C   Float?  // cP — ASTM D2983 viscosidad dinámica a 20°C
+  flashPointOpen   Float?  // °C — ASTM D92 copa abierta (Cleveland)
+  calorificCalG    Float?  // Cal/g — ASTM D240
+  waterSedimentPct Float?  // % — ASTM D4007
+  waterByKFPct     Float?  // % — ASTM E203 Karl Fischer
+
+  // Meta
+  labNotes        String? // "Olor fuerte", observaciones del lab
   additionalTests Json?   // Flexible field for extra tests
   verdict         String? // "Cumple con las especificaciones"
   pdfUrl          String?

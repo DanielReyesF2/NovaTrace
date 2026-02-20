@@ -64,6 +64,17 @@ const NAV_ITEMS = [
     ),
   },
   {
+    href: "/lab",
+    label: "Laboratorio",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 3v7.4a2 2 0 01-.4 1.2L4 18.6a1 1 0 00.8 1.4h14.4a1 1 0 00.8-1.4l-4.6-7a2 2 0 01-.4-1.2V3" />
+        <line x1="8" y1="3" x2="16" y2="3" />
+        <path d="M10 12h4" />
+      </svg>
+    ),
+  },
+  {
     href: "/map",
     label: "Trazabilidad",
     icon: (

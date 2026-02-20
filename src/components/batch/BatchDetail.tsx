@@ -84,12 +84,27 @@ interface BatchDetailProps {
       labCertification: string | null;
       sampleNumber: string;
       reportDate: string;
+      productClassification: string | null;
+      // Lab 1 style
       viscosity40C: number | null;
       sulfurPercent: number | null;
       waterContent: number | null;
       flashPoint: number | null;
       density15C: number | null;
       calorificMJ: number | null;
+      carbonResidue: number | null;
+      ashContent: number | null;
+      crepitation: string | null;
+      appearance: string | null;
+      color: string | null;
+      // Lab 2 style
+      density20C: number | null;
+      viscDynamic20C: number | null;
+      flashPointOpen: number | null;
+      calorificCalG: number | null;
+      waterSedimentPct: number | null;
+      waterByKFPct: number | null;
+      labNotes: string | null;
       verdict: string | null;
     }>;
     certificates: Array<{
@@ -668,78 +683,125 @@ export function BatchDetail({ batch }: BatchDetailProps) {
 
       {/* ── Lab Results ── */}
       {batch.labResults.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5">
-          <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-4">
-            Laboratorio
-          </h3>
-          {batch.labResults.map((lab) => (
-            <div key={lab.id}>
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <span className="text-sm font-semibold">{lab.labName}</span>
-                  {lab.labCertification && (
-                    <span className="text-[10px] text-eco-blue ml-2">
-                      {lab.labCertification}
+        <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5 space-y-5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium">
+              Laboratorio — {batch.labResults.length} {batch.labResults.length === 1 ? "análisis" : "análisis"}
+            </h3>
+            <Link
+              href="/lab"
+              className="text-[10px] text-eco-blue hover:underline font-medium"
+            >
+              Ver todo →
+            </Link>
+          </div>
+          {batch.labResults.map((lab) => {
+            const PRODUCT_COLORS: Record<string, { color: string; bg: string }> = {
+              "Aceite pirolítico": { color: "#7C5CFC", bg: "rgba(124,92,252,0.08)" },
+              "Solvente": { color: "#E8700A", bg: "rgba(232,112,10,0.08)" },
+            };
+            const ps = lab.productClassification
+              ? PRODUCT_COLORS[lab.productClassification] || { color: "#273949", bg: "rgba(39,57,73,0.06)" }
+              : null;
+
+            // Build rows dynamically from available fields
+            const rows: { test: string; value: string; method: string }[] = [];
+            if (lab.density15C != null) rows.push({ test: "Densidad @15°C", value: `${lab.density15C} g/mL`, method: "ASTM D4052" });
+            if (lab.density20C != null) rows.push({ test: "Densidad @20°C", value: `${lab.density20C} Kg/L`, method: "ASTM D1298" });
+            if (lab.viscosity40C != null) rows.push({ test: "Viscosidad @40°C", value: `${lab.viscosity40C} mm²/s`, method: "ASTM D7042" });
+            if (lab.viscDynamic20C != null) rows.push({ test: "Visc. Dinámica @20°C", value: `${lab.viscDynamic20C} cP`, method: "ASTM D2983" });
+            if (lab.flashPoint != null) rows.push({ test: "Pto. Inflam. (cerrada)", value: `${lab.flashPoint}°C`, method: "ASTM D93" });
+            if (lab.flashPointOpen != null) rows.push({ test: "Pto. Inflam. (abierta)", value: lab.flashPointOpen <= 5 ? "<5°C" : `${lab.flashPointOpen}°C`, method: "ASTM D92" });
+            if (lab.calorificMJ != null) rows.push({ test: "Poder Calorífico", value: `${lab.calorificMJ} MJ/kg`, method: "ASTM D240" });
+            if (lab.calorificCalG != null) rows.push({ test: "Poder Calorífico", value: `${lab.calorificCalG.toLocaleString()} Cal/g`, method: "ASTM D240" });
+            if (lab.waterContent != null) rows.push({ test: "Contenido de Agua", value: `${lab.waterContent} PPM`, method: "ASTM D6304" });
+            if (lab.waterByKFPct != null) rows.push({ test: "Agua (Karl Fischer)", value: `${lab.waterByKFPct}%`, method: "ASTM E203" });
+            if (lab.waterSedimentPct != null) rows.push({ test: "Agua y Sedimento", value: `${lab.waterSedimentPct}%`, method: "ASTM D4007" });
+            if (lab.sulfurPercent != null) rows.push({ test: "Azufre", value: `${lab.sulfurPercent}% m/m`, method: "ASTM D4951" });
+            if (lab.carbonResidue != null) rows.push({ test: "Residuo Carbón", value: `${lab.carbonResidue}%`, method: "ASTM D4530" });
+            if (lab.ashContent != null) rows.push({ test: "Cenizas", value: `${lab.ashContent}%`, method: "ASTM D482" });
+
+            return (
+              <div key={lab.id} className="border border-eco-border/50 rounded-xl p-4">
+                {/* Lab header */}
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">{lab.labName}</span>
+                      {lab.labCertification && (
+                        <span className="text-[9px] text-eco-blue font-mono">
+                          {lab.labCertification}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-eco-muted-2">
+                      Muestra: {lab.sampleNumber} ·{" "}
+                      {new Date(lab.reportDate).toLocaleDateString("es-MX")}
+                    </p>
+                  </div>
+                  {ps && lab.productClassification && (
+                    <span
+                      className="text-[9px] font-semibold px-2.5 py-1 rounded-full"
+                      style={{ color: ps.color, background: ps.bg }}
+                    >
+                      {lab.productClassification}
                     </span>
                   )}
-                  <p className="text-[10px] text-eco-muted-2">
-                    Muestra: {lab.sampleNumber} ·{" "}
-                    {new Date(lab.reportDate).toLocaleDateString("es-MX")}
-                  </p>
                 </div>
-              </div>
-              <div className="space-y-1">
-                {[
-                  {
-                    test: "Viscosidad @40°C",
-                    value: lab.viscosity40C ? `${lab.viscosity40C} mm²/s` : "—",
-                    method: "ASTM D7042",
-                  },
-                  {
-                    test: "Contenido de Agua",
-                    value: lab.waterContent ? `${lab.waterContent} PPM` : "—",
-                    method: "ASTM D6304",
-                  },
-                  {
-                    test: "% Azufre",
-                    value: lab.sulfurPercent ? `${lab.sulfurPercent}% m/m` : "—",
-                    method: "ASTM D4951",
-                  },
-                  ...(lab.flashPoint != null ? [{
-                    test: "Punto de Inflamación",
-                    value: `${lab.flashPoint}°C`,
-                    method: "ASTM D93",
-                  }] : []),
-                  ...(lab.density15C != null ? [{
-                    test: "Densidad @15°C",
-                    value: `${lab.density15C} g/mL`,
-                    method: "ASTM D4052",
-                  }] : []),
-                  ...(lab.calorificMJ != null ? [{
-                    test: "Poder Calorífico",
-                    value: `${lab.calorificMJ} MJ/kg`,
-                    method: "ASTM D240",
-                  }] : []),
-                ].map((row, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between py-2 px-3 rounded bg-eco-surface-2/50"
-                  >
-                    <span className="text-xs">{row.test}</span>
-                    <div className="flex items-center gap-4">
-                      <span className="text-[10px] text-eco-muted-2 font-mono">{row.method}</span>
-                      <span className="text-sm font-mono font-bold">{row.value}</span>
-                    </div>
+
+                {/* Qualitative row */}
+                {(lab.crepitation || lab.appearance || lab.color) && (
+                  <div className="flex gap-3 mb-2">
+                    {lab.appearance && (
+                      <span className="text-[9px] px-2 py-1 rounded-full bg-eco-surface-2 text-eco-muted">
+                        {lab.appearance}
+                      </span>
+                    )}
+                    {lab.color && (
+                      <span className="text-[9px] px-2 py-1 rounded-full bg-eco-surface-2 text-eco-muted">
+                        Color: {lab.color}
+                      </span>
+                    )}
+                    {lab.crepitation && (
+                      <span className="text-[9px] px-2 py-1 rounded-full bg-eco-surface-2 text-eco-muted">
+                        Crepitación: {lab.crepitation}
+                      </span>
+                    )}
                   </div>
-                ))}
-              </div>
-              {lab.verdict && (
-                <div className="mt-3 text-center py-2.5 bg-eco-green/5 border border-eco-green/10 rounded-lg">
-                  <span className="text-eco-green text-sm font-semibold">✓ {lab.verdict}</span>
+                )}
+
+                {/* Test results */}
+                <div className="space-y-1">
+                  {rows.map((row, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between py-2 px-3 rounded bg-eco-surface-2/50"
+                    >
+                      <span className="text-xs">{row.test}</span>
+                      <div className="flex items-center gap-4">
+                        <span className="text-[10px] text-eco-muted-2 font-mono">{row.method}</span>
+                        <span className="text-sm font-mono font-bold">{row.value}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
-            </div>
-          ))}
+
+                {/* Notes */}
+                {lab.labNotes && (
+                  <div className="mt-2 px-3 py-2 bg-amber-50/50 border border-amber-200/30 rounded-lg">
+                    <p className="text-[10px] text-amber-800 italic">{lab.labNotes}</p>
+                  </div>
+                )}
+
+                {/* Verdict */}
+                {lab.verdict && (
+                  <div className="mt-3 text-center py-2.5 bg-eco-green/5 border border-eco-green/10 rounded-lg">
+                    <span className="text-eco-green text-sm font-semibold">✓ {lab.verdict}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
