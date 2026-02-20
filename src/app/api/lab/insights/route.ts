@@ -1,11 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateLabAnalysis } from "@/lib/nova-ai";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     await requireAuth();
+
+    // Check if fresh analysis is requested (bypass cache)
+    const skipCache = req.nextUrl.searchParams.get("fresh") === "1";
 
     // Fetch all lab results with batch info
     const labResults = await prisma.labResult.findMany({
@@ -30,7 +33,7 @@ export async function GET() {
     // Serialize for the analysis engine
     const serialized = JSON.parse(JSON.stringify(labResults));
 
-    const analysis = await generateLabAnalysis(serialized, batchCode);
+    const analysis = await generateLabAnalysis(serialized, batchCode, skipCache);
 
     if (!analysis) {
       return NextResponse.json(

@@ -459,22 +459,43 @@ function buildLabComparisonMessage(
 /* ── Generate Lab Analysis ── */
 export async function generateLabAnalysis(
   labResults: Array<Record<string, unknown>>,
-  batchCode: string
+  batchCode: string,
+  skipCache = false
 ): Promise<NovaLabAnalysis | null> {
-  // Check cache
+  // Check cache (unless explicitly skipping)
   const cacheKey = `lab-${labResults.map((l) => l.id).join("-")}`;
-  const cached = labInsightsCache.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < 60 * 60 * 1000) {
-    return cached.data;
+  if (!skipCache) {
+    const cached = labInsightsCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < 60 * 60 * 1000) {
+      // Validate cached data is a real analysis (not a fallback with raw markdown)
+      const isRealAnalysis = cached.data.findings.length > 1 ||
+        (cached.data.safetyAssessment && cached.data.safetyAssessment.length > 10) ||
+        (cached.data.proactiveInsights && cached.data.proactiveInsights.length > 0);
+      if (isRealAnalysis) {
+        console.log("[Nova AI] Returning cached lab analysis");
+        return cached.data;
+      } else {
+        console.log("[Nova AI] Cached result looks like a fallback, re-analyzing...");
+        labInsightsCache.delete(cacheKey);
+      }
+    }
+  } else {
+    // Explicitly clear stale cache
+    labInsightsCache.delete(cacheKey);
+    console.log("[Nova AI] Cache skipped, forcing fresh analysis");
   }
 
   const message = buildLabComparisonMessage(labResults, batchCode);
-  const conversationId = `novatrace-lab-${cacheKey}`;
+  const conversationId = `novatrace-lab-${Date.now()}`; // Unique conversation each time
 
+  console.log("[Nova AI] Calling gateway for lab analysis...");
   const response = await callNovaGateway(message, conversationId);
   if (!response || !response.response) {
+    console.error("[Nova AI] No response from gateway");
     return null;
   }
+
+  console.log("[Nova AI] Got response, length:", response.response.length, "First 100 chars:", response.response.substring(0, 100));
 
   // Parse
   const analysis = parseLabAnalysis(response.response);
@@ -483,8 +504,17 @@ export async function generateLabAnalysis(
     return null;
   }
 
-  // Cache
-  labInsightsCache.set(cacheKey, { data: analysis, timestamp: Date.now() });
+  // Only cache if it's a REAL analysis (not a fallback)
+  const isRealAnalysis = analysis.findings.length > 1 ||
+    (analysis.safetyAssessment && analysis.safetyAssessment.length > 10) ||
+    (analysis.proactiveInsights && analysis.proactiveInsights.length > 0);
+
+  if (isRealAnalysis) {
+    labInsightsCache.set(cacheKey, { data: analysis, timestamp: Date.now() });
+    console.log("[Nova AI] Lab analysis cached (real analysis)");
+  } else {
+    console.log("[Nova AI] Lab analysis NOT cached (looks like fallback)");
+  }
 
   return analysis;
 }

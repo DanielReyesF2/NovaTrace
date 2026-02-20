@@ -69,7 +69,7 @@ export function NovaLabAnalysis() {
     setState("loading");
     setErrorMsg("");
     try {
-      const res = await fetch("/api/lab/insights");
+      const res = await fetch("/api/lab/insights?fresh=1");
       const data = await res.json();
       if (!res.ok) {
         setErrorMsg(data.error || "Error al contactar Nova AI");
