@@ -20,57 +20,112 @@ interface LabAnalysis {
   recommendations: string[];
 }
 
+/* ── Style configs ── */
 const FINDING_STYLES: Record<
   string,
   { icon: string; bg: string; border: string; color: string; label: string }
 > = {
-  positive: {
-    icon: "✓",
-    bg: "rgba(61,122,10,0.04)",
-    border: "rgba(61,122,10,0.15)",
-    color: "#3d7a0a",
-    label: "Positivo",
-  },
-  warning: {
-    icon: "⚠",
-    bg: "rgba(232,112,10,0.04)",
-    border: "rgba(232,112,10,0.15)",
-    color: "#E8700A",
-    label: "Atención",
-  },
   critical: {
-    icon: "⛔",
-    bg: "rgba(220,38,38,0.04)",
-    border: "rgba(220,38,38,0.12)",
+    icon: "!",
+    bg: "rgba(220,38,38,0.05)",
+    border: "rgba(220,38,38,0.15)",
     color: "#DC2626",
     label: "Crítico",
   },
+  warning: {
+    icon: "!",
+    bg: "rgba(232,112,10,0.04)",
+    border: "rgba(232,112,10,0.12)",
+    color: "#E8700A",
+    label: "Atención",
+  },
+  positive: {
+    icon: "✓",
+    bg: "rgba(61,122,10,0.04)",
+    border: "rgba(61,122,10,0.12)",
+    color: "#3d7a0a",
+    label: "OK",
+  },
   neutral: {
-    icon: "ℹ",
-    bg: "rgba(45,140,240,0.04)",
-    border: "rgba(45,140,240,0.15)",
+    icon: "i",
+    bg: "rgba(45,140,240,0.03)",
+    border: "rgba(45,140,240,0.10)",
     color: "#2D8CF0",
     label: "Info",
   },
 };
 
-const IMPORTANCE_STYLES: Record<string, { bg: string; border: string; dot: string; label: string }> = {
-  high: { bg: "rgba(220,38,38,0.03)", border: "rgba(220,38,38,0.12)", dot: "#DC2626", label: "Alta prioridad" },
-  medium: { bg: "rgba(232,112,10,0.03)", border: "rgba(232,112,10,0.12)", dot: "#E8700A", label: "Relevante" },
-  low: { bg: "rgba(45,140,240,0.03)", border: "rgba(45,140,240,0.10)", dot: "#2D8CF0", label: "Informativo" },
+const IMPORTANCE_COLORS: Record<string, string> = {
+  high: "#DC2626",
+  medium: "#E8700A",
+  low: "#2D8CF0",
 };
 
+/* ── Collapsible section ── */
+function Section({
+  title,
+  icon,
+  color,
+  children,
+  defaultOpen = false,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  color: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div
+      className="rounded-xl overflow-hidden"
+      style={{ border: `1px solid ${color}18` }}
+    >
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center gap-2.5 px-4 py-3 text-left transition-colors hover:bg-black/[0.01]"
+        style={{ background: `${color}06` }}
+      >
+        <span style={{ color }} className="flex-shrink-0 opacity-60">
+          {icon}
+        </span>
+        <span className="text-[11px] font-semibold text-eco-ink flex-1">
+          {title}
+        </span>
+        <span
+          className="text-[10px] text-eco-muted transition-transform duration-200"
+          style={{ transform: open ? "rotate(90deg)" : "rotate(0deg)" }}
+        >
+          ▶
+        </span>
+      </button>
+      {open && (
+        <div className="px-4 pb-4 pt-1 animate-fade-in">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Main component ── */
 export function NovaLabAnalysis() {
-  const [state, setState] = useState<"idle" | "loading" | "loaded" | "error">("idle");
+  const [state, setState] = useState<
+    "idle" | "loading" | "loaded" | "error"
+  >("idle");
   const [analysis, setAnalysis] = useState<LabAnalysis | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
+  const [elapsed, setElapsed] = useState(0);
 
   const analyze = async () => {
     setState("loading");
     setErrorMsg("");
+    const t0 = Date.now();
+    const timer = setInterval(() => setElapsed(Math.floor((Date.now() - t0) / 1000)), 1000);
     try {
       const res = await fetch("/api/lab/insights?fresh=1");
       const data = await res.json();
+      clearInterval(timer);
       if (!res.ok) {
         setErrorMsg(data.error || "Error al contactar Nova AI");
         setState("error");
@@ -79,61 +134,118 @@ export function NovaLabAnalysis() {
       setAnalysis(data.analysis);
       setState("loaded");
     } catch {
+      clearInterval(timer);
       setErrorMsg("No se pudo conectar con Nova AI");
       setState("error");
     }
   };
 
+  // Sort findings: critical first, then warning, then rest
+  const sortedFindings = analysis?.findings
+    ? [...analysis.findings].sort((a, b) => {
+        const order: Record<string, number> = { critical: 0, warning: 1, positive: 2, neutral: 3 };
+        return (order[a.type] ?? 3) - (order[b.type] ?? 3);
+      })
+    : [];
+
+  // Count findings by type
+  const findingCounts = sortedFindings.reduce(
+    (acc, f) => {
+      acc[f.type] = (acc[f.type] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
   return (
     <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] overflow-hidden">
-      {/* Header */}
+      {/* ── Header ── */}
       <div
-        className="px-6 py-4 flex items-center justify-between"
+        className="px-5 py-3.5 flex items-center justify-between"
         style={{ background: "linear-gradient(135deg, #273949, #3d5a29)" }}
       >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
               <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z" />
             </svg>
           </div>
           <div>
-            <h3 className="text-white text-sm font-bold">Análisis Profundo Nova AI</h3>
-            <p className="text-white/40 text-[10px]">Química, seguridad, normalización y preguntas que no sabías que debías hacer</p>
+            <h3 className="text-white text-[13px] font-bold tracking-tight">
+              Nova AI — Análisis de Laboratorio
+            </h3>
+            <p className="text-white/30 text-[9px]">
+              Química · Seguridad · Normalización · Preguntas proactivas
+            </p>
           </div>
         </div>
         {state !== "loading" && (
           <button
             onClick={analyze}
-            className="text-[10px] font-semibold px-4 py-2 rounded-lg bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors"
+            className="text-[10px] font-semibold px-3.5 py-1.5 rounded-lg bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-colors"
           >
             {state === "loaded" ? "↻ Regenerar" : "✦ Analizar"}
           </button>
         )}
       </div>
 
-      {/* Body */}
-      <div className="p-6">
+      {/* ── Body ── */}
+      <div className="p-5">
         {/* IDLE */}
         {state === "idle" && (
-          <div className="text-center py-8">
-            <div className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: "linear-gradient(135deg, rgba(39,57,73,0.06), rgba(61,122,10,0.06))" }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#273949" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <div className="text-center py-6">
+            <div
+              className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(39,57,73,0.06), rgba(61,122,10,0.06))",
+              }}
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#273949"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M9 3v7.4a2 2 0 01-.4 1.2L4 18.6a1 1 0 00.8 1.4h14.4a1 1 0 00.8-1.4l-4.6-7a2 2 0 01-.4-1.2V3" />
                 <line x1="8" y1="3" x2="16" y2="3" />
               </svg>
             </div>
-            <p className="text-sm text-eco-ink font-medium mb-1">Análisis profundo de laboratorio</p>
-            <p className="text-xs text-eco-muted mb-4 max-w-md mx-auto leading-relaxed">
-              Nova analizará la química detrás de cada resultado, normalizará métodos ASTM,
-              evaluará seguridad y te dirá cosas que no sabías que necesitabas preguntar.
+            <p className="text-sm text-eco-ink font-medium mb-1">
+              Análisis profundo de laboratorio
+            </p>
+            <p className="text-[11px] text-eco-muted mb-4 max-w-sm mx-auto leading-relaxed">
+              Nova analiza la química detrás de cada resultado, normaliza métodos
+              ASTM, evalúa seguridad y genera preguntas proactivas.
             </p>
             <button
               onClick={analyze}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-xs font-semibold transition-all hover:shadow-lg hover:scale-105 active:scale-100"
-              style={{ background: "linear-gradient(135deg, #273949, #3d7a0a)" }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-xs font-semibold transition-all hover:shadow-lg hover:scale-[1.03] active:scale-100"
+              style={{
+                background: "linear-gradient(135deg, #273949, #3d7a0a)",
+              }}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              >
                 <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z" />
               </svg>
               Iniciar análisis con Nova
@@ -143,20 +255,34 @@ export function NovaLabAnalysis() {
 
         {/* LOADING */}
         {state === "loading" && (
-          <div className="py-12 text-center space-y-4">
-            <div className="flex justify-center gap-1.5">
-              {[0, 150, 300].map((d) => (
-                <span
-                  key={d}
-                  className="w-2.5 h-2.5 rounded-full animate-bounce"
-                  style={{ background: "#3d7a0a", animationDelay: `${d}ms` }}
+          <div className="py-10 text-center space-y-3">
+            {/* Progress bar */}
+            <div className="max-w-xs mx-auto">
+              <div className="h-1 rounded-full bg-eco-surface-2 overflow-hidden">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    background: "linear-gradient(90deg, #273949, #3d7a0a)",
+                    width: `${Math.min(95, elapsed * 1.4)}%`,
+                    transition: "width 1s linear",
+                  }}
                 />
-              ))}
+              </div>
             </div>
             <div>
-              <p className="text-sm text-eco-ink font-medium">Nova analizando resultados...</p>
-              <p className="text-[10px] text-eco-muted mt-1">
-                Analizando química, normalizando temperaturas, evaluando seguridad, generando insights
+              <p className="text-sm text-eco-ink font-medium">
+                Nova analizando...
+              </p>
+              <p className="text-[10px] text-eco-muted mt-0.5">
+                {elapsed < 15
+                  ? "Leyendo resultados de laboratorio"
+                  : elapsed < 40
+                    ? "Normalizando métodos ASTM y evaluando química"
+                    : elapsed < 60
+                      ? "Generando evaluación de seguridad e insights"
+                      : "Finalizando análisis profundo"}
+                {" "}
+                <span className="font-mono text-eco-muted-2">{elapsed}s</span>
               </p>
             </div>
           </div>
@@ -164,159 +290,133 @@ export function NovaLabAnalysis() {
 
         {/* ERROR */}
         {state === "error" && (
-          <div className="py-8 text-center space-y-3">
-            <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-eco-red/5 border border-eco-red/10">
-              <span className="text-eco-red text-sm">⚠</span>
-              <span className="text-xs text-eco-red">{errorMsg}</span>
+          <div className="py-6 text-center space-y-3">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 border border-red-100">
+              <span className="text-red-500 text-xs">⚠</span>
+              <span className="text-[11px] text-red-600">{errorMsg}</span>
             </div>
             <div>
-              <button onClick={analyze} className="text-xs text-eco-blue hover:underline">
-                Reintentar
+              <button
+                onClick={analyze}
+                className="text-[11px] text-eco-blue hover:underline font-medium"
+              >
+                Reintentar análisis
               </button>
             </div>
           </div>
         )}
 
-        {/* LOADED */}
+        {/* ── LOADED ── */}
         {state === "loaded" && analysis && (
-          <div className="space-y-6">
-            {/* Summary */}
-            <div className="p-4 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(39,57,73,0.03), rgba(61,122,10,0.03))", border: "1px solid rgba(39,57,73,0.08)" }}>
-              <p className="text-sm text-eco-ink leading-relaxed">{analysis.summary}</p>
+          <div className="space-y-5">
+            {/* ── Safety banner (if exists) ── */}
+            {analysis.safetyAssessment && (
+              <div
+                className="flex gap-3 p-3.5 rounded-xl"
+                style={{
+                  background: "linear-gradient(135deg, rgba(220,38,38,0.04), rgba(232,112,10,0.03))",
+                  border: "1px solid rgba(220,38,38,0.12)",
+                }}
+              >
+                <div className="flex-shrink-0">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ background: "rgba(220,38,38,0.08)" }}
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#DC2626"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    >
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-[11px] font-bold text-red-700 mb-1">
+                    Evaluación de Seguridad
+                  </h4>
+                  <p className="text-[11px] text-eco-ink leading-relaxed">
+                    {analysis.safetyAssessment}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* ── Summary + quick stats ── */}
+            <div>
+              <p className="text-[13px] text-eco-ink leading-relaxed">
+                {analysis.summary}
+              </p>
+              {/* Finding count chips */}
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {Object.entries(findingCounts).map(([type, count]) => {
+                  const s = FINDING_STYLES[type] || FINDING_STYLES.neutral;
+                  return (
+                    <span
+                      key={type}
+                      className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+                      style={{ color: s.color, background: `${s.color}10` }}
+                    >
+                      {count} {s.label}
+                    </span>
+                  );
+                })}
+                {analysis.proactiveInsights && analysis.proactiveInsights.length > 0 && (
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full text-purple-600 bg-purple-50">
+                    {analysis.proactiveInsights.length} Preguntas
+                  </span>
+                )}
+                {analysis.recommendations.length > 0 && (
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full text-emerald-700 bg-emerald-50">
+                    {analysis.recommendations.length} Acciones
+                  </span>
+                )}
+              </div>
             </div>
 
-            {/* Findings */}
-            {analysis.findings.length > 0 && (
+            {/* ── Findings ── */}
+            {sortedFindings.length > 0 && (
               <div>
-                <h4 className="text-[10px] text-eco-muted uppercase tracking-[2px] font-semibold mb-3">
+                <h4 className="text-[10px] text-eco-muted uppercase tracking-[2px] font-medium mb-2.5">
                   Hallazgos
                 </h4>
-                <div className="space-y-2.5">
-                  {analysis.findings.map((f, i) => {
-                    const s = FINDING_STYLES[f.type] || FINDING_STYLES.neutral;
+                <div className="space-y-2">
+                  {sortedFindings.map((f, i) => {
+                    const s =
+                      FINDING_STYLES[f.type] || FINDING_STYLES.neutral;
                     return (
                       <div
                         key={i}
-                        className="flex gap-3 p-3.5 rounded-xl"
-                        style={{ background: s.bg, border: `1px solid ${s.border}` }}
+                        className="flex gap-2.5 p-3 rounded-xl"
+                        style={{
+                          background: s.bg,
+                          border: `1px solid ${s.border}`,
+                        }}
                       >
-                        <div className="flex-shrink-0 mt-0.5">
-                          <span
-                            className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
-                            style={{ color: s.color, background: `${s.color}15` }}
-                          >
-                            {s.icon}
-                          </span>
-                        </div>
+                        <span
+                          className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold mt-0.5"
+                          style={{
+                            color: "#fff",
+                            background: s.color,
+                          }}
+                        >
+                          {s.icon}
+                        </span>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-xs font-bold" style={{ color: s.color }}>
-                              {f.title}
-                            </span>
-                            <span
-                              className="text-[7px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
-                              style={{ color: s.color, background: `${s.color}12` }}
-                            >
-                              {s.label}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-eco-ink-light leading-relaxed">{f.detail}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Normalization analysis */}
-            {analysis.normalization && (
-              <div>
-                <h4 className="text-[10px] text-eco-muted uppercase tracking-[2px] font-semibold mb-3 flex items-center gap-2">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
-                  </svg>
-                  Normalización de Métodos
-                </h4>
-                <div className="p-4 rounded-xl bg-eco-blue/[0.03] border border-eco-blue/10">
-                  <p className="text-[11px] text-eco-ink leading-relaxed whitespace-pre-line">{analysis.normalization}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Product characterization */}
-            {analysis.productCharacterization && (
-              <div>
-                <h4 className="text-[10px] text-eco-muted uppercase tracking-[2px] font-semibold mb-3 flex items-center gap-2">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M9 3v7.4a2 2 0 01-.4 1.2L4 18.6a1 1 0 00.8 1.4h14.4a1 1 0 00.8-1.4l-4.6-7a2 2 0 01-.4-1.2V3" />
-                  </svg>
-                  Caracterización del Producto
-                </h4>
-                <div className="p-4 rounded-xl" style={{ background: "rgba(124,92,252,0.03)", border: "1px solid rgba(124,92,252,0.10)" }}>
-                  <p className="text-[11px] text-eco-ink leading-relaxed whitespace-pre-line">{analysis.productCharacterization}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Safety Assessment */}
-            {analysis.safetyAssessment && (
-              <div>
-                <h4 className="text-[10px] text-eco-muted uppercase tracking-[2px] font-semibold mb-3 flex items-center gap-2">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                  </svg>
-                  Evaluación de Seguridad
-                </h4>
-                <div className="p-4 rounded-xl" style={{ background: "rgba(220,38,38,0.02)", border: "1px solid rgba(220,38,38,0.10)" }}>
-                  <p className="text-[11px] text-eco-ink leading-relaxed whitespace-pre-line">{analysis.safetyAssessment}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Proactive Insights — the key section */}
-            {analysis.proactiveInsights && analysis.proactiveInsights.length > 0 && (
-              <div>
-                <h4 className="text-[10px] text-eco-muted uppercase tracking-[2px] font-semibold mb-1 flex items-center gap-2">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
-                    <line x1="12" y1="17" x2="12.01" y2="17" />
-                  </svg>
-                  Lo Que No Sabías Que Debías Preguntar
-                </h4>
-                <p className="text-[9px] text-eco-muted mb-3">
-                  Nova identificó estas preguntas críticas que podrían impactar tu operación
-                </p>
-                <div className="space-y-3">
-                  {analysis.proactiveInsights.map((insight, i) => {
-                    const imp = IMPORTANCE_STYLES[insight.importance] || IMPORTANCE_STYLES.medium;
-                    return (
-                      <div
-                        key={i}
-                        className="rounded-xl overflow-hidden"
-                        style={{ background: imp.bg, border: `1px solid ${imp.border}` }}
-                      >
-                        {/* Question */}
-                        <div className="px-4 py-3 flex items-start gap-3">
                           <span
-                            className="flex-shrink-0 mt-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
-                            style={{ background: imp.dot }}
+                            className="text-[11px] font-bold"
+                            style={{ color: s.color }}
                           >
-                            ?
+                            {f.title}
                           </span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xs font-bold text-eco-ink">{insight.question}</span>
-                              <span
-                                className="text-[7px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full flex-shrink-0"
-                                style={{ color: imp.dot, background: `${imp.dot}12` }}
-                              >
-                                {imp.label}
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-eco-ink-light leading-relaxed">{insight.answer}</p>
-                          </div>
+                          <p className="text-[11px] text-eco-ink-light leading-relaxed mt-0.5">
+                            {f.detail}
+                          </p>
                         </div>
                       </div>
                     );
@@ -325,33 +425,152 @@ export function NovaLabAnalysis() {
               </div>
             )}
 
-            {/* Recommendations */}
+            {/* ── Technical deep-dives (collapsible) ── */}
+            <div className="space-y-2">
+              <h4 className="text-[10px] text-eco-muted uppercase tracking-[2px] font-medium mb-1">
+                Análisis técnico
+              </h4>
+
+              {/* Normalization */}
+              {analysis.normalization && (
+                <Section
+                  title="Normalización de Métodos ASTM"
+                  icon={
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    >
+                      <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
+                    </svg>
+                  }
+                  color="#2D8CF0"
+                  defaultOpen={false}
+                >
+                  <p className="text-[11px] text-eco-ink leading-relaxed">
+                    {analysis.normalization}
+                  </p>
+                </Section>
+              )}
+
+              {/* Product Characterization */}
+              {analysis.productCharacterization && (
+                <Section
+                  title="Caracterización del Producto"
+                  icon={
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    >
+                      <path d="M9 3v7.4a2 2 0 01-.4 1.2L4 18.6a1 1 0 00.8 1.4h14.4a1 1 0 00.8-1.4l-4.6-7a2 2 0 01-.4-1.2V3" />
+                    </svg>
+                  }
+                  color="#7C5CFC"
+                  defaultOpen={false}
+                >
+                  <p className="text-[11px] text-eco-ink leading-relaxed">
+                    {analysis.productCharacterization}
+                  </p>
+                </Section>
+              )}
+            </div>
+
+            {/* ── Proactive Insights ── */}
+            {analysis.proactiveInsights &&
+              analysis.proactiveInsights.length > 0 && (
+                <div>
+                  <h4 className="text-[10px] text-eco-muted uppercase tracking-[2px] font-medium mb-0.5">
+                    Preguntas que no sabías que debías hacer
+                  </h4>
+                  <p className="text-[9px] text-eco-muted-2 mb-2.5">
+                    Nova identificó estos puntos críticos para tu operación
+                  </p>
+                  <div className="space-y-2">
+                    {analysis.proactiveInsights.map((insight, i) => {
+                      const dotColor =
+                        IMPORTANCE_COLORS[insight.importance] || "#2D8CF0";
+                      return (
+                        <div
+                          key={i}
+                          className="rounded-xl bg-eco-surface-2/40 border border-black/[0.03] overflow-hidden"
+                        >
+                          <div className="px-3.5 py-2.5 flex items-start gap-2.5">
+                            <span
+                              className="flex-shrink-0 mt-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold text-white"
+                              style={{ background: dotColor }}
+                            >
+                              ?
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[11px] font-bold text-eco-ink leading-snug">
+                                {insight.question}
+                              </p>
+                              <p className="text-[11px] text-eco-ink-light leading-relaxed mt-1">
+                                {insight.answer}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+            {/* ── Recommendations ── */}
             {analysis.recommendations.length > 0 && (
               <div>
-                <h4 className="text-[10px] text-eco-muted uppercase tracking-[2px] font-semibold mb-3">
-                  Recomendaciones
+                <h4 className="text-[10px] text-eco-muted uppercase tracking-[2px] font-medium mb-2.5">
+                  Acciones recomendadas
                 </h4>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {analysis.recommendations.map((rec, i) => (
-                    <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-eco-surface-2/50">
-                      <span className="text-[10px] font-mono font-bold flex-shrink-0 mt-px w-5 h-5 rounded-full flex items-center justify-center" style={{ color: "#3d7a0a", background: "rgba(61,122,10,0.08)" }}>
+                    <div
+                      key={i}
+                      className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-lg"
+                      style={{
+                        background:
+                          i % 2 === 0
+                            ? "rgba(61,122,10,0.03)"
+                            : "transparent",
+                      }}
+                    >
+                      <span
+                        className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-mono font-bold mt-0.5"
+                        style={{
+                          color: "#3d7a0a",
+                          background: "rgba(61,122,10,0.10)",
+                        }}
+                      >
                         {i + 1}
                       </span>
-                      <p className="text-xs text-eco-ink leading-relaxed">{rec}</p>
+                      <p className="text-[11px] text-eco-ink leading-relaxed">
+                        {rec}
+                      </p>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Footer */}
-            <div className="pt-4 border-t border-eco-border flex items-center justify-between">
+            {/* ── Footer ── */}
+            <div className="pt-3 border-t border-eco-border flex items-center justify-between">
               <p className="text-[8px] text-eco-muted-2 italic">
-                Análisis generado por Nova AI · Los resultados son orientativos y no sustituyen el criterio profesional
+                Generado por Nova AI · Orientativo, no sustituye criterio
+                profesional
               </p>
               <button
                 onClick={analyze}
-                className="text-[10px] text-eco-muted hover:text-eco-blue transition-colors"
+                className="text-[10px] text-eco-muted hover:text-eco-ink-light transition-colors font-medium"
               >
                 ↻ Regenerar
               </button>
