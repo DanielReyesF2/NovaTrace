@@ -479,7 +479,7 @@ export async function generateLabAnalysis(
   // Parse
   const analysis = parseLabAnalysis(response.response);
   if (!analysis) {
-    console.error("[Nova AI] Could not parse lab analysis from response");
+    console.error("[Nova AI] Could not parse lab analysis from response. First 300 chars:", response.response?.substring(0, 300));
     return null;
   }
 
@@ -490,13 +490,22 @@ export async function generateLabAnalysis(
 }
 
 function parseLabAnalysis(responseText: string): NovaLabAnalysis | null {
+  // Step 1: Strip markdown code fences (```json ... ```)
+  let cleaned = responseText.trim();
+  if (cleaned.startsWith("```")) {
+    // Remove opening ```json or ``` and closing ```
+    cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "").trim();
+  }
+
+  // Step 2: Try direct JSON parse on cleaned text
   try {
-    const parsed = JSON.parse(responseText);
+    const parsed = JSON.parse(cleaned);
     if (parsed.summary && Array.isArray(parsed.findings)) {
       return parsed;
     }
   } catch {
-    const jsonMatch = responseText.match(/\{[\s\S]*"summary"[\s\S]*\}/);
+    // Step 3: Try regex extraction (greedy match for JSON object)
+    const jsonMatch = cleaned.match(/\{[\s\S]*"summary"[\s\S]*\}/);
     if (jsonMatch) {
       try {
         const parsed = JSON.parse(jsonMatch[0]);
@@ -504,7 +513,27 @@ function parseLabAnalysis(responseText: string): NovaLabAnalysis | null {
           return parsed;
         }
       } catch {
-        // fall through
+        // Step 4: Try to find balanced braces
+        const start = cleaned.indexOf("{");
+        if (start !== -1) {
+          let depth = 0;
+          let end = -1;
+          for (let i = start; i < cleaned.length; i++) {
+            if (cleaned[i] === "{") depth++;
+            if (cleaned[i] === "}") depth--;
+            if (depth === 0) { end = i; break; }
+          }
+          if (end > start) {
+            try {
+              const parsed = JSON.parse(cleaned.substring(start, end + 1));
+              if (parsed.summary && Array.isArray(parsed.findings)) {
+                return parsed;
+              }
+            } catch {
+              // fall through
+            }
+          }
+        }
       }
     }
   }
