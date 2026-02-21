@@ -12,253 +12,212 @@ interface TraceabilityPipelineProps {
   totalCerts: number;
 }
 
-/* Circle geometry */
-const CX = 200, CY = 180, CR = 100, NR = 18, N = 7;
-
-const STATIONS = [
-  { label: "Recolección", color: "#273949", bg: "rgba(39,57,73,0.03)" },
-  { label: "Transporte", color: "#273949", bg: "rgba(39,57,73,0.03)" },
-  { label: "Planta", color: "#273949", bg: "rgba(39,57,73,0.03)" },
-  { label: "Pirólisis", color: "#E8700A", bg: "rgba(232,112,10,0.04)" },
-  { label: "Aceite", color: "#7C5CFC", bg: "rgba(124,92,252,0.04)" },
-  { label: "Distribución", color: "#7C5CFC", bg: "rgba(124,92,252,0.04)" },
-  { label: "Certificación", color: "#3d7a0a", bg: "rgba(61,122,10,0.04)" },
+const STEPS = [
+  {
+    label: "Recolección",
+    key: "recoleccion",
+    color: "#273949",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+        <line x1="12" y1="22.08" x2="12" y2="12" />
+      </svg>
+    ),
+  },
+  {
+    label: "Transporte",
+    key: "transporte",
+    color: "#273949",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="1" y="3" width="15" height="13" rx="1" />
+        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+        <circle cx="5.5" cy="18.5" r="2.5" />
+        <circle cx="18.5" cy="18.5" r="2.5" />
+      </svg>
+    ),
+  },
+  {
+    label: "Planta",
+    key: "planta",
+    color: "#273949",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 20V8l5-5v5l5-5v5l5-5v17" />
+        <path d="M2 20h20" />
+        <rect x="17" y="2" width="5" height="8" rx="0.5" />
+      </svg>
+    ),
+  },
+  {
+    label: "Pirólisis",
+    key: "pirolisis",
+    color: "#E8700A",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z" />
+      </svg>
+    ),
+  },
+  {
+    label: "Aceite",
+    key: "aceite",
+    color: "#7C5CFC",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z" />
+      </svg>
+    ),
+  },
+  {
+    label: "Lab",
+    key: "lab",
+    color: "#2D8CF0",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 3v7.4a2 2 0 01-.4 1.2L4 18.6a1 1 0 00.8 1.4h14.4a1 1 0 00.8-1.4l-4.6-7a2 2 0 01-.4-1.2V3" />
+        <line x1="8" y1="3" x2="16" y2="3" />
+      </svg>
+    ),
+  },
+  {
+    label: "Certificado",
+    key: "certificado",
+    color: "#3d7a0a",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <polyline points="9 12 11 14 15 10" />
+      </svg>
+    ),
+  },
 ];
 
-/* Icon paths (Feather-style) */
-const ICONS: Record<number, JSX.Element> = {
-  0: ( // Package
-    <g transform="translate(-12,-12)">
-      <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
-      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-      <line x1="12" y1="22.08" x2="12" y2="12" />
-    </g>
-  ),
-  1: ( // Truck
-    <g transform="translate(-12,-12)">
-      <rect x="1" y="3" width="15" height="13" rx="1" />
-      <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
-      <circle cx="5.5" cy="18.5" r="2.5" />
-      <circle cx="18.5" cy="18.5" r="2.5" />
-    </g>
-  ),
-  2: ( // Factory
-    <g transform="translate(-12,-12)">
-      <path d="M2 20V8l5-5v5l5-5v5l5-5v17" />
-      <path d="M2 20h20" />
-      <rect x="17" y="2" width="5" height="8" rx="0.5" />
-    </g>
-  ),
-  3: ( // Flame
-    <g transform="translate(-12,-12)">
-      <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z" />
-    </g>
-  ),
-  4: ( // Droplet
-    <g transform="translate(-12,-12)">
-      <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z" />
-    </g>
-  ),
-  5: ( // Truck (distribution)
-    <g transform="translate(-12,-12)">
-      <rect x="1" y="3" width="15" height="13" rx="1" />
-      <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
-      <circle cx="5.5" cy="18.5" r="2.5" />
-      <circle cx="18.5" cy="18.5" r="2.5" />
-    </g>
-  ),
-  6: ( // Shield + Check
-    <g transform="translate(-12,-12)">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      <polyline points="9 12 11 14 15 10" />
-    </g>
-  ),
-};
-
-function nodePos(i: number) {
-  const angle = (i * 2 * Math.PI / N) - Math.PI / 2;
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  return {
-    x: CX + CR * cos,
-    y: CY + CR * sin,
-    angle,
-    cos,
-    sin,
-    lx: CX + (CR + 40) * cos,
-    ly: CY + (CR + 40) * sin,
-    anchor: (cos > 0.25 ? "start" : cos < -0.25 ? "end" : "middle") as "start" | "end" | "middle",
-  };
-}
-
-const POS = Array.from({ length: N }, (_, i) => nodePos(i));
-
 export function TraceabilityPipeline({ stats, totalCerts }: TraceabilityPipelineProps) {
-  const values: (null | { val: number; unit: string; color: string })[] = [
-    { val: stats.totalBatches, unit: "lotes", color: "#273949" },
-    null,
-    null,
-    { val: stats.totalFeedstockKg, unit: "kg", color: "#E8700A" },
-    { val: stats.totalOilLiters, unit: "L", color: "#7C5CFC" },
-    null,
-    { val: totalCerts, unit: "certs", color: "#3d7a0a" },
-  ];
+  // Determine which steps are "active" based on real data
+  const stepMetrics: Record<string, { value: number; unit: string } | null> = {
+    recoleccion: stats.totalBatches > 0 ? { value: stats.totalBatches, unit: "lotes" } : null,
+    transporte: stats.totalBatches > 0 ? { value: stats.totalBatches, unit: "" } : null,
+    planta: stats.totalFeedstockKg > 0 ? { value: stats.totalFeedstockKg, unit: "kg" } : null,
+    pirolisis: stats.totalFeedstockKg > 0 ? { value: stats.totalFeedstockKg, unit: "kg" } : null,
+    aceite: stats.totalOilLiters > 0 ? { value: stats.totalOilLiters, unit: "L" } : null,
+    lab: stats.totalOilLiters > 0 ? { value: stats.totalOilLiters, unit: "" } : null,
+    certificado: totalCerts > 0 ? { value: totalCerts, unit: "certs" } : null,
+  };
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-soft border border-black/[0.03] h-full flex flex-col">
-      <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium mb-1">
-        Ciclo de vida
-      </h3>
-      <div className="flex-1 flex items-center justify-center">
-        <svg viewBox="0 0 400 370" className="w-full max-w-[400px]">
-          <defs>
-            <linearGradient id="circG" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#273949" />
-              <stop offset="45%" stopColor="#E8700A" />
-              <stop offset="100%" stopColor="#3d7a0a" />
-            </linearGradient>
-            <filter id="cns" x="-25%" y="-20%" width="150%" height="150%">
-              <feDropShadow dx="0" dy="1" stdDeviation="2.5" floodColor="#273949" floodOpacity="0.08" />
-            </filter>
-            <linearGradient id="cflameG" x1="0" y1="1" x2="0" y2="0">
-              <stop offset="0%" stopColor="#E8700A" />
-              <stop offset="100%" stopColor="#FBBF24" />
-            </linearGradient>
-          </defs>
+    <div className="bg-white rounded-2xl px-5 py-4 shadow-soft border border-black/[0.03]">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium">
+          Ciclo de Trazabilidad
+        </h3>
+        <span className="text-[9px] text-eco-muted-2 font-mono">
+          {stats.totalCO2Avoided > 0 && (
+            <>
+              <span style={{ color: "#3d7a0a" }}>{stats.totalCO2Avoided.toFixed(0)}</span>
+              {" "}kg CO₂ evitadas
+            </>
+          )}
+        </span>
+      </div>
 
-          {/* Circle track — soft background */}
-          <circle cx={CX} cy={CY} r={CR} fill="none"
-            stroke="rgba(39,57,73,0.04)" strokeWidth="36" />
+      {/* Horizontal process flow */}
+      <div className="flex items-start">
+        {STEPS.map((step, i) => {
+          const metric = stepMetrics[step.key];
+          const isActive = metric !== null;
+          const showMetric = metric && metric.unit; // only show if has a unit (not pass-through)
 
-          {/* Circle track — flowing dashes */}
-          <circle cx={CX} cy={CY} r={CR} fill="none"
-            stroke="url(#circG)" strokeWidth="1.5"
-            strokeDasharray="7 5" className="circle-flow" />
-
-          {/* Directional chevrons between nodes */}
-          {POS.map((p, i) => {
-            const n = POS[(i + 1) % N];
-            const mx = (p.x + n.x) / 2;
-            const my = (p.y + n.y) / 2;
-            const dx = n.x - p.x, dy = n.y - p.y;
-            const len = Math.sqrt(dx * dx + dy * dy);
-            const ux = dx / len, uy = dy / len;
-            const px = -uy, py = ux;
-            return (
-              <path key={`ch${i}`}
-                d={`M${mx - ux * 4 + px * 4},${my - uy * 4 + py * 4} L${mx + ux * 3},${my + uy * 3} L${mx - ux * 4 - px * 4},${my - uy * 4 - py * 4}`}
-                fill="none" stroke="url(#circG)" strokeWidth="1"
-                strokeLinecap="round" strokeLinejoin="round" opacity="0.2" />
-            );
-          })}
-
-          {/* Flowing particles around the circle */}
-          <g transform={`translate(${CX},${CY})`}>
-            {[0, 2.8, 5.6].map((delay, i) => (
-              <circle key={`cpt${i}`} r="2.5" fill="url(#circG)">
-                <animateMotion
-                  dur="9s" begin={`${delay}s`} repeatCount="indefinite"
-                  path={`M0,${-CR} A${CR},${CR} 0 0,1 0,${CR} A${CR},${CR} 0 0,1 0,${-CR}`}
-                />
-                <animate attributeName="opacity" values="0;0.5;0.5;0"
-                  dur="9s" begin={`${delay}s`} repeatCount="indefinite" />
-              </circle>
-            ))}
-          </g>
-
-          {/* Accent: Reactor heat glow */}
-          <circle cx={POS[3].x} cy={POS[3].y} r={NR}
-            fill="none" stroke="#E8700A" strokeWidth="1.5">
-            <animate attributeName="r" values={`${NR};${NR + 10}`} dur="2s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.3;0" dur="2s" repeatCount="indefinite" />
-          </circle>
-          {/* Mini flames */}
-          {[-5, 1, 7].map((off, fi) => (
-            <path key={`fl${fi}`}
-              d={`M${POS[3].x + off - 2.5},${POS[3].y + NR + 2} Q${POS[3].x + off},${POS[3].y + NR - 4} ${POS[3].x + off + 2.5},${POS[3].y + NR + 2}`}
-              fill="url(#cflameG)">
-              <animate attributeName="opacity" values="0.35;0.85;0.35"
-                dur={`${0.6 + fi * 0.12}s`} begin={`${fi * 0.2}s`} repeatCount="indefinite" />
-            </path>
-          ))}
-
-          {/* Accent: Oil drips */}
-          <circle cx={POS[4].x} r="2" fill="#7C5CFC">
-            <animate attributeName="cy" values={`${POS[4].y + NR};${POS[4].y + NR + 12}`}
-              dur="1.5s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0;0.5;0" dur="1.5s" repeatCount="indefinite" />
-          </circle>
-
-          {/* Accent: Cert pulse */}
-          <circle cx={POS[6].x} cy={POS[6].y} r={NR}
-            fill="none" stroke="#3d7a0a" strokeWidth="1.5">
-            <animate attributeName="r" values={`${NR};${NR + 12}`} dur="2.5s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.3;0" dur="2.5s" repeatCount="indefinite" />
-          </circle>
-
-          {/* Station nodes */}
-          {STATIONS.map((st, i) => (
-            <g key={`n${i}`}>
-              <circle cx={POS[i].x} cy={POS[i].y} r={NR}
-                fill="white" stroke={st.color} strokeWidth="2" filter="url(#cns)" />
-              <circle cx={POS[i].x} cy={POS[i].y} r={NR - 3}
-                fill={st.bg} stroke="none" />
-              <g transform={`translate(${POS[i].x},${POS[i].y}) scale(0.5)`}
-                fill="none" stroke={st.color} strokeWidth="2"
-                strokeLinecap="round" strokeLinejoin="round">
-                {ICONS[i]}
-              </g>
-            </g>
-          ))}
-
-          {/* Labels + values */}
-          {STATIONS.map((st, i) => {
-            const p = POS[i];
-            const v = values[i];
-            const foX = p.anchor === "start" ? p.lx : p.anchor === "end" ? p.lx - 85 : p.lx - 42;
-            return (
-              <g key={`lbl${i}`}>
-                <text x={p.lx} y={p.ly}
-                  textAnchor={p.anchor} dominantBaseline="central"
-                  fontSize="7.5" fontWeight="600"
-                  fontFamily="'JetBrains Mono', monospace"
-                  fill={st.color}>
-                  {st.label}
-                </text>
-                {v && (
-                  <foreignObject x={foX} y={p.ly + 5} width="85" height="20">
-                    <div style={{
-                      textAlign: p.anchor === "start" ? "left" : p.anchor === "end" ? "right" : "center",
-                      lineHeight: 1,
-                    }}>
-                      <span style={{ color: v.color }}>
-                        <AnimatedCounter value={v.val} className="font-mono text-[10px] font-bold" />
-                      </span>
-                      <span style={{ fontSize: "7px", color: "rgba(39,57,73,0.4)", marginLeft: "2px" }}>
-                        {v.unit}
-                      </span>
-                    </div>
-                  </foreignObject>
-                )}
-              </g>
-            );
-          })}
-
-          {/* Center — CO₂ metric */}
-          <g>
-            <circle cx={CX} cy={CY} r="28" fill="rgba(61,122,10,0.04)" stroke="rgba(61,122,10,0.1)" strokeWidth="1" />
-            <foreignObject x={CX - 35} y={CY - 16} width="70" height="36">
-              <div style={{ textAlign: "center", lineHeight: 1.2 }}>
-                <span style={{ color: "#3d7a0a" }}>
-                  <AnimatedCounter value={stats.totalCO2Avoided} decimals={1} className="font-mono text-xs font-bold" />
-                </span>
-                <div style={{ fontSize: "6px", color: "rgba(39,57,73,0.4)", marginTop: "2px", letterSpacing: "0.5px" }}>
-                  kg CO₂ evitadas
+          return (
+            <div key={step.key} className="flex items-start flex-1 min-w-0">
+              {/* Step node */}
+              <div className="flex flex-col items-center min-w-0" style={{ width: "100%" }}>
+                {/* Circle */}
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-500"
+                  style={{
+                    background: isActive ? `${step.color}12` : "rgba(0,0,0,0.02)",
+                    border: `1.5px solid ${isActive ? step.color : "rgba(0,0,0,0.06)"}`,
+                    color: isActive ? step.color : "rgba(0,0,0,0.15)",
+                  }}
+                >
+                  {step.icon}
                 </div>
+
+                {/* Label */}
+                <span
+                  className="text-[8px] font-semibold mt-1.5 text-center leading-tight tracking-wide uppercase"
+                  style={{
+                    color: isActive ? step.color : "rgba(0,0,0,0.2)",
+                  }}
+                >
+                  {step.label}
+                </span>
+
+                {/* Metric */}
+                {showMetric ? (
+                  <div className="mt-0.5 text-center">
+                    <span style={{ color: step.color }}>
+                      <AnimatedCounter
+                        value={metric.value}
+                        className="font-mono text-[10px] font-bold"
+                      />
+                    </span>
+                    <span className="text-[7px] text-eco-muted ml-0.5">
+                      {metric.unit}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="mt-0.5 h-[14px]" />
+                )}
               </div>
-            </foreignObject>
-          </g>
-        </svg>
+
+              {/* Connector line + chevron (not after last) */}
+              {i < STEPS.length - 1 && (
+                <div className="flex items-center self-center mt-0.5 -mx-1 flex-shrink-0" style={{ marginTop: "6px" }}>
+                  <div
+                    className="h-px flex-1"
+                    style={{
+                      width: "16px",
+                      background: isActive && stepMetrics[STEPS[i + 1].key]
+                        ? `linear-gradient(90deg, ${step.color}40, ${STEPS[i + 1].color}40)`
+                        : "rgba(0,0,0,0.06)",
+                    }}
+                  />
+                  <svg
+                    width="6"
+                    height="8"
+                    viewBox="0 0 6 8"
+                    fill="none"
+                    className="flex-shrink-0"
+                  >
+                    <path
+                      d="M1 1l3 3-3 3"
+                      stroke={
+                        isActive && stepMetrics[STEPS[i + 1].key]
+                          ? `${step.color}60`
+                          : "rgba(0,0,0,0.08)"
+                      }
+                      strokeWidth="1.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <div
+                    className="h-px flex-1"
+                    style={{
+                      width: "16px",
+                      background: isActive && stepMetrics[STEPS[i + 1].key]
+                        ? `linear-gradient(90deg, ${step.color}40, ${STEPS[i + 1].color}40)`
+                        : "rgba(0,0,0,0.06)",
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

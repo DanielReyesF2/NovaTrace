@@ -145,3 +145,12 @@ body {
 .animate-slide-in-right {
   animation: slideInRight 0.25s ease-out;
 }
+
+/* Heatmap cell staggered fade-in */
+@keyframes heatmapFadeIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 0.85; transform: scale(1); }
+}
+.heatmap-cell {
+  animation: heatmapFadeIn 0.4s ease-out both;
+}

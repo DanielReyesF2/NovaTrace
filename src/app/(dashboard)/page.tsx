@@ -50,15 +50,15 @@ export default async function HomePage() {
     }),
   ]);
 
-  const completedCount = await prisma.batch.count({
-    where: { status: "COMPLETED" },
-  });
+  const [completedCount, inProgressCount] = await Promise.all([
+    prisma.batch.count({ where: { status: "COMPLETED" } }),
+    prisma.batch.count({ where: { status: "ACTIVE" } }),
+  ]);
 
   return (
     <Dashboard
       batches={JSON.parse(JSON.stringify(batches))}
       recentEvents={JSON.parse(JSON.stringify(recentEvents))}
-      lastBatchId={batches.length > 0 ? batches[0].id : null}
       stats={{
         totalBatches: stats._count,
         completedBatches: completedCount,
@@ -66,6 +66,7 @@ export default async function HomePage() {
         totalOilLiters: stats._sum.oilOutput ?? 0,
         totalCO2Avoided: stats._sum.co2Avoided ?? 0,
         totalCO2Baseline: stats._sum.co2Baseline ?? 0,
+        inProgressBatches: inProgressCount,
       }}
     />
   );

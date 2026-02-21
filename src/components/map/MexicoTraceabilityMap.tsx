@@ -74,7 +74,7 @@ export function MexicoMapCard({ batches }: { batches: BatchOrigin[] }) {
   const [hoveredState, setHoveredState] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; data: StateAgg } | null>(null);
   const [position, setPosition] = useState({ coordinates: [-100.5, 20] as [number, number], zoom: 2 });
-  const { stateData, maxKg } = useMapData(batches);
+  const { stateData, totalKg, maxKg } = useMapData(batches);
 
   const getFill = useCallback(
     (name: string): string => {
@@ -296,6 +296,25 @@ export function MexicoMapCard({ batches }: { batches: BatchOrigin[] }) {
           </div>
         )}
       </div>
+
+      {/* Stats row */}
+      {stateData.size > 0 && (
+        <div className="flex items-center gap-3 mt-3 px-1 text-[11px] font-mono text-eco-muted">
+          <span>
+            <span className="font-semibold text-eco-ink">{stateData.size}</span> estados
+          </span>
+          <span className="text-eco-border">·</span>
+          <span>
+            <span className="font-semibold" style={{ color: "#3d7a0a" }}>{totalKg.toLocaleString()}</span> kg recolectados
+          </span>
+          <span className="text-eco-border">·</span>
+          <span>
+            <span className="font-semibold text-eco-ink">
+              {Array.from(stateData.values()).reduce((s, d) => s + d.batchCount, 0)}
+            </span> lotes
+          </span>
+        </div>
+      )}
 
       {/* Legend */}
       <div className="flex items-center gap-4 mt-3 text-[8px] text-eco-muted">
