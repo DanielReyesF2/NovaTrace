@@ -144,28 +144,33 @@ function specsToMetrics(specs: Record<string, unknown> | null): { label: string;
   return metrics.slice(0, 4); // Max 4 metrics per annotation
 }
 
+// Pre-defined positions with good spatial separation (detail page shows more)
+const DETAIL_POSITIONS: [number, number, number][] = [
+  [-3.5, 1.8, -1.0],
+  [3.2, 0.8, 1.5],
+  [0.0, 2.5, -3.0],
+  [-2.0, 0.5, 3.0],
+  [2.5, 2.0, -2.0],
+  [-1.0, 1.5, 3.5],
+  [3.0, 1.2, -0.5],
+  [-3.0, 2.2, 1.5],
+  [1.5, 0.8, -3.5],
+  [0.0, 1.0, 2.8],
+];
+
 // Generate annotations from child equipment data
 function generateAnnotations(children: ChildEquipment[]): Annotation[] {
-  // Distribute annotations in a circle around the model
-  const radius = 2;
-  return children.map((child, i) => {
-    const angle = (i / Math.max(children.length, 1)) * Math.PI * 2;
-    const x = Math.cos(angle) * radius;
-    const z = Math.sin(angle) * radius;
-    const y = 1 + (i % 3) * 0.8; // Stagger heights
-
-    return {
-      id: child.id,
-      position: [x, y, z] as [number, number, number],
-      label: child.tag ? `${child.tag} — ${child.name}` : child.name,
-      description: `${TYPE_LABELS[child.type] ?? child.type}${child.location ? ` · ${child.location}` : ""}`,
-      status: calibrationToStatus(child.calibrationStatus),
-      metrics: [
-        ...specsToMetrics(child.specs),
-        { label: "Lecturas", value: String(child._count.readings) },
-      ].slice(0, 4),
-    };
-  });
+  return children.slice(0, DETAIL_POSITIONS.length).map((child, i) => ({
+    id: child.id,
+    position: DETAIL_POSITIONS[i],
+    label: child.tag ? `${child.tag} — ${child.name}` : child.name,
+    description: `${TYPE_LABELS[child.type] ?? child.type}${child.location ? ` · ${child.location}` : ""}`,
+    status: calibrationToStatus(child.calibrationStatus),
+    metrics: [
+      ...specsToMetrics(child.specs),
+      { label: "Lecturas", value: String(child._count.readings) },
+    ].slice(0, 4),
+  }));
 }
 
 // ---------------------------------------------------------------------------

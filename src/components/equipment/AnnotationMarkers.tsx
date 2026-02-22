@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Html } from "@react-three/drei";
+import { useState, useRef, useEffect } from "react";
+import { Html, QuadraticBezierLine } from "@react-three/drei";
 import * as THREE from "three";
 
 // ---------------------------------------------------------------------------
@@ -17,117 +17,190 @@ export interface Annotation {
 }
 
 // ---------------------------------------------------------------------------
-// Status color helpers
+// Status color helpers — subtle palette
 // ---------------------------------------------------------------------------
 function statusColor(status?: string) {
   switch (status) {
     case "critical":
-      return { bg: "#DC2626", ring: "rgba(220,38,38,0.4)", text: "#fca5a5" };
+      return { dot: "#DC2626", line: "rgba(220,38,38,0.30)", text: "#fca5a5", badge: "#DC2626" };
     case "warning":
-      return { bg: "#D97706", ring: "rgba(217,119,6,0.4)", text: "#fcd34d" };
+      return { dot: "#D97706", line: "rgba(217,119,6,0.25)", text: "#fcd34d", badge: "#D97706" };
     default:
-      return { bg: "#3d7a0a", ring: "rgba(61,122,10,0.3)", text: "#b5e951" };
+      return { dot: "#4a9a12", line: "rgba(61,122,10,0.22)", text: "#b5e951", badge: "#3d7a0a" };
   }
 }
 
 // ---------------------------------------------------------------------------
-// Single annotation marker
+// Label offset — where the leader line ends and the HTML label starts
 // ---------------------------------------------------------------------------
-function Marker({ annotation }: { annotation: Annotation }) {
+const LABEL_OFFSET: [number, number, number] = [0.6, 0.7, 0];
+const LINE_MID: [number, number, number] = [0.15, 0.55, 0];
+
+// ---------------------------------------------------------------------------
+// Single annotation marker — Apple-style: minimal dot + leader line + clean label
+// ---------------------------------------------------------------------------
+function Marker({ annotation, index = 0 }: { annotation: Annotation; index?: number }) {
   const [expanded, setExpanded] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [visible, setVisible] = useState(false);
   const colors = statusColor(annotation.status);
+
+  // Staggered entrance
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(true), index * 180);
+    return () => clearTimeout(timer);
+  }, [index]);
 
   return (
     <group position={new THREE.Vector3(...annotation.position)}>
-      {/* Glowing sphere at the anchor point */}
-      <mesh onClick={() => setExpanded((v) => !v)}>
-        <sphereGeometry args={[0.08, 16, 16]} />
-        <meshStandardMaterial color={colors.bg} emissive={colors.bg} emissiveIntensity={0.8} />
+      {/* Tiny anchor dot */}
+      <mesh>
+        <sphereGeometry args={[0.03, 12, 12]} />
+        <meshStandardMaterial
+          color={colors.dot}
+          emissive={colors.dot}
+          emissiveIntensity={0.3}
+          transparent
+          opacity={visible ? 1 : 0}
+        />
       </mesh>
 
-      {/* Pulsing ring */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.12, 0.18, 32]} />
-        <meshBasicMaterial color={colors.bg} transparent opacity={0.4} side={THREE.DoubleSide} />
-      </mesh>
+      {/* Curved leader line from dot to label */}
+      {visible && (
+        <QuadraticBezierLine
+          start={[0, 0, 0]}
+          end={LABEL_OFFSET}
+          mid={LINE_MID}
+          color={colors.line}
+          lineWidth={1}
+          transparent
+          opacity={0.6}
+        />
+      )}
 
-      {/* HTML label */}
+      {/* HTML label — clean, minimal */}
       <Html
-        position={[0.3, 0.4, 0]}
-        distanceFactor={8}
+        position={LABEL_OFFSET}
+        distanceFactor={6}
         occlude={false}
-        style={{ pointerEvents: "auto", transition: "all 0.2s ease" }}
+        style={{
+          pointerEvents: "auto",
+          opacity: visible ? 1 : 0,
+          transition: "opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+        }}
       >
         <div
           onClick={() => setExpanded((v) => !v)}
-          style={{ cursor: "pointer", userSelect: "none", minWidth: expanded ? "200px" : "120px" }}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => {
+            setHovered(false);
+            if (!expanded) setExpanded(false);
+          }}
+          style={{
+            cursor: "pointer",
+            userSelect: "none",
+            minWidth: expanded ? "200px" : "auto",
+          }}
         >
-          {/* Compact label */}
+          {/* Compact label pill */}
           <div
             style={{
-              display: "flex",
+              display: "inline-flex",
               alignItems: "center",
-              gap: "6px",
-              background: "rgba(29,43,54,0.92)",
-              backdropFilter: "blur(12px)",
-              border: `1px solid ${colors.bg}33`,
-              borderRadius: "8px",
-              padding: "6px 10px",
-              boxShadow: `0 0 20px ${colors.ring}`,
+              gap: "5px",
+              background: "rgba(29,43,54,0.82)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: "6px",
+              padding: "3px 8px",
+              transform: hovered ? "scale(1.06)" : "scale(1)",
+              transition: "transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
             }}
           >
+            {/* Status dot */}
             <span
               style={{
-                width: "8px",
-                height: "8px",
+                width: "5px",
+                height: "5px",
                 borderRadius: "50%",
-                background: colors.bg,
-                boxShadow: `0 0 8px ${colors.bg}`,
+                background: colors.dot,
                 flexShrink: 0,
               }}
             />
+            {/* Tag text */}
             <span
               style={{
-                color: "#e2e8f0",
-                fontSize: "11px",
-                fontWeight: 600,
+                color: "rgba(255,255,255,0.85)",
+                fontSize: "10px",
+                fontWeight: 500,
                 whiteSpace: "nowrap",
-                fontFamily: "Inter, system-ui, sans-serif",
+                fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+                letterSpacing: "0.01em",
               }}
             >
               {annotation.label}
             </span>
-            <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "10px", marginLeft: "2px" }}>
-              {expanded ? "▾" : "▸"}
-            </span>
           </div>
 
-          {/* Expanded panel */}
+          {/* Hover tooltip: description */}
+          {hovered && !expanded && annotation.description && (
+            <div
+              style={{
+                marginTop: "4px",
+                background: "rgba(29,43,54,0.88)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: "6px",
+                padding: "4px 8px",
+                animation: "fadeIn 0.2s ease",
+              }}
+            >
+              <p
+                style={{
+                  color: "rgba(255,255,255,0.5)",
+                  fontSize: "9px",
+                  margin: 0,
+                  fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {annotation.description}
+              </p>
+            </div>
+          )}
+
+          {/* Expanded panel: metrics */}
           {expanded && (
             <div
               style={{
                 marginTop: "4px",
-                background: "rgba(29,43,54,0.95)",
-                backdropFilter: "blur(16px)",
-                border: `1px solid ${colors.bg}33`,
-                borderRadius: "10px",
-                padding: "10px 12px",
-                boxShadow: `0 4px 30px rgba(0,0,0,0.5), 0 0 20px ${colors.ring}`,
+                background: "rgba(29,43,54,0.90)",
+                backdropFilter: "blur(24px)",
+                WebkitBackdropFilter: "blur(24px)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: "8px",
+                padding: "8px 10px",
+                maxWidth: "220px",
+                animation: "fadeIn 0.2s ease",
               }}
             >
+              {/* Description */}
               {annotation.description && (
                 <p
                   style={{
-                    color: "rgba(255,255,255,0.5)",
-                    fontSize: "10px",
-                    margin: "0 0 8px 0",
-                    fontFamily: "Inter, system-ui, sans-serif",
+                    color: "rgba(255,255,255,0.45)",
+                    fontSize: "9px",
+                    margin: "0 0 6px 0",
+                    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
                   }}
                 >
                   {annotation.description}
                 </p>
               )}
 
+              {/* Metrics */}
               {annotation.metrics?.map((m, i) => (
                 <div
                   key={i}
@@ -135,18 +208,18 @@ function Marker({ annotation }: { annotation: Annotation }) {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    padding: "3px 0",
+                    padding: "2px 0",
                     borderBottom:
                       i < (annotation.metrics?.length || 0) - 1
-                        ? "1px solid rgba(255,255,255,0.06)"
+                        ? "1px solid rgba(255,255,255,0.04)"
                         : "none",
                   }}
                 >
                   <span
                     style={{
-                      color: "rgba(255,255,255,0.4)",
-                      fontSize: "10px",
-                      fontFamily: "Inter, system-ui, sans-serif",
+                      color: "rgba(255,255,255,0.35)",
+                      fontSize: "9px",
+                      fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
                     }}
                   >
                     {m.label}
@@ -154,14 +227,20 @@ function Marker({ annotation }: { annotation: Annotation }) {
                   <span
                     style={{
                       color: colors.text,
-                      fontSize: "11px",
+                      fontSize: "10px",
                       fontWeight: 600,
-                      fontFamily: "Inter, system-ui, sans-serif",
+                      fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
                     }}
                   >
                     {m.value}
                     {m.unit && (
-                      <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "9px", marginLeft: "2px" }}>
+                      <span
+                        style={{
+                          color: "rgba(255,255,255,0.25)",
+                          fontSize: "8px",
+                          marginLeft: "2px",
+                        }}
+                      >
                         {m.unit}
                       </span>
                     )}
@@ -170,22 +249,34 @@ function Marker({ annotation }: { annotation: Annotation }) {
               ))}
 
               {/* Status badge */}
-              <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "4px" }}>
+              <div
+                style={{
+                  marginTop: "6px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
                 <span
-                  style={{ width: "6px", height: "6px", borderRadius: "50%", background: colors.bg }}
+                  style={{
+                    width: "4px",
+                    height: "4px",
+                    borderRadius: "50%",
+                    background: colors.badge,
+                  }}
                 />
                 <span
                   style={{
                     color: colors.text,
-                    fontSize: "9px",
+                    fontSize: "8px",
                     fontWeight: 600,
                     textTransform: "uppercase",
                     letterSpacing: "0.5px",
-                    fontFamily: "Inter, system-ui, sans-serif",
+                    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
                   }}
                 >
                   {annotation.status === "critical"
-                    ? "CALIBRACION VENCIDA"
+                    ? "CALIBRACIÓN VENCIDA"
                     : annotation.status === "warning"
                       ? "POR VENCER"
                       : "VIGENTE"}
@@ -213,8 +304,8 @@ export default function AnnotationMarkers({
 
   return (
     <group>
-      {annotations.map((a) => (
-        <Marker key={a.id} annotation={a} />
+      {annotations.map((a, i) => (
+        <Marker key={a.id} annotation={a} index={i} />
       ))}
     </group>
   );

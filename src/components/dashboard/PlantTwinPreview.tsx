@@ -29,48 +29,45 @@ interface PlantTwinPreviewProps {
   mtlUrl?: string;
 }
 
-/* ── Status helpers ── */
-const STATUS_MAP: Record<string, { label: string; color: string; bg: string; dot: string }> = {
-  VALID: { label: "Vigente", color: "#3d7a0a", bg: "rgba(61,122,10,0.08)", dot: "#3d7a0a" },
-  EXPIRING: { label: "Por Vencer", color: "#E8700A", bg: "rgba(232,112,10,0.08)", dot: "#E8700A" },
-  EXPIRED: { label: "Vencida", color: "#DC2626", bg: "rgba(220,38,38,0.06)", dot: "#DC2626" },
-  RETIRED: { label: "Retirado", color: "#6b7280", bg: "rgba(107,114,128,0.08)", dot: "#6b7280" },
-};
+/* ── Pre-defined positions with good spatial separation ── */
+const ANNOTATION_POSITIONS: [number, number, number][] = [
+  [-3.5, 1.8, -1.0], // far-left, upper
+  [3.2, 0.8, 1.5],   // far-right, lower
+  [0.0, 2.5, -3.0],  // center-back, upper
+  [-2.0, 0.5, 3.0],  // left-front, low
+  [2.5, 2.0, -2.0],  // right-back, upper
+];
 
-/* ── Annotation generation ── */
+/* ── Annotation generation — max 5, priority-sorted, spatially separated ── */
 function generateAnnotations(equipment: EquipmentSummary[]) {
-  const annotatable = equipment.filter(
-    (eq) => eq.subsystem && eq.tag
+  const annotatable = equipment.filter((eq) => eq.subsystem && eq.tag);
+
+  // Priority: critical first, then warning, then normal
+  const priority: Record<string, number> = { EXPIRED: 0, EXPIRING: 1, VALID: 2, RETIRED: 3 };
+  const sorted = [...annotatable].sort(
+    (a, b) => (priority[a.calibrationStatus] ?? 2) - (priority[b.calibrationStatus] ?? 2)
   );
-  const grid = annotatable.map((eq, i) => {
-    const angle = (i / Math.max(annotatable.length, 1)) * Math.PI * 2;
-    const radius = 2 + (i % 3) * 0.8;
-    return {
-      id: eq.id,
-      position: [
-        Math.cos(angle) * radius,
-        0.6 + (i % 3) * 0.5,
-        Math.sin(angle) * radius,
-      ] as [number, number, number],
-      label: eq.tag || eq.name,
-      description: eq.name,
-      status:
-        eq.calibrationStatus === "EXPIRED"
-          ? ("critical" as const)
-          : eq.calibrationStatus === "EXPIRING"
-            ? ("warning" as const)
-            : ("normal" as const),
-      metrics: eq.specs
-        ? Object.entries(eq.specs as Record<string, unknown>)
-            .slice(0, 3)
-            .map(([k, v]) => ({
-              label: k.replace(/([A-Z])/g, " $1").trim(),
-              value: String(v),
-            }))
-        : [],
-    };
-  });
-  return grid;
+
+  return sorted.slice(0, ANNOTATION_POSITIONS.length).map((eq, i) => ({
+    id: eq.id,
+    position: ANNOTATION_POSITIONS[i],
+    label: eq.tag || eq.name,
+    description: eq.name,
+    status:
+      eq.calibrationStatus === "EXPIRED"
+        ? ("critical" as const)
+        : eq.calibrationStatus === "EXPIRING"
+          ? ("warning" as const)
+          : ("normal" as const),
+    metrics: eq.specs
+      ? Object.entries(eq.specs as Record<string, unknown>)
+          .slice(0, 3)
+          .map(([k, v]) => ({
+            label: k.replace(/([A-Z])/g, " $1").trim(),
+            value: String(v),
+          }))
+      : [],
+  }));
 }
 
 /* ── Component ── */
@@ -87,7 +84,6 @@ export function PlantTwinPreview({
     []
   );
 
-  // Counts
   const alertCount = equipment.filter(
     (e) => e.calibrationStatus === "EXPIRED" || e.calibrationStatus === "EXPIRING"
   ).length;
@@ -107,13 +103,7 @@ export function PlantTwinPreview({
               Gemelo Digital — Planta DY-500
             </h2>
             <p className="text-[10px] text-eco-muted">
-              {equipment.length} equipos
-              {modelInfo ? ` · ${modelInfo.meshCount} meshes` : ""}
-              {alertCount > 0 && (
-                <span className="text-eco-red ml-1">
-                  · {alertCount} alerta{alertCount > 1 ? "s" : ""}
-                </span>
-              )}
+              Planta DY-500{modelInfo ? ` · ${modelInfo.meshCount} mallas` : ""}
             </p>
           </div>
         </div>
@@ -128,80 +118,33 @@ export function PlantTwinPreview({
         </Link>
       </div>
 
-      {/* Content: 3D Viewer + Equipment sidebar */}
-      <div className="flex flex-col lg:flex-row">
-        {/* 3D Viewer */}
-        <div className="flex-1 h-[380px] min-h-[300px] relative">
-          <ModelViewer
-            modelUrl={modelUrl}
-            mtlUrl={mtlUrl}
-            showGrid
-            showAnnotations
-            annotations={annotations}
-            onModelLoaded={handleModelLoaded}
-          />
-          {/* Overlay badge */}
-          <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-eco-navy/80 backdrop-blur-sm text-white/60 text-[9px] font-mono px-2.5 py-1 rounded-lg">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-eco-green animate-pulse" />
-            3D Live
-          </div>
+      {/* Content: Full-bleed 3D Viewer */}
+      <div className="relative h-[440px] min-h-[360px]">
+        <ModelViewer
+          modelUrl={modelUrl}
+          mtlUrl={mtlUrl}
+          showGrid
+          showAnnotations
+          annotations={annotations}
+          onModelLoaded={handleModelLoaded}
+        />
+
+        {/* Bottom-left: live badge */}
+        <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-eco-navy/80 backdrop-blur-sm text-white/50 text-[9px] font-mono px-2.5 py-1 rounded-lg">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-eco-green animate-pulse" />
+          3D Live
         </div>
 
-        {/* Equipment sidebar */}
-        <div className="lg:w-72 border-t lg:border-t-0 lg:border-l border-black/[0.04] max-h-[380px] overflow-y-auto">
-          <div className="p-4 space-y-1">
-            <p className="text-[9px] tracking-[1.5px] text-eco-muted uppercase font-medium mb-3">
-              Equipos Principales
-            </p>
-            {equipment.slice(0, 8).map((eq) => {
-              const status = STATUS_MAP[eq.calibrationStatus] || STATUS_MAP.VALID;
-              return (
-                <Link
-                  key={eq.id}
-                  href={`/equipment/${eq.id}/twin`}
-                  className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-eco-surface-2/50 transition-colors group"
-                >
-                  <span
-                    className="mt-1 block h-2 w-2 rounded-full flex-shrink-0"
-                    style={{ background: status.dot }}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-semibold text-eco-ink truncate group-hover:text-eco-green transition-colors">
-                      {eq.name}
-                    </p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      {eq.tag && (
-                        <span className="font-mono text-[9px] text-eco-muted">
-                          {eq.tag}
-                        </span>
-                      )}
-                      <span
-                        className="text-[8px] font-semibold px-1.5 py-0.5 rounded-full"
-                        style={{ color: status.color, background: status.bg }}
-                      >
-                        {status.label}
-                      </span>
-                    </div>
-                    {eq._count.childEquipment > 0 && (
-                      <p className="text-[9px] text-eco-muted mt-0.5">
-                        {eq._count.childEquipment} sub-componente{eq._count.childEquipment > 1 ? "s" : ""}
-                      </p>
-                    )}
-                  </div>
-                  <svg className="h-3 w-3 text-eco-muted/40 mt-1 flex-shrink-0 group-hover:text-eco-green transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                  </svg>
-                </Link>
-              );
-            })}
-            {equipment.length > 8 && (
-              <Link
-                href="/equipment"
-                className="block text-center text-[10px] text-eco-muted hover:text-eco-green py-2 transition-colors"
-              >
-                + {equipment.length - 8} equipos m\u00e1s
-              </Link>
-            )}
+        {/* Bottom-right: floating pills */}
+        <div className="absolute bottom-3 right-3 flex items-center gap-2">
+          {alertCount > 0 && (
+            <div className="flex items-center gap-1.5 bg-eco-red/90 backdrop-blur-sm text-white text-[9px] font-semibold px-2.5 py-1 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-white/80" />
+              {alertCount} alerta{alertCount > 1 ? "s" : ""}
+            </div>
+          )}
+          <div className="bg-eco-navy/80 backdrop-blur-sm text-white/40 text-[9px] font-mono px-2.5 py-1 rounded-lg">
+            {equipment.length} equipos
           </div>
         </div>
       </div>

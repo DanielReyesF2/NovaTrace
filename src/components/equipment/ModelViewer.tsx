@@ -2,7 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { OrbitControls, Grid } from "@react-three/drei";
+import { OrbitControls, Grid, Environment } from "@react-three/drei";
 import * as THREE from "three";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
@@ -121,7 +121,7 @@ function OBJOnly({
 }
 
 // ---------------------------------------------------------------------------
-// Cinematic camera entrance
+// Cinematic camera entrance — slow, elegant descent
 // ---------------------------------------------------------------------------
 function CameraRig() {
   const { camera } = useThree();
@@ -130,15 +130,15 @@ function CameraRig() {
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
-    camera.position.set(8, 6, 8);
+    camera.position.set(7, 5.5, 7);
     camera.lookAt(0, 0, 0);
   }, [camera]);
 
   useFrame((_, delta) => {
-    if (camera.position.y > 3.5) {
-      camera.position.y -= delta * 1.2;
-      camera.position.x -= delta * 1.5;
-      camera.position.z -= delta * 1.5;
+    if (camera.position.y > 3) {
+      camera.position.y -= delta * 0.8;
+      camera.position.x -= delta * 1.0;
+      camera.position.z -= delta * 1.0;
     }
   });
 
@@ -187,20 +187,22 @@ export default function ModelViewer({
     <ViewerErrorBoundary>
       <Canvas
         dpr={[1, 2]}
-        camera={{ position: [8, 6, 8], fov: 45, near: 0.1, far: 1000 }}
+        camera={{ position: [7, 5.5, 7], fov: 42, near: 0.1, far: 1000 }}
         gl={{ antialias: true }}
         style={{ background: "#1d2b36" }}
       >
         {/* Background — eco-navy */}
         <color attach="background" args={["#1d2b36"]} />
-        <fog attach="fog" args={["#1d2b36", 20, 50]} />
+        <fog attach="fog" args={["#1d2b36", 30, 60]} />
 
-        {/* Lighting — bright enough for photogrammetry textures */}
-        <ambientLight intensity={0.8} />
-        <directionalLight position={[5, 8, 3]} intensity={1.5} />
-        <directionalLight position={[-3, 4, -5]} intensity={0.5} color="#7C5CFC" />
-        <pointLight position={[0, 5, 0]} intensity={0.8} color="#b5e951" />
-        <hemisphereLight args={["#b1e1ff", "#1d2b36", 0.5]} />
+        {/* Lighting — soft, cinematic */}
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[5, 8, 3]} intensity={1.0} color="#fff5e6" />
+        <directionalLight position={[-3, 4, -5]} intensity={0.3} color="#7C5CFC" />
+        <hemisphereLight args={["#c8e0ff", "#1d2b36", 0.35]} />
+
+        {/* Environment for subtle reflections */}
+        <Environment preset="city" background={false} />
 
         {/* Camera animation */}
         <CameraRig />
@@ -215,30 +217,30 @@ export default function ModelViewer({
         {/* 3D Annotations */}
         <AnnotationMarkers annotations={annotations} visible={showAnnotations} />
 
-        {/* Ground grid */}
+        {/* Ground grid — subtle, nearly invisible */}
         {showGrid && (
           <Grid
             position={[0, -0.01, 0]}
-            args={[20, 20]}
+            args={[30, 30]}
             cellSize={0.5}
-            cellThickness={0.5}
-            cellColor="#2e4050"
-            sectionSize={2}
-            sectionThickness={1}
-            sectionColor="#3d5060"
-            fadeDistance={20}
-            fadeStrength={1}
+            cellThickness={0.3}
+            cellColor="#253540"
+            sectionSize={2.5}
+            sectionThickness={0.6}
+            sectionColor="#2e4050"
+            fadeDistance={25}
+            fadeStrength={1.5}
             infiniteGrid
           />
         )}
 
-        {/* Controls */}
+        {/* Controls — slow, contemplative auto-rotate */}
         <OrbitControls
           makeDefault
           enableDamping
-          dampingFactor={0.1}
+          dampingFactor={0.08}
           autoRotate
-          autoRotateSpeed={0.5}
+          autoRotateSpeed={0.25}
           minDistance={1}
           maxDistance={30}
         />
