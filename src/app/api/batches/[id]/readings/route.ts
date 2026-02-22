@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { createReadingSchema } from "@/lib/validations";
+import { createAuditEntry } from "@/lib/audit";
 
 export async function GET(
   _req: NextRequest,
@@ -33,8 +34,18 @@ export async function POST(
     data: {
       batchId: id,
       timestamp: timestamp ? new Date(timestamp) : new Date(),
+      createdById: session.userId,
       ...rest,
     },
+  });
+
+  await createAuditEntry({
+    userId: session.userId,
+    userEmail: session.email,
+    action: "CREATE",
+    entity: "Reading",
+    entityId: reading.id,
+    batchId: id,
   });
 
   // Update batch maxReactorTemp if higher

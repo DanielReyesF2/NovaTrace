@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { createPhotoSchema } from "@/lib/validations";
+import { createAuditEntry } from "@/lib/audit";
 
 export async function GET(
   _req: NextRequest,
@@ -41,8 +42,18 @@ export async function POST(
       data: {
         batchId: id,
         takenAt: takenAt ? new Date(takenAt) : new Date(),
+        createdById: session.userId,
         ...rest,
       },
+    });
+
+    await createAuditEntry({
+      userId: session.userId,
+      userEmail: session.email,
+      action: "CREATE",
+      entity: "Photo",
+      entityId: photo.id,
+      batchId: id,
     });
 
     return NextResponse.json(photo, { status: 201 });

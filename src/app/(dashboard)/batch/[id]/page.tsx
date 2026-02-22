@@ -17,6 +17,13 @@ export default async function BatchPage({
       photos: { orderBy: { takenAt: "asc" } },
       labResults: true,
       certificates: true,
+      productFractions: {
+        orderBy: { createdAt: "asc" },
+        include: {
+          equipment: { select: { id: true, name: true, type: true } },
+          labResult: { select: { id: true, sampleNumber: true, productClassification: true } },
+        },
+      },
     },
   });
 

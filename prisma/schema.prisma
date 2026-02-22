@@ -18,12 +18,21 @@ model User {
   role         UserRole @default(OPERATOR)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  // Reverse relations (per-user attribution)
+  readings         Reading[]
+  processEvents    ProcessEvent[]
+  photos           Photo[]
+  labResults       LabResult[]
+  equipmentCreated Equipment[]
+  auditLogs        AuditLog[]
+  fractionsCreated ProductFraction[]
 }
 
 enum UserRole {
-  ADMIN    // Daniel — full access
+  ADMIN // Daniel — full access
   OPERATOR // Salvador, etc — record batches
-  VIEWER   // Investors, auditors — read only
+  VIEWER // Investors, auditors — read only
 }
 
 // ============================================
@@ -36,15 +45,19 @@ model Batch {
   date   DateTime
   status BatchStatus @default(ACTIVE)
 
-  // Feedstock (entrada)
-  feedstockType      String  // "LDPE Agrícola"
-  feedstockOrigin    String  // "Michoacán, MX"
-  feedstockWeight    Float   // kg entrada
-  feedstockCondition String? // "Sin triturar, húmedo, ~30% tierra"
-  contaminationPct   Float?  // % estimado de contaminación
+  // Process type (pyrolysis vs distillation)
+  processType    ProcessType @default(PYROLYSIS)
+  parentBatchIds String[] // For DISTILLATION: cuids of source pyrolysis batches
 
-  // Producto (salida)
-  oilOutput       Float? // litros de aceite
+  // Feedstock (entrada)
+  feedstockType      String // "LDPE Agrícola"
+  feedstockOrigin    String // "Michoacán, MX"
+  feedstockWeight    Float // kg entrada
+  feedstockCondition String? // "Sin triturar, húmedo, ~30% tierra"
+  contaminationPct   Float? // % estimado de contaminación
+
+  // Producto (salida) — totals for mass balance
+  oilOutput       Float? // litros de aceite (total across all fractions)
   oilWeightKg     Float? // kg de aceite
   residueWeightKg Float? // kg de residuo sólido
   yieldPercent    Float? // rendimiento calculado
@@ -64,29 +77,29 @@ model Batch {
 
   // Transporte & Logística (ISO 14040 / ISCC+)
   transportMode       String? // "Camión 3.5t", "Pickup"
-  transportDistanceKm Float?  // km desde origen a planta
+  transportDistanceKm Float? // km desde origen a planta
   transportFuelType   String? // "Diésel", "Gasolina"
-  transportFuelL      Float?  // litros combustible transporte
-  transportCo2Kg      Float?  // kg CO2 del transporte (calculado)
+  transportFuelL      Float? // litros combustible transporte
+  transportCo2Kg      Float? // kg CO2 del transporte (calculado)
 
   // Emisiones de Proceso (ISO 14040)
-  emissionsCo2Kg    Float? // kg CO2 directas del proceso
-  emissionsCh4Kg    Float? // kg CH4 fugitivas
-  emissionsNoxKg    Float? // kg NOx del quemador
-  emissionsSoxKg    Float? // kg SOx del quemador
-  emissionsPmKg     Float? // kg partículas (PM)
-  emissionsWaterL   Float? // litros de agua residual generada
-  waterConsumedL    Float? // litros de agua consumida en enfriamiento
+  emissionsCo2Kg  Float? // kg CO2 directas del proceso
+  emissionsCh4Kg  Float? // kg CH4 fugitivas
+  emissionsNoxKg  Float? // kg NOx del quemador
+  emissionsSoxKg  Float? // kg SOx del quemador
+  emissionsPmKg   Float? // kg partículas (PM)
+  emissionsWaterL Float? // litros de agua residual generada
+  waterConsumedL  Float? // litros de agua consumida en enfriamiento
 
   // Catalizadores & Insumos (ISO 14040)
-  catalystType   String? // "Ninguno (térmica)", "Zeolita", etc
-  catalystKg     Float?  // kg catalizador usado
-  chemicalsUsed  String? // Otros insumos químicos si aplica
+  catalystType  String? // "Ninguno (térmica)", "Zeolita", etc
+  catalystKg    Float? // kg catalizador usado
+  chemicalsUsed String? // Otros insumos químicos si aplica
 
   // Residuos (ISO 14040 / Verra)
-  charDisposition  String? // "Secuestro en suelo", "Venta como combustible"
-  ashDisposition   String? // "Disposición controlada", "Reciclaje"
-  wastewaterDisp   String? // "Recirculación", "Tratamiento"
+  charDisposition String? // "Secuestro en suelo", "Venta como combustible"
+  ashDisposition  String? // "Disposición controlada", "Reciclaje"
+  wastewaterDisp  String? // "Recirculación", "Tratamiento"
 
   // ISCC+ Chain of Custody
   sustainabilityCertId String? // ID del certificado de sostenibilidad ISCC
@@ -106,16 +119,18 @@ model Batch {
   operators String[] // ["Daniel", "Salvador"]
 
   // Relaciones
-  readings     Reading[]
-  events       ProcessEvent[]
-  photos       Photo[]
-  labResults   LabResult[]
-  certificates Certificate[]
+  readings         Reading[]
+  events           ProcessEvent[]
+  photos           Photo[]
+  labResults       LabResult[]
+  certificates     Certificate[]
+  auditLogs        AuditLog[]
+  productFractions ProductFraction[]
 
   // GHG Impact (calculated, stored for performance)
-  co2Baseline  Float? // kg CO2eq sin proyecto (quema abierta)
-  co2Project   Float? // kg CO2eq con proyecto (pirólisis lifecycle)
-  co2Avoided   Float? // kg CO2eq evitados
+  co2Baseline Float? // kg CO2eq sin proyecto (quema abierta)
+  co2Project  Float? // kg CO2eq con proyecto (pirólisis lifecycle)
+  co2Avoided  Float? // kg CO2eq evitados
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -126,6 +141,11 @@ enum BatchStatus {
   COMPLETED
   INCOMPLETE
   TEST
+}
+
+enum ProcessType {
+  PYROLYSIS
+  DISTILLATION
 }
 
 // ============================================
@@ -147,6 +167,12 @@ model Reading {
 
   notes String?
 
+  // Attribution & equipment traceability
+  createdById String?
+  createdBy   User?      @relation(fields: [createdById], references: [id])
+  equipmentId String?
+  equipment   Equipment? @relation(fields: [equipmentId], references: [id])
+
   @@index([batchId, timestamp])
 }
 
@@ -162,6 +188,10 @@ model ProcessEvent {
   type      EventType
   detail    String // "Quemador aceite ON", "Válvula SG-1 abierta"
   notes     String?
+
+  // Attribution
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id])
 
   @@index([batchId, timestamp])
 }
@@ -186,7 +216,11 @@ model Photo {
   url     String
   type    PhotoType
   caption String?
-  takenAt DateTime @default(now())
+  takenAt DateTime  @default(now())
+
+  // Attribution
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id])
 }
 
 enum PhotoType {
@@ -206,9 +240,9 @@ model LabResult {
   batchId String
   batch   Batch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
 
-  labName          String  // "Diamond Internacional de México"
+  labName          String // "Diamond Internacional de México"
   labCertification String? // "ISO 9001 — AMTIVO"
-  sampleNumber     String  // "295-26"
+  sampleNumber     String // "295-26"
   lotNumber        String? // "12022026"
   reportDate       DateTime
 
@@ -218,30 +252,37 @@ model LabResult {
   // Test results — Lab 1 style (Diamond Internacional)
   crepitation   String? // "Negativo"
   appearance    String? // "Clara y Brillante"
-  viscosity40C  Float?  // mm²/s — ASTM D7042
+  viscosity40C  Float? // mm²/s — ASTM D7042
   color         String? // "Café"
-  waterContent  Float?  // PPM — ASTM D6304
-  sulfurPercent Float?  // % m/m — ASTM D4951
-  flashPoint    Float?  // °C — ASTM D93
-  density15C    Float?  // g/mL a 15°C — ASTM D4052
-  carbonResidue Float?  // % — ASTM D4530
-  ashContent    Float?  // % — ASTM D482
-  calorificMJ   Float?  // MJ/kg — poder calorífico
+  waterContent  Float? // PPM — ASTM D6304
+  sulfurPercent Float? // % m/m — ASTM D4951
+  flashPoint    Float? // °C — ASTM D93
+  density15C    Float? // g/mL a 15°C — ASTM D4052
+  carbonResidue Float? // % — ASTM D4530
+  ashContent    Float? // % — ASTM D482
+  calorificMJ   Float? // MJ/kg — poder calorífico
 
   // Test results — Lab 2 style (general)
-  density20C       Float?  // Kg/L a 20°C — ASTM D1298
-  viscDynamic20C   Float?  // cP — ASTM D2983 viscosidad dinámica a 20°C
-  flashPointOpen   Float?  // °C — ASTM D92 copa abierta (Cleveland)
-  calorificCalG    Float?  // Cal/g — ASTM D240
-  waterSedimentPct Float?  // % — ASTM D4007
-  waterByKFPct     Float?  // % — ASTM E203 Karl Fischer
+  density20C       Float? // Kg/L a 20°C — ASTM D1298
+  viscDynamic20C   Float? // cP — ASTM D2983 viscosidad dinámica a 20°C
+  flashPointOpen   Float? // °C — ASTM D92 copa abierta (Cleveland)
+  calorificCalG    Float? // Cal/g — ASTM D240
+  waterSedimentPct Float? // % — ASTM D4007
+  waterByKFPct     Float? // % — ASTM E203 Karl Fischer
 
   // Meta
   labNotes        String? // "Olor fuerte", observaciones del lab
-  additionalTests Json?   // Flexible field for extra tests
+  additionalTests Json? // Flexible field for extra tests
   verdict         String? // "Cumple con las especificaciones"
   pdfUrl          String?
   analystName     String?
+
+  // Attribution
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id])
+
+  // Fraction link (reverse of ProductFraction.labResultId)
+  productFraction ProductFraction?
 }
 
 // ============================================
@@ -253,7 +294,7 @@ model Certificate {
   batch   Batch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
 
   code String @unique // Unique code for QR verification
-  hash String         // SHA-256 of all batch data
+  hash String // SHA-256 of all batch data
 
   pdfUrl String?
   qrData String // Data encoded in QR
@@ -264,4 +305,158 @@ model Certificate {
 
   generatedAt DateTime  @default(now())
   verifiedAt  DateTime? // When someone scans the QR
+}
+
+// ============================================
+// FRACCIONES DE PRODUCTO
+// ============================================
+model ProductFraction {
+  id      String @id @default(cuid())
+  batchId String
+  batch   Batch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  type        FractionType
+  outputPoint String? // "Amortiguador", "Condensador 1", "Condensador 2", "Condensador horizontal"
+  name        String? // "Aceite crudo pesado", "Nafta ligera C5-C10"
+
+  quantityL         Float? // liters collected
+  quantityKg        Float? // kg
+  densityKgL        Float? // measured density kg/L
+  temperatureRangeC String? // condensation temp range ("80-150°C")
+  destination       String? // "SOLD", "TO_DISTILLATION", "RECIRCULATED", "STORAGE"
+
+  // Equipment & lab linkage
+  equipmentId String?
+  equipment   Equipment? @relation(fields: [equipmentId], references: [id])
+  labResultId String?    @unique
+  labResult   LabResult? @relation(fields: [labResultId], references: [id])
+
+  notes String?
+
+  // Attribution
+  createdById String?
+  createdBy   User?    @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([batchId])
+}
+
+enum FractionType {
+  HEAVY_CRUDE // Amortiguador (pyrolysis)
+  MEDIUM_OIL // 1st condenser (pyrolysis)
+  LIGHT_NAPHTHA // 2nd condenser (pyrolysis)
+  GAS_CONDENSABLE // Condensable gas
+  GAS_NONCONDENSABLE // Non-condensable gas, recirculated as fuel
+  REFINED_DIESEL // Distillation output after acid/alkaline treatment
+  CRUDE_MIX // Combined pyrolysis fractions before distillation
+  OTHER
+}
+
+// ============================================
+// REGISTRO DE EQUIPOS
+// ============================================
+model Equipment {
+  id           String        @id @default(cuid())
+  name         String // "Termopar reactor K-type"
+  type         EquipmentType
+  serialNumber String?
+  manufacturer String?
+  model        String?
+  location     String? // "Reactor principal", "Condensador 1"
+
+  // Digital twin — technical specs
+  subsystem String? // "PYROLYSIS", "DISTILLATION", "UTILITIES", "INSTRUMENTATION"
+  specs     Json?   // { powerKw, capacityKg, operatingTempRange, pressureRange, volumeL, material, dimensions, fuelType, flowRateL, ... }
+  tag       String? // P&ID tag: "TI-001", "PI-001", "V-001"
+
+  // Hierarchy — e.g. thermocouple belongs to reactor
+  parentEquipmentId String?
+  parentEquipment   Equipment?  @relation("EquipmentHierarchy", fields: [parentEquipmentId], references: [id])
+  childEquipment    Equipment[] @relation("EquipmentHierarchy")
+
+  // Calibration (ISCC+ / Verra requirement)
+  calibrationDate     DateTime?
+  calibrationExpiry   DateTime?
+  calibrationProvider String? // "Laboratorio Nacional de Metrología"
+  calibrationCertUrl  String?
+  accuracySpec        String? // "±0.5°C", "±0.1 kg"
+  calibrationStatus   CalibrationStatus @default(VALID)
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Attribution
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id])
+
+  // Relations
+  readings  Reading[]
+  fractions ProductFraction[]
+
+  @@index([type])
+  @@index([calibrationExpiry])
+  @@index([subsystem])
+}
+
+enum EquipmentType {
+  REACTOR
+  DISTILLER
+  CONDENSER
+  BUFFER_CHAMBER
+  BURNER
+  BLOWER
+  PUMP
+  COMPRESSOR
+  TANK
+  VALVE
+  DAMPER
+  COOLING_TOWER
+  GAS_SYSTEM
+  PIPING
+  THERMOCOUPLE
+  SCALE
+  FLOW_METER
+  PRESSURE_GAUGE
+  HYGROMETER
+  TIMER
+  CONTROL_PANEL
+  CONVEYOR
+  OTHER
+}
+
+enum CalibrationStatus {
+  VALID
+  EXPIRING
+  EXPIRED
+  RETIRED
+}
+
+// ============================================
+// BITACORA DE AUDITORIA
+// ============================================
+model AuditLog {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+
+  userId    String
+  user      User   @relation(fields: [userId], references: [id])
+  userEmail String // Denormalized for fast display
+
+  action   String // "CREATE", "UPDATE", "DELETE"
+  entity   String // "Batch", "Reading", "LabResult", etc.
+  entityId String
+
+  batchId String?
+  batch   Batch?  @relation(fields: [batchId], references: [id], onDelete: SetNull)
+
+  changes   Json? // { field: { old, new } }
+  reason    String?
+  ipAddress String?
+  userAgent String?
+
+  @@index([entityId])
+  @@index([batchId])
+  @@index([userId])
+  @@index([timestamp])
 }

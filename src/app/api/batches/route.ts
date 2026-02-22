@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { createBatchSchema } from "@/lib/validations";
 import { generateBatchCode } from "@/lib/utils";
 import { calculateGHG } from "@/lib/ghg";
+import { createAuditEntry } from "@/lib/audit";
 
 export async function GET() {
   try {
@@ -52,6 +53,16 @@ export async function POST(req: NextRequest) {
         status: "ACTIVE",
         ...data,
       },
+    });
+
+    await createAuditEntry({
+      userId: session.userId,
+      userEmail: session.email,
+      action: "CREATE",
+      entity: "Batch",
+      entityId: batch.id,
+      batchId: batch.id,
+      changes: data as unknown as Record<string, unknown>,
     });
 
     return NextResponse.json(batch, { status: 201 });

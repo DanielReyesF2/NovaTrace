@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { updateBatchSchema } from "@/lib/validations";
 import { calculateGHG } from "@/lib/ghg";
+import { createAuditEntry, diffRecords } from "@/lib/audit";
 
 export async function GET(
   _req: NextRequest,
@@ -18,6 +19,13 @@ export async function GET(
         photos: { orderBy: { takenAt: "asc" } },
         labResults: true,
         certificates: true,
+        productFractions: {
+          orderBy: { createdAt: "asc" },
+          include: {
+            equipment: { select: { id: true, name: true, type: true } },
+            labResult: { select: { id: true, sampleNumber: true, productClassification: true } },
+          },
+        },
       },
     });
 
@@ -46,30 +54,49 @@ export async function PATCH(
     const body = await req.json();
     const data = updateBatchSchema.parse(body);
 
+    // Fetch before update for audit diff
+    const existing = await prisma.batch.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: "Lote no encontrado" }, { status: 404 });
+    }
+
     // If completing, calculate GHG impact
     let ghgData = {};
     if (data.status === "COMPLETED" && data.oilOutput != null) {
-      const existing = await prisma.batch.findUnique({ where: { id } });
-      if (existing) {
-        const ghg = calculateGHG({
-          feedstockKg: existing.feedstockWeight,
-          contaminationPct: existing.contaminationPct ?? 0,
-          oilLiters: data.oilOutput,
-          dieselConsumedL: data.dieselConsumedL,
-          durationHours: data.durationMinutes ? data.durationMinutes / 60 : undefined,
-        });
-        ghgData = {
-          co2Baseline: ghg.baselineTotal,
-          co2Project: ghg.projectTotal,
-          co2Avoided: ghg.avoided,
-        };
-      }
+      const ghg = calculateGHG({
+        feedstockKg: existing.feedstockWeight,
+        contaminationPct: existing.contaminationPct ?? 0,
+        oilLiters: data.oilOutput,
+        dieselConsumedL: data.dieselConsumedL,
+        durationHours: data.durationMinutes ? data.durationMinutes / 60 : undefined,
+      });
+      ghgData = {
+        co2Baseline: ghg.baselineTotal,
+        co2Project: ghg.projectTotal,
+        co2Avoided: ghg.avoided,
+      };
     }
 
     const batch = await prisma.batch.update({
       where: { id },
       data: { ...data, ...ghgData },
     });
+
+    const changes = diffRecords(
+      existing as unknown as Record<string, unknown>,
+      batch as unknown as Record<string, unknown>
+    );
+    if (changes) {
+      await createAuditEntry({
+        userId: session.userId,
+        userEmail: session.email,
+        action: "UPDATE",
+        entity: "Batch",
+        entityId: id,
+        batchId: id,
+        changes,
+      });
+    }
 
     return NextResponse.json(batch);
   } catch (error) {

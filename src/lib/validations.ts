@@ -6,6 +6,8 @@ export const loginSchema = z.object({
 });
 
 export const createBatchSchema = z.object({
+  processType: z.enum(["PYROLYSIS", "DISTILLATION"]).optional(),
+  parentBatchIds: z.array(z.string()).optional(),
   feedstockType: z.string().min(1),
   feedstockOrigin: z.string().min(1),
   feedstockWeight: z.number().positive(),
@@ -37,6 +39,7 @@ export const createReadingSchema = z.object({
   compressorPsi: z.number().optional(),
   regulatorPsi: z.number().optional(),
   damperPosition: z.number().optional(),
+  equipmentId: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -76,4 +79,72 @@ export const createLabResultSchema = z.object({
   additionalTests: z.record(z.string()).optional(),
   verdict: z.string().optional(),
   analystName: z.string().optional(),
+});
+
+// ── Equipment ──
+
+export const createEquipmentSchema = z.object({
+  name: z.string().min(1),
+  type: z.enum([
+    "REACTOR", "DISTILLER", "CONDENSER", "BUFFER_CHAMBER",
+    "BURNER", "BLOWER", "PUMP", "COMPRESSOR", "TANK",
+    "VALVE", "DAMPER", "COOLING_TOWER", "GAS_SYSTEM", "PIPING",
+    "THERMOCOUPLE", "SCALE", "FLOW_METER", "PRESSURE_GAUGE",
+    "HYGROMETER", "TIMER", "CONTROL_PANEL", "CONVEYOR", "OTHER",
+  ]),
+  serialNumber: z.string().optional(),
+  manufacturer: z.string().optional(),
+  model: z.string().optional(),
+  location: z.string().optional(),
+  subsystem: z.string().optional(),
+  specs: z.record(z.unknown()).optional(),
+  tag: z.string().optional(),
+  parentEquipmentId: z.string().optional(),
+  calibrationDate: z.string().datetime().optional(),
+  calibrationExpiry: z.string().datetime().optional(),
+  calibrationProvider: z.string().optional(),
+  calibrationCertUrl: z.string().url().optional(),
+  accuracySpec: z.string().optional(),
+  calibrationStatus: z.enum(["VALID", "EXPIRING", "EXPIRED", "RETIRED"]).optional(),
+});
+
+export const updateEquipmentSchema = createEquipmentSchema.partial();
+
+// ── Product Fractions ──
+
+export const createFractionSchema = z.object({
+  type: z.enum([
+    "HEAVY_CRUDE",
+    "MEDIUM_OIL",
+    "LIGHT_NAPHTHA",
+    "GAS_CONDENSABLE",
+    "GAS_NONCONDENSABLE",
+    "REFINED_DIESEL",
+    "CRUDE_MIX",
+    "OTHER",
+  ]),
+  outputPoint: z.string().optional(),
+  name: z.string().optional(),
+  quantityL: z.number().min(0).optional(),
+  quantityKg: z.number().min(0).optional(),
+  densityKgL: z.number().min(0).optional(),
+  temperatureRangeC: z.string().optional(),
+  destination: z.string().optional(),
+  equipmentId: z.string().optional(),
+  labResultId: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const updateFractionSchema = createFractionSchema.partial();
+
+// ── Audit Log Query ──
+
+export const auditQuerySchema = z.object({
+  entity: z.string().optional(),
+  entityId: z.string().optional(),
+  batchId: z.string().optional(),
+  userId: z.string().optional(),
+  action: z.enum(["CREATE", "UPDATE", "DELETE"]).optional(),
+  limit: z.coerce.number().min(1).max(100).optional(),
+  offset: z.coerce.number().min(0).optional(),
 });

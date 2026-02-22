@@ -56,10 +56,26 @@ interface BatchDetailProps {
     plasticTypeCode: string | null;
     baselineScenario: string | null;
     additionalityProof: string | null;
+    // Process
+    processType: string;
+    parentBatchIds: string[];
     // GHG
     co2Baseline: number | null;
     co2Project: number | null;
     co2Avoided: number | null;
+    // Product fractions
+    productFractions: Array<{
+      id: string;
+      type: string;
+      outputPoint: string | null;
+      name: string | null;
+      quantityL: number | null;
+      quantityKg: number | null;
+      densityKgL: number | null;
+      destination: string | null;
+      equipment: { id: string; name: string; type: string } | null;
+      labResult: { id: string; sampleNumber: string; productClassification: string | null } | null;
+    }>;
     readings: Array<{
       id: string;
       timestamp: string;
@@ -166,6 +182,15 @@ export function BatchDetail({ batch }: BatchDetailProps) {
           >
             {status.label}
           </span>
+          <span
+            className="text-[10px] font-semibold px-2.5 py-1 rounded-full"
+            style={{
+              color: batch.processType === "DISTILLATION" ? "#2D8CF0" : "#E8700A",
+              background: batch.processType === "DISTILLATION" ? "rgba(45,140,240,0.1)" : "rgba(232,112,10,0.1)",
+            }}
+          >
+            {batch.processType === "DISTILLATION" ? "Destilacion" : "Pirolisis"}
+          </span>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-[13px] text-eco-muted font-light">
@@ -235,6 +260,130 @@ export function BatchDetail({ batch }: BatchDetailProps) {
             <p className="text-xs text-eco-ink-light leading-relaxed mt-0.5">
               {batch.stopReason}
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Product Fractions ── */}
+      {batch.productFractions.length > 0 && (
+        <div className="bg-white rounded-2xl shadow-soft border border-black/[0.03] p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-[11px] tracking-[2px] text-eco-muted uppercase font-medium">
+              Fracciones de Producto
+            </h3>
+            {batch.oilOutput != null && batch.oilOutput > 0 && (
+              <span className="text-[10px] text-eco-muted">
+                Total: <span className="font-mono font-semibold text-eco-ink">{batch.oilOutput} L</span>
+              </span>
+            )}
+          </div>
+
+          {/* Fraction sum bar */}
+          {(() => {
+            const total = batch.oilOutput ?? 0;
+            if (total <= 0) return null;
+            const FRACTION_COLORS: Record<string, string> = {
+              HEAVY_CRUDE: "#E8700A",
+              MEDIUM_OIL: "#7C5CFC",
+              LIGHT_NAPHTHA: "#2D8CF0",
+              REFINED_DIESEL: "#3d7a0a",
+              GAS_NONCONDENSABLE: "#6B7280",
+              GAS_CONDENSABLE: "#9CA3AF",
+              CRUDE_MIX: "#D97706",
+              OTHER: "#374151",
+            };
+            const fracs = batch.productFractions.filter((f) => f.quantityL != null && f.quantityL > 0);
+            const sumL = fracs.reduce((s, f) => s + (f.quantityL ?? 0), 0);
+            return (
+              <div>
+                <div className="h-3 rounded-full overflow-hidden flex bg-eco-bg">
+                  {fracs.map((f) => (
+                    <div
+                      key={f.id}
+                      className="h-full transition-all"
+                      style={{
+                        width: `${((f.quantityL ?? 0) / total) * 100}%`,
+                        backgroundColor: FRACTION_COLORS[f.type] ?? "#374151",
+                      }}
+                      title={`${f.name ?? f.type}: ${f.quantityL} L`}
+                    />
+                  ))}
+                </div>
+                {sumL < total && (
+                  <p className="text-[9px] text-eco-muted mt-1">
+                    {sumL.toFixed(1)} L registrados de {total} L total ({((sumL / total) * 100).toFixed(0)}%)
+                  </p>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* Fraction cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {batch.productFractions.map((f) => {
+              const FRACTION_LABELS: Record<string, string> = {
+                HEAVY_CRUDE: "Crudo Pesado",
+                MEDIUM_OIL: "Aceite Medio",
+                LIGHT_NAPHTHA: "Nafta Ligera",
+                GAS_NONCONDENSABLE: "Gas NC",
+                GAS_CONDENSABLE: "Gas Cond.",
+                REFINED_DIESEL: "Diesel Refinado",
+                CRUDE_MIX: "Mezcla Cruda",
+                OTHER: "Otro",
+              };
+              const FRACTION_ICONS: Record<string, string> = {
+                HEAVY_CRUDE: "🛢",
+                MEDIUM_OIL: "🧪",
+                LIGHT_NAPHTHA: "💧",
+                GAS_NONCONDENSABLE: "💨",
+                GAS_CONDENSABLE: "🌫",
+                REFINED_DIESEL: "⛽",
+                CRUDE_MIX: "🔄",
+              };
+              return (
+                <div key={f.id} className="bg-eco-bg rounded-xl p-3.5 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">{FRACTION_ICONS[f.type] ?? "📦"}</span>
+                    <div>
+                      <p className="text-xs font-semibold text-eco-ink">
+                        {f.name ?? FRACTION_LABELS[f.type] ?? f.type}
+                      </p>
+                      {f.outputPoint && (
+                        <p className="text-[9px] text-eco-muted">{f.outputPoint}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-3 text-[10px]">
+                    {f.quantityL != null && (
+                      <span className="font-mono text-eco-ink">{f.quantityL} L</span>
+                    )}
+                    {f.quantityKg != null && (
+                      <span className="font-mono text-eco-muted">{f.quantityKg} kg</span>
+                    )}
+                    {f.densityKgL != null && (
+                      <span className="text-eco-muted">{f.densityKgL} kg/L</span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {f.destination && (
+                      <span className="text-[8px] px-1.5 py-0.5 rounded bg-white text-eco-muted font-medium">
+                        {f.destination}
+                      </span>
+                    )}
+                    {f.equipment && (
+                      <span className="text-[8px] px-1.5 py-0.5 rounded bg-white text-eco-muted font-medium">
+                        {f.equipment.name}
+                      </span>
+                    )}
+                    {f.labResult && (
+                      <span className="text-[8px] px-1.5 py-0.5 rounded bg-eco-green/10 text-eco-green font-medium">
+                        Lab: {f.labResult.sampleNumber}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
