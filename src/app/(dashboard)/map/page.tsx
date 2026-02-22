@@ -1,19 +1,5 @@
-import { prisma } from "@/lib/prisma";
-import { MexicoTraceabilityMap } from "@/components/map/MexicoTraceabilityMap";
+import { redirect } from "next/navigation";
 
-export default async function MapPage() {
-  const batches = await prisma.batch.findMany({
-    orderBy: { date: "asc" },
-    select: {
-      code: true,
-      feedstockOrigin: true,
-      feedstockWeight: true,
-      feedstockType: true,
-      status: true,
-    },
-  });
-
-  return (
-    <MexicoTraceabilityMap batches={JSON.parse(JSON.stringify(batches))} />
-  );
+export default function MapPage() {
+  redirect("/analytics?tab=origenes");
 }
