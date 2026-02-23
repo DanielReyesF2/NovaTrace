@@ -5,9 +5,13 @@ import dynamic from "next/dynamic";
 import { AnalyticsDashboard } from "./AnalyticsDashboard";
 import { ImpactDashboard } from "@/components/impact/ImpactDashboard";
 
-// Dynamic import for map (heavy dependency: react-simple-maps)
+// Dynamic imports for heavy dependencies
 const MexicoTraceabilityMap = dynamic(
   () => import("@/components/map/MexicoTraceabilityMap").then((mod) => mod.MexicoTraceabilityMap),
+  { ssr: false, loading: () => <div className="h-96 animate-pulse bg-eco-surface-2 rounded-2xl" /> }
+);
+const LabDashboard = dynamic(
+  () => import("@/components/lab/LabDashboard").then((mod) => mod.LabDashboard),
   { ssr: false, loading: () => <div className="h-96 animate-pulse bg-eco-surface-2 rounded-2xl" /> }
 );
 
@@ -63,6 +67,51 @@ interface MapBatch {
   status: string;
 }
 
+interface LabResultSerialized {
+  id: string;
+  batchId: string;
+  labName: string;
+  labCertification: string | null;
+  sampleNumber: string;
+  lotNumber: string | null;
+  reportDate: string;
+  productClassification: string | null;
+  crepitation: string | null;
+  appearance: string | null;
+  viscosity40C: number | null;
+  color: string | null;
+  waterContent: number | null;
+  sulfurPercent: number | null;
+  flashPoint: number | null;
+  density15C: number | null;
+  carbonResidue: number | null;
+  ashContent: number | null;
+  calorificMJ: number | null;
+  density20C: number | null;
+  viscDynamic20C: number | null;
+  flashPointOpen: number | null;
+  calorificCalG: number | null;
+  waterSedimentPct: number | null;
+  waterByKFPct: number | null;
+  labNotes: string | null;
+  verdict: string | null;
+  analystName: string | null;
+  batch: {
+    id: string;
+    code: string;
+    date: string;
+    status: string;
+    feedstockType: string;
+    oilOutput: number | null;
+  };
+}
+
+interface LabStats {
+  totalLabs: number;
+  uniqueLabs: number;
+  batchesWithLab: number;
+}
+
 interface AnalyticsUnifiedProps {
   batches: AnalyticsBatch[];
   summary: {
@@ -75,6 +124,8 @@ interface AnalyticsUnifiedProps {
   };
   impactData: ImpactData;
   mapBatches: MapBatch[];
+  labResults: LabResultSerialized[];
+  labStats: LabStats;
   defaultTab?: string;
 }
 
@@ -83,6 +134,7 @@ const TABS = [
   { id: "rendimiento", label: "Rendimiento" },
   { id: "impacto", label: "Impacto Ambiental" },
   { id: "origenes", label: "Orígenes" },
+  { id: "laboratorio", label: "Laboratorio" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -93,6 +145,8 @@ export function AnalyticsUnified({
   summary,
   impactData,
   mapBatches,
+  labResults,
+  labStats,
   defaultTab = "rendimiento",
 }: AnalyticsUnifiedProps) {
   const [activeTab, setActiveTab] = useState<TabId>(
@@ -133,6 +187,9 @@ export function AnalyticsUnified({
         )}
         {activeTab === "origenes" && (
           <MexicoTraceabilityMap batches={mapBatches} />
+        )}
+        {activeTab === "laboratorio" && (
+          <LabDashboard labResults={labResults} stats={labStats} />
         )}
       </div>
     </div>

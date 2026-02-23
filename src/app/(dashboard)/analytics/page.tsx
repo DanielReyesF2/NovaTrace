@@ -10,7 +10,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
   const params = await searchParams;
 
   // Unified data fetch — all 3 tabs in one round-trip
-  const [allBatches, aggregate, completedCount, completedBatches, mapBatches] =
+  const [allBatches, aggregate, completedCount, completedBatches, mapBatches, labResults] =
     await Promise.all([
       // Analytics tab: all batches with full detail
       prisma.batch.findMany({
@@ -87,6 +87,23 @@ export default async function AnalyticsPage({ searchParams }: Props) {
           status: true,
         },
       }),
+
+      // Lab tab: all lab results with batch info
+      prisma.labResult.findMany({
+        orderBy: { reportDate: "desc" },
+        include: {
+          batch: {
+            select: {
+              id: true,
+              code: true,
+              date: true,
+              status: true,
+              feedstockType: true,
+              oilOutput: true,
+            },
+          },
+        },
+      }),
     ]);
 
   // Calculate GHG breakdown for Impact tab
@@ -125,6 +142,13 @@ export default async function AnalyticsPage({ searchParams }: Props) {
   const avgContamination =
     completedBatches.length > 0 ? contaminationSum / completedBatches.length : 15;
 
+  // Lab stats
+  const labStats = {
+    totalLabs: labResults.length,
+    uniqueLabs: new Set(labResults.map((l) => l.labName)).size,
+    batchesWithLab: new Set(labResults.map((l) => l.batchId)).size,
+  };
+
   return (
     <AnalyticsUnified
       batches={JSON.parse(JSON.stringify(allBatches))}
@@ -150,6 +174,8 @@ export default async function AnalyticsPage({ searchParams }: Props) {
         totalProjectEmissions,
       }}
       mapBatches={JSON.parse(JSON.stringify(mapBatches))}
+      labResults={JSON.parse(JSON.stringify(labResults))}
+      labStats={labStats}
       defaultTab={params.tab ?? "rendimiento"}
     />
   );
