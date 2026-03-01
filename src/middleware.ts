@@ -9,7 +9,7 @@ const PUBLIC_ROUTES = [
   "/api/stats", // Health check endpoint
   "/verify/", // Public verification page
   "/login",
-  "/demo/", // Public demo passport pages
+  "/demo",  // Public demo showcase + passport pages
 ];
 
 export async function middleware(request: NextRequest) {
