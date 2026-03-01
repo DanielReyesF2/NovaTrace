@@ -42,7 +42,7 @@ export const config: IndustryPassportConfig = {
   industry: "Productos de Limpieza",
   slug: "limpieza",
   branding: {
-    companyName: "EcoClean México",
+    companyName: "Verde Oliva",
     tagline: "Limpieza Responsable · Envases Retornables",
     primaryColor: "#2E7D32",
     accentColor: "#66BB6A",
