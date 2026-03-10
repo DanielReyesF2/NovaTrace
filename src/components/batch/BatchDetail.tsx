@@ -193,6 +193,13 @@ export function BatchDetail({ batch }: BatchDetailProps) {
           </span>
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            href={`/batch/${batch.id}/live`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            En Vivo
+          </Link>
           <span className="text-[13px] text-eco-muted font-light">
             {new Date(batch.date).toLocaleDateString("es-MX", {
               weekday: "long",
