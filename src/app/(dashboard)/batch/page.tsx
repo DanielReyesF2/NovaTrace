@@ -152,14 +152,10 @@ export default async function BatchListPage() {
                   {batch.operators.join(", ")}
                 </span>
                 {batch.status === "ACTIVE" && (
-                  <Link
-                    href={`/batch/${batch.id}/live`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors ml-2"
-                  >
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-50 text-red-600 border border-red-200 ml-2">
                     <span className="w-1 h-1 rounded-full bg-red-500 animate-pulse" />
                     EN VIVO
-                  </Link>
+                  </span>
                 )}
               </div>
             </Link>
