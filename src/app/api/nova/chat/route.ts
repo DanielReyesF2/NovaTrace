@@ -57,6 +57,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Resolve the app URL for Nova to call back
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    req.nextUrl.origin ||
+    "http://localhost:3000";
+
+  // Forward the user's auth token so Nova can make authenticated requests
+  const authToken = req.cookies.get("econova-token")?.value || "";
+
   // Build payload for Nova AI Gateway
   const gatewayPayload: Record<string, unknown> = {
     message: message.trim(),
@@ -68,6 +77,77 @@ export async function POST(req: NextRequest) {
       user_email: session.email,
       user_role: session.role,
       source: "novatrace-widget",
+      // Connection info so Nova can call back to NovaTrace APIs
+      api_url: appUrl,
+      api_token: authToken,
+      // Available NovaTrace API endpoints Nova can call
+      available_endpoints: [
+        {
+          method: "GET",
+          path: "/api/batches",
+          description: "List all batches",
+        },
+        {
+          method: "POST",
+          path: "/api/batches",
+          description: "Create a new batch",
+          body: {
+            feedstockType: "string (required) — e.g. LDPE, HDPE, PP, PS, PET, MIX, MULCH_FILM, DRIP_TAPE, GREENHOUSE, SILAGE, OTHER",
+            feedstockOrigin: "string (required) — origin/source of the feedstock",
+            feedstockWeight: "number (required) — weight in kg",
+            feedstockCondition: "string (optional) — condition description",
+            contaminationPct: "number (optional) — contamination percentage 0-100",
+            operators: "string[] (required, min 1) — operator names",
+            processType: "string (optional) — PYROLYSIS or DISTILLATION",
+            notes: "string (optional)",
+          },
+        },
+        {
+          method: "GET",
+          path: "/api/batches/:id",
+          description: "Get batch details by ID",
+        },
+        {
+          method: "PATCH",
+          path: "/api/batches/:id",
+          description: "Update a batch (status, oilOutput, etc.)",
+          body: {
+            status: "string (optional) — ACTIVE, COMPLETED, INCOMPLETE, TEST",
+            oilOutput: "number (optional) — oil output in liters",
+            oilWeightKg: "number (optional)",
+            residueWeightKg: "number (optional)",
+            yieldPercent: "number (optional) — 0-100",
+            durationMinutes: "number (optional)",
+            dieselConsumedL: "number (optional)",
+            stopReason: "string (optional)",
+            notes: "string (optional)",
+          },
+        },
+        {
+          method: "POST",
+          path: "/api/batches/:id/readings",
+          description: "Add a temperature/pressure reading to a batch",
+          body: {
+            reactorTemp: "number (optional) — reactor temperature °C",
+            controlTemp: "number (optional)",
+            steelTemp: "number (optional)",
+            chainTemp: "number (optional)",
+            compressorPsi: "number (optional)",
+            regulatorPsi: "number (optional)",
+            notes: "string (optional)",
+          },
+        },
+        {
+          method: "POST",
+          path: "/api/batches/:id/events",
+          description: "Add a process event to a batch",
+          body: {
+            type: "string (required) — VALVE_CHANGE, EQUIPMENT_TOGGLE, FUEL_ADD, INCIDENT, OBSERVATION, PHASE_CHANGE",
+            detail: "string (required)",
+            notes: "string (optional)",
+          },
+        },
+      ],
     },
   };
 
