@@ -31,7 +31,19 @@ async function main() {
     },
   });
 
-  console.log("✅ Users created:", admin.name, operator.name);
+  const client = await prisma.user.upsert({
+    where: { email: "tono.nava@econova.com.mx" },
+    update: {},
+    create: {
+      email: "tono.nava@econova.com.mx",
+      name: "Toño Nava",
+      phone: "+5213331279060",
+      passwordHash: await hash("nova-tono-2026", 12),
+      role: "VIEWER",
+    },
+  });
+
+  console.log("✅ Users created:", admin.name, operator.name, client.name);
 
   // ============================================
   // BATCH ECO-001 — COMPLETED
