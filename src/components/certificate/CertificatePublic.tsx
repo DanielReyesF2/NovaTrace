@@ -222,8 +222,8 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
   const gasPctOfEnergy = totalEnergyIn > 0 ? Math.round((gasMJ / totalEnergyIn) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-[#F5F3EE] flex items-center justify-center p-4 sm:p-8">
-      <div className="w-full max-w-xl">
+    <div className="min-h-screen bg-[#F5F3EE] flex items-center justify-center p-4 sm:p-6">
+      <div className="w-full max-w-4xl">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
 
           {/* ═══ HEADER ═══ */}
@@ -269,22 +269,20 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
             </div>
           </div>
 
-          {/* ═══ PRODUCT HERO ═══ */}
-          <div className="px-6 sm:px-8 py-5 border-b border-gray-100">
-            <div className="flex items-baseline gap-2 mb-1">
-              <span className="font-mono text-4xl font-bold tracking-tight" style={{ color: "#7C5CFC" }}>{oilL}</span>
-              <span className="text-sm text-gray-500">{t("litros de aceite pirolítico", "liters of pyrolysis oil")}</span>
+          {/* ═══ PRODUCT HERO + KEY METRICS ═══ */}
+          <div className="px-6 sm:px-8 py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex-shrink-0">
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="font-mono text-4xl font-bold tracking-tight" style={{ color: "#7C5CFC" }}>{oilL}</span>
+                <span className="text-sm text-gray-500">{t("litros de aceite pirolítico", "liters of pyrolysis oil")}</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-gray-400">
+                <span className="font-mono font-medium">{batch.code}</span>
+                <span>·</span>
+                <span>{dateFormatted}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-400">
-              <span className="font-mono font-medium">{batch.code}</span>
-              <span>·</span>
-              <span>{dateFormatted}</span>
-            </div>
-          </div>
-
-          {/* ═══ KEY METRICS ═══ */}
-          <div className="px-7 sm:px-10 py-5 bg-gray-50/50 border-b border-gray-100">
-            <div className="grid grid-cols-4 gap-2">
+            <div className="flex-1 grid grid-cols-4 gap-2">
               <Stat value={co2Avoided.toFixed(0)} unit="kg" label={t("CO₂eq evitados", "CO₂eq avoided")} color="#3d5c0e" />
               <Stat value={`${energyRatio.toFixed(1)}:1`} label={t("Ratio energético", "Energy ratio")} color="#E8700A" />
               <Stat value={(batch.yieldPercent ?? 0).toFixed(0)} unit="%" label={t("Rendimiento", "Yield")} color="#7C5CFC" />
@@ -293,7 +291,10 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
           </div>
 
           {/* ═══ CONTENT ═══ */}
-          <div className="px-7 sm:px-10 py-8 space-y-10">
+          <div className="px-5 sm:px-8 py-6 space-y-8">
+
+            {/* ROW: 01 + 02 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             {/* 01 — PRODUCER IDENTITY */}
             <Section num="01" title={t("Identidad del Productor", "Producer Identity")}>
@@ -318,8 +319,8 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
               </Info>
             </Section>
 
-            {/* 02 — LCA FRAMEWORK */}
-            <Section num="02" title={t("Marco de Análisis de Ciclo de Vida", "Life Cycle Assessment Framework")}>
+            {/* 02 — LCA FRAMEWORK (same row) */}
+            <Section num="02" title={t("Marco LCA", "LCA Framework")}>
               <div className="space-y-1">
                 <Row label={t("Norma", "Standard")} value="ISO 14040:2006 / ISO 14044:2006" bold />
                 <Row label={t("Unidad funcional", "Functional unit")}
@@ -352,6 +353,8 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                 )}
               </Info>
             </Section>
+
+            </div>{/* end ROW 01+02 */}
 
             {/* 03 — FEEDSTOCK CHARACTERIZATION */}
             <Section num="03" title={t("Caracterización del Feedstock", "Feedstock Characterization")}>
@@ -562,6 +565,9 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
               </div>
             </Section>
 
+            {/* ROW: 05 + 06 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
             {/* 05 — MASS BALANCE */}
             {oilL > 0 && (
               <Section num="05" title={t("Balance de Masa", "Mass Balance")}>
@@ -671,6 +677,8 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                 </Info>
               </Section>
             )}
+
+            </div>{/* end ROW 05+06 */}
 
             {/* 07 — LAB RESULTS */}
             {lab && (
@@ -825,6 +833,9 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
               </Section>
             )}
 
+            {/* ROW: 09 + 10 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
             {/* 09 — TRANSPORT */}
             {batch.transportDistanceKm != null && (
               <Section num="09" title={t("Transporte del Feedstock", "Feedstock Transport")}>
@@ -875,6 +886,11 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
               </Section>
             )}
 
+            </div>{/* end ROW 09+10 */}
+
+            {/* ROW: 11 + 12 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
             {/* 11 — WASTE MANAGEMENT */}
             {batch.charDisposition && (
               <Section num="11" title={t("Gestión de Residuos — Economía Circular", "Waste Management — Circular Economy")}>
@@ -910,7 +926,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
 
             {/* 12 — REGULATORY COMPLIANCE */}
             <Section num="12" title={t("Cumplimiento Normativo", "Regulatory Compliance")}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 gap-2.5">
                 <ComplianceCard color="#3d5c0e" name="ISO 14040/14044"
                   article={t("Análisis de Ciclo de Vida", "Life Cycle Assessment")}
                   status={t("CONFORME", "COMPLIANT")}
@@ -957,6 +973,9 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                 </Info>
               )}
             </Section>
+
+            </div>{/* end ROW 11+12 */}
+
           </div>
 
           {/* ═══ VERIFICATION FOOTER ═══ */}
