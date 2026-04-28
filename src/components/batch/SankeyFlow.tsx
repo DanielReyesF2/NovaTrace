@@ -177,7 +177,7 @@ export function SankeyFlow({
           Gas · {gasKg} kg
         </text>
         <text x={rightX + nodeW + 6} y={gasY + gasH / 2 + 9} textAnchor="start" style={{ fontSize: 7, fill: "#94a3b8", fontStyle: "italic" }}>
-          ↺ Recircula para calentar el reactor
+          ↺ no condensable
         </text>
       </svg>
     </div>

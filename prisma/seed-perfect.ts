@@ -485,8 +485,8 @@ async function main() {
     waterConsumedL: WATER_CONSUMED_L,
 
     // Catalizadores & Insumos
-    catalystType: "Ninguno — pirólisis térmica pura",
-    catalystKg: 0,
+    catalystType: "Zeolita natural (clinoptilolita)",
+    catalystKg: 5,
     chemicalsUsed: "Ninguno",
 
     // Disposición de residuos

@@ -107,11 +107,11 @@ function Row({ label, value, bold }: { label: string; value: string | number | n
 export function CertificatePublic({ certificate }: CertificatePublicProps) {
   const { batch } = certificate;
   const oilL = batch.oilOutput ?? 0;
-  const oilKg = batch.oilWeightKg ?? oilL * 0.85;
+  const oilKg = Math.round(batch.oilWeightKg ?? oilL * 0.85);
   const co2Avoided = batch.co2Avoided ?? 0;
   const cleanKg = batch.feedstockWeight * (1 - (batch.contaminationPct ?? 0) / 100);
   const charKg = Math.round(cleanKg * 0.10);
-  const gasKg = Math.round(cleanKg - oilKg - charKg);
+  const gasKg = Math.round(cleanKg) - oilKg - charKg;
   const co2PerLiter = oilL > 0 && co2Avoided > 0 ? co2Avoided / oilL : 0;
   const baselinePerL = batch.co2Baseline && oilL > 0 ? batch.co2Baseline / oilL : 0;
   const projectPerL = batch.co2Project && oilL > 0 ? batch.co2Project / oilL : 0;
@@ -121,17 +121,17 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
 
   // Energy balance calculations
   const dieselL = batch.dieselConsumedL ?? 0;
-  const dieselMJ = dieselL * 0.85 * 45.6; // kg × MJ/kg (diesel LHV)
+  const dieselMJ = Math.round(dieselL * 0.85 * 45.6);
   const elecKwh = batch.electricityKwh ?? 0;
-  const elecMJ = elecKwh * 3.6; // kWh → MJ
+  const elecMJ = Math.round(elecKwh * 3.6);
   const gasRecKg = batch.gasRecirculatedKg ?? 0;
-  const gasMJ = gasRecKg * 38; // syngas ~38 MJ/kg
+  const gasMJ = Math.round(gasRecKg * 38);
   const totalEnergyIn = dieselMJ + elecMJ + gasMJ;
 
   const oilMJperKg = batch.oilCalorificMJ ?? 43.2;
   const charMJperKg = batch.charCalorificMJ ?? 28.5;
-  const oilEnergyMJ = oilKg * oilMJperKg;
-  const charEnergyMJ = charKg * charMJperKg;
+  const oilEnergyMJ = Math.round(oilKg * oilMJperKg);
+  const charEnergyMJ = Math.round(charKg * charMJperKg);
   const totalEnergyOut = oilEnergyMJ + charEnergyMJ;
   const energyRatio = totalEnergyIn > 0 ? totalEnergyOut / totalEnergyIn : 0;
   const hasEnergyData = dieselL > 0 || elecKwh > 0;
@@ -192,6 +192,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                   day: "numeric",
                   month: "long",
                   year: "numeric",
+                  timeZone: "UTC",
                 })}
               </span>
             </div>
@@ -269,8 +270,8 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                 <div className="mb-2">
                   <p className="text-[8px] uppercase tracking-[1.5px] text-gray-400 font-semibold mb-1.5">Salidas (contenido energético)</p>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                    <Row label={`Aceite (${oilMJperKg} MJ/kg)`} value={`${Math.round(oilKg)} kg → ${oilEnergyMJ.toFixed(0)} MJ`} />
-                    <Row label={`Char (${charMJperKg} MJ/kg)`} value={`${charKg} kg → ${charEnergyMJ.toFixed(0)} MJ`} />
+                    <Row label={`Aceite (${oilMJperKg} MJ/kg)`} value={`${oilKg} kg → ${oilEnergyMJ} MJ`} />
+                    <Row label={`Char (${charMJperKg} MJ/kg)`} value={`${charKg} kg → ${charEnergyMJ} MJ`} />
                   </div>
                   <div className="mt-1 pt-1 border-t border-gray-100">
                     <Row label="Total energía salida" value={`${totalEnergyOut.toFixed(0)} MJ`} bold />
