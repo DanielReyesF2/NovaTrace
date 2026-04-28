@@ -449,10 +449,10 @@ async function main() {
   const batchData = {
     date: BATCH_DATE,
     status: "COMPLETED" as const,
-    feedstockType: "LDPE Agrícola",
+    feedstockType: "Film poliolefínico agrícola",
     feedstockOrigin: "Michoacán, MX",
     feedstockWeight: FEEDSTOCK_KG,
-    feedstockCondition: "LDPE acolchado agrícola, pre-clasificado y limpio. Mín contaminación.",
+    feedstockCondition: "Mezcla LDPE/LLDPE de acolchado agrícola (mulch film), 6-18 meses exposición UV. Contaminantes: tierra (~4%), agroquímicos (~2%), materia orgánica (~1.5%), humedad (~0.5%). Pre-proceso: separación manual + triturado ≤50mm, sin lavado.",
     contaminationPct: CONTAMINATION_PCT,
     oilOutput: OIL_OUTPUT_L,
     oilWeightKg: Math.round(OIL_OUTPUT_L * 0.85 * 100) / 100,
