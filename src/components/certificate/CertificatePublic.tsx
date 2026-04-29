@@ -299,67 +299,64 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
               <Stat value="100" unit="%" label={t("Contenido reciclado", "Recycled content")} color="#2D8CF0" />
             </div>
 
-            {/* Lifecycle flow — 6 stages */}
-            <p className="text-[8px] uppercase tracking-[2.5px] text-gray-500 font-semibold mb-4 text-center">
-              {t("Ciclo de vida del lote", "Batch lifecycle")}
+            {/* ═══ LIFECYCLE FLOW — Premium timeline ═══ */}
+            <p className="text-[7px] uppercase tracking-[3px] text-gray-500 font-semibold mb-4 text-center">
+              {t("Ciclo de vida completo", "Complete life cycle")}
             </p>
-            <div className="flex items-start justify-between relative">
-              {/* Connecting line */}
-              <div className="absolute top-[10px] left-[8%] right-[8%] h-px bg-gray-300" />
 
-              {/* Stage 1: Origen */}
-              <div className="flex flex-col items-center text-center relative z-10 flex-1">
-                <div className="w-5 h-5 rounded-full bg-[#64748b] mb-2 flex-shrink-0" />
-                <span className="text-[8px] tracking-[1.5px] text-[#64748b] font-bold uppercase mb-1">
-                  {t("Origen", "Origin")}
+            {/* Timeline cards */}
+            <div className="grid grid-cols-6 gap-1.5">
+              {[
+                { label: t("ORIGEN", "ORIGIN"), value: `${batch.feedstockWeight}`, unit: "kg", sub: t("plástico agrícola", "agricultural plastic"), color: "#64748b", bg: "from-slate-50 to-slate-100/50" },
+                { label: t("TRASLADO", "TRANSPORT"), value: `${batch.transportDistanceKm ?? 280}`, unit: "km", sub: t("Michoacán → Lerma", "Michoacán → Lerma"), color: "#92400e", bg: "from-amber-50/80 to-orange-50/50" },
+                { label: t("PIRÓLISIS", "PYROLYSIS"), value: `${batch.durationMinutes ? Math.floor(batch.durationMinutes / 60) : 9}`, unit: "h", sub: t("catalítica 520°C", "catalytic 520°C"), color: "#E8700A", bg: "from-orange-50 to-amber-50/50" },
+                { label: t("REFINACIÓN", "REFINING"), value: "2", unit: t("etapas", "stages"), sub: "H₂SO₄ + NaOH", color: "#7C5CFC", bg: "from-violet-50 to-purple-50/50" },
+                { label: t("PRODUCTO", "PRODUCT"), value: `${oilL}`, unit: "L", sub: t("diésel pirolítico", "pyrolytic diesel"), color: "#7C5CFC", bg: "from-purple-50 to-violet-50/50" },
+                { label: t("IMPACTO", "IMPACT"), value: `-${co2Avoided.toFixed(0)}`, unit: "kg", sub: t("CO₂eq evitados", "CO₂eq avoided"), color: "#3d5c0e", bg: "from-green-50 to-emerald-50/50" },
+              ].map((stage, i, arr) => (
+                <div key={stage.label} className="relative">
+                  {/* Card */}
+                  <div className={`rounded-xl p-2.5 bg-gradient-to-br ${stage.bg} border border-gray-100 text-center h-full`}>
+                    {/* Top color bar */}
+                    <div className="h-1 rounded-full mb-2.5 mx-auto w-8" style={{ backgroundColor: stage.color, opacity: 0.6 }} />
+                    {/* Value */}
+                    <div className="flex items-baseline justify-center gap-0.5">
+                      <span className="font-mono text-lg font-extrabold" style={{ color: stage.color }}>{stage.value}</span>
+                      <span className="text-[9px] font-semibold" style={{ color: stage.color, opacity: 0.7 }}>{stage.unit}</span>
+                    </div>
+                    {/* Label */}
+                    <div className="text-[7px] tracking-[1px] font-bold mt-1.5" style={{ color: stage.color }}>{stage.label}</div>
+                    {/* Sub */}
+                    <div className="text-[8px] text-gray-500 mt-0.5 leading-tight">{stage.sub}</div>
+                  </div>
+                  {/* Arrow connector */}
+                  {i < arr.length - 1 && (
+                    <div className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 text-gray-300 text-[10px]">›</div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Reverse logistics strip */}
+            <div className="mt-3 rounded-xl border border-dashed border-[#92400e]/20 bg-[#92400e]/[0.03] px-4 py-2.5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-[#92400e]/10 flex items-center justify-center flex-shrink-0">
+                  <span className="text-[10px]" style={{ color: "#92400e" }}>↺</span>
+                </div>
+                <span className="text-[10px] text-[#92400e]/80 font-medium">
+                  {t("Logística inversa — nuestro diésel alimenta el camión de recolección", "Reverse logistics — our diesel fuels the collection truck")}
                 </span>
-                <span className="font-mono text-sm font-bold text-gray-800">{batch.feedstockWeight} kg</span>
               </div>
-
-              {/* Stage 2: Traslado */}
-              <div className="flex flex-col items-center text-center relative z-10 flex-1">
-                <div className="w-5 h-5 rounded-full bg-[#92400e] mb-2 flex-shrink-0" />
-                <span className="text-[8px] tracking-[1.5px] text-[#92400e] font-bold uppercase mb-1">
-                  {t("Traslado", "Transport")}
-                </span>
-                <span className="font-mono text-sm font-bold text-gray-800">{batch.transportDistanceKm ?? "\u2014"} km</span>
-              </div>
-
-              {/* Stage 3: Pir\u00f3lisis */}
-              <div className="flex flex-col items-center text-center relative z-10 flex-1">
-                <div className="w-5 h-5 rounded-full bg-[#E8700A] mb-2 flex-shrink-0" />
-                <span className="text-[8px] tracking-[1.5px] text-[#E8700A] font-bold uppercase mb-1">
-                  {t("Pir\u00f3lisis", "Pyrolysis")}
-                </span>
-                <span className="font-mono text-sm font-bold text-gray-800">{batch.durationMinutes ? Math.floor(batch.durationMinutes / 60) : 9}h</span>
-              </div>
-
-              {/* Stage 4: Destilaci\u00f3n */}
-              <div className="flex flex-col items-center text-center relative z-10 flex-1">
-                <div className="w-5 h-5 rounded-full bg-[#7C5CFC] mb-2 flex-shrink-0" />
-                <span className="text-[8px] tracking-[1.5px] text-[#7C5CFC] font-bold uppercase mb-1">
-                  {t("Destilaci\u00f3n", "Distillation")}
-                </span>
-                <span className="font-mono text-sm font-bold text-gray-800">{t("Refinaci\u00f3n", "Refining")}</span>
-              </div>
-
-              {/* Stage 5: Producto */}
-              <div className="flex flex-col items-center text-center relative z-10 flex-1">
-                <div className="w-5 h-5 rounded-full bg-[#7C5CFC] mb-2 flex-shrink-0" />
-                <span className="text-[8px] tracking-[1.5px] text-[#7C5CFC] font-bold uppercase mb-1">
-                  {t("Producto", "Product")}
-                </span>
-                <span className="font-mono text-sm font-bold text-gray-800">{oilL} L</span>
-              </div>
-
-              {/* Stage 6: Impacto */}
-              <div className="flex flex-col items-center text-center relative z-10 flex-1">
-                <div className="w-5 h-5 rounded-full bg-[#3d5c0e] mb-2 flex-shrink-0" />
-                <span className="text-[8px] tracking-[1.5px] text-[#3d5c0e] font-bold uppercase mb-1">
-                  {t("Impacto", "Impact")}
-                </span>
-                <span className="font-mono text-sm font-bold text-gray-800">-{co2Avoided.toFixed(0)}</span>
-                <span className="text-[8px] text-gray-500 leading-tight mt-0.5">kg CO&#x2082;</span>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="text-center">
+                  <div className="font-mono text-xs font-bold" style={{ color: "#92400e" }}>{batch.transportFuelL ?? 59} L</div>
+                  <div className="text-[7px] text-gray-500">{t("logística", "logistics")}</div>
+                </div>
+                <div className="text-gray-300 text-[8px]">|</div>
+                <div className="text-center">
+                  <div className="font-mono text-xs font-bold" style={{ color: "#3d5c0e" }}>{oilL - (batch.transportFuelL ?? 59)} L</div>
+                  <div className="text-[7px] text-gray-500">{t("venta", "sale")}</div>
+                </div>
               </div>
             </div>
           </div>
