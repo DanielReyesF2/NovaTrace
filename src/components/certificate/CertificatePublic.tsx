@@ -84,7 +84,7 @@ function Section({ num, title, children }: { num: string; title: string; childre
     <section>
       <div className="flex items-center gap-2.5 mb-4">
         <div className="w-1 h-6 rounded-full bg-[#3d5c0e]" />
-        <span className="text-[9px] font-mono text-[#3d5c0e]/50 font-bold">{num}</span>
+        <span className="text-[10px] font-mono text-[#3d5c0e]/70 font-bold">{num}</span>
         <h3 className="text-[10px] tracking-[2.5px] text-[#3d5c0e] font-bold uppercase">{title}</h3>
       </div>
       {children}
@@ -95,20 +95,20 @@ function Section({ num, title, children }: { num: string; title: string; childre
 function Row({ label, value, bold, sub }: { label: string; value: string | number | null; bold?: boolean; sub?: string }) {
   if (value == null || value === "") return null;
   return (
-    <div className="py-2 border-b border-gray-100/60 last:border-0">
+    <div className="py-2 border-b border-gray-200/60 last:border-0">
       <div className="flex items-baseline gap-2">
-        <span className="text-gray-500 text-[11px] flex-shrink-0">{label}</span>
-        <span className="flex-1 border-b border-dotted border-gray-300/50 min-w-[12px] translate-y-[-3px]" />
-        <span className={`text-[11px] text-right flex-shrink-0 ${bold ? "font-mono font-bold text-gray-900" : "text-gray-700"}`}>{value}</span>
+        <span className="text-gray-600 text-[11px] flex-shrink-0">{label}</span>
+        <span className="flex-1 border-b border-dotted border-gray-300/60 min-w-[8px] translate-y-[-3px]" />
+        <span className={`text-[11px] text-right ${bold ? "font-mono font-bold text-gray-900" : "text-gray-800"}`}>{value}</span>
       </div>
-      {sub && <p className="text-[9px] text-gray-400 mt-1 leading-relaxed italic">{sub}</p>}
+      {sub && <p className="text-[10px] text-gray-500 mt-1 leading-relaxed">{sub}</p>}
     </div>
   );
 }
 
 function Info({ children }: { children: React.ReactNode }) {
   return (
-    <div className="text-[9.5px] text-gray-500 leading-relaxed mt-3 bg-[#f8f7f4] rounded-xl px-4 py-3 border-l-[3px] border-[#3d5c0e]/25">
+    <div className="text-[10px] text-gray-600 leading-relaxed mt-3 bg-[#f8f7f4] rounded-xl px-4 py-3 border-l-[3px] border-[#3d5c0e]/30">
       {children}
     </div>
   );
@@ -121,7 +121,7 @@ function Stat({ value, unit, label, color }: { value: string; unit?: string; lab
         <span className="font-mono text-xl sm:text-2xl font-bold" style={{ color }}>{value}</span>
         {unit && <span className="text-[10px] font-semibold" style={{ color, opacity: 0.7 }}>{unit}</span>}
       </div>
-      <div className="text-[8px] sm:text-[9px] text-gray-400 uppercase tracking-wider mt-1 leading-tight">{label}</div>
+      <div className="text-[8px] sm:text-[9px] text-gray-600 uppercase tracking-wider mt-1 leading-tight">{label}</div>
     </div>
   );
 }
@@ -142,7 +142,7 @@ function ComplianceCard({ color, name, article, items, status }: {
       <p className="text-[9px] font-medium text-gray-500 mb-2">{article}</p>
       <ul className="space-y-1">
         {items.map((item, i) => (
-          <li key={i} className="text-[9px] text-gray-400 leading-relaxed flex items-start gap-1.5">
+          <li key={i} className="text-[9px] text-gray-500 leading-relaxed flex items-start gap-1.5">
             <span style={{ color }} className="mt-px flex-shrink-0 text-[7px]">&#9679;</span>
             <span>{item}</span>
           </li>
@@ -161,8 +161,8 @@ function LabRow({ label, value, unit, diesel, pass, method }: {
         <span className="text-[11px] text-gray-600 font-medium">{label}</span>
         <span className="text-[8px] text-gray-300 ml-1.5">{method}</span>
       </div>
-      <span className="font-mono text-[11px] font-bold text-gray-800 text-right">{value} <span className="text-[9px] text-gray-400 font-normal">{unit}</span></span>
-      <span className="text-[9px] text-gray-400 text-right">{diesel}</span>
+      <span className="font-mono text-[11px] font-bold text-gray-800 text-right">{value} <span className="text-[9px] text-gray-500 font-normal">{unit}</span></span>
+      <span className="text-[9px] text-gray-500 text-right">{diesel}</span>
       <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${pass ? "bg-[#3d5c0e]/10 text-[#3d5c0e]" : "bg-red-50 text-red-500"}`}>
         {pass ? "✓" : "✗"}
       </span>
@@ -232,11 +232,11 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
             <div className="px-6 sm:px-8 pt-5 pb-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[8px] tracking-[4px] text-white/40 uppercase mb-1">
+                  <p className="text-[8px] tracking-[4px] text-white/60 uppercase mb-1">
                     {t("Pasaporte Digital de Producto", "Digital Product Passport")}
                   </p>
                   <h1 className="text-2xl font-bold text-white font-mono tracking-tight">ECONOVA</h1>
-                  <p className="text-[8px] tracking-[3px] text-white/30 uppercase mt-0.5">
+                  <p className="text-[8px] tracking-[3px] text-white/50 uppercase mt-0.5">
                     {t("Economía Circular · México", "Circular Economy · Mexico")}
                   </p>
                 </div>
@@ -264,7 +264,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
               ].map((b) => (
                 <div key={b.label} className="text-center">
                   <span className="text-[7px] text-white/60 font-semibold tracking-wider">{b.label}</span>
-                  <span className="block text-[6px] text-white/30 tracking-wider">{b.sub}</span>
+                  <span className="block text-[6px] text-white/50 tracking-wider">{b.sub}</span>
                 </div>
               ))}
             </div>
@@ -277,7 +277,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                 <span className="font-mono text-4xl font-bold tracking-tight" style={{ color: "#7C5CFC" }}>{oilL}</span>
                 <span className="text-sm text-gray-500">{t("litros de aceite pirolítico", "liters of pyrolysis oil")}</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-gray-400">
+              <div className="flex items-center gap-2 text-xs text-gray-500">
                 <span className="font-mono font-medium">{batch.code}</span>
                 <span>·</span>
                 <span>{dateFormatted}</span>
@@ -360,7 +360,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
             {/* 03 — FEEDSTOCK CHARACTERIZATION */}
             <Section num="03" title={t("Caracterización del Feedstock", "Feedstock Characterization")}>
               {/* Agricultural context — 2-col grid */}
-              <p className="text-[8px] uppercase tracking-[1.5px] text-gray-400 font-semibold mb-2">
+              <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-2">
                 {t("Contexto agrícola", "Agricultural context")}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 mb-4">
@@ -389,7 +389,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                 {/* LEFT: Polymer composition */}
                 <div>
-                  <p className="text-[8px] uppercase tracking-[1.5px] text-gray-400 font-semibold mb-2">
+                  <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-2">
                     {t("Composición polimérica", "Polymer composition")}
                   </p>
                   <div className="mb-2">
@@ -418,7 +418,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
 
                 {/* RIGHT: Contaminant profile */}
                 <div>
-                  <p className="text-[8px] uppercase tracking-[1.5px] text-gray-400 font-semibold mb-2">
+                  <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-2">
                     {t(`Perfil de contaminantes (${batch.contaminationPct ?? 8}% = ${contaminationKg} kg)`,
                       `Contaminant profile (${batch.contaminationPct ?? 8}% = ${contaminationKg} kg)`)}
                   </p>
@@ -442,7 +442,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                         <div className="ml-5 h-2 bg-gray-100 rounded-full overflow-hidden">
                           <div className="h-full rounded-full" style={{ width: `${c.pct}%`, backgroundColor: c.color, opacity: 0.55 }} />
                         </div>
-                        <p className="ml-5 text-[8px] text-gray-400 mt-1">{c.detail}</p>
+                        <p className="ml-5 text-[8px] text-gray-500 mt-1">{c.detail}</p>
                       </div>
                     ))}
                   </div>
@@ -452,7 +452,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
               {/* Pre-processing + Mass summary — side by side */}
               <div className="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-6">
                 <div>
-                  <p className="text-[8px] uppercase tracking-[1.5px] text-gray-400 font-semibold mb-2">
+                  <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-2">
                     {t("Pre-procesamiento en planta", "Plant pre-processing")}
                   </p>
                   <div className="space-y-2">
@@ -479,15 +479,15 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
                       <div className="font-mono text-lg font-bold text-gray-800">{batch.feedstockWeight}</div>
-                      <div className="text-[9px] text-gray-400 mt-0.5">kg {t("bruto", "gross")}</div>
+                      <div className="text-[9px] text-gray-500 mt-0.5">kg {t("bruto", "gross")}</div>
                     </div>
                     <div>
                       <div className="font-mono text-lg font-bold text-red-500">{contaminationKg}</div>
-                      <div className="text-[9px] text-gray-400 mt-0.5">kg {t("contam.", "contam.")}</div>
+                      <div className="text-[9px] text-gray-500 mt-0.5">kg {t("contam.", "contam.")}</div>
                     </div>
                     <div>
                       <div className="font-mono text-lg font-bold text-[#3d5c0e]">{Math.round(cleanKg)}</div>
-                      <div className="text-[9px] text-gray-400 mt-0.5">kg {t("neto", "net")}</div>
+                      <div className="text-[9px] text-gray-500 mt-0.5">kg {t("neto", "net")}</div>
                     </div>
                   </div>
                 </div>
@@ -527,7 +527,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
               {/* Thermal profile + Key metrics — side by side */}
               <div className="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-6">
                 <div>
-                  <p className="text-[8px] uppercase tracking-[1.5px] text-gray-400 font-semibold mb-2">
+                  <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-2">
                     {t("Perfil térmico del proceso", "Process thermal profile")}
                   </p>
                   <div className="space-y-1.5">
@@ -549,10 +549,10 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                         <div className="pb-2 flex-1">
                           <div className="flex items-baseline gap-2">
                             <span className="text-[10px] font-bold text-gray-700">{p.phase}</span>
-                            <span className="text-[9px] font-mono text-gray-400">{p.time}</span>
+                            <span className="text-[9px] font-mono text-gray-500">{p.time}</span>
                             <span className="text-[9px] font-mono font-bold" style={{ color: p.color }}>{p.temp}</span>
                           </div>
-                          <p className="text-[8px] text-gray-400 mt-0.5">{p.detail}</p>
+                          <p className="text-[8px] text-gray-500 mt-0.5">{p.detail}</p>
                         </div>
                       </div>
                     ))}
@@ -569,19 +569,19 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                 <div className="grid grid-cols-2 md:grid-cols-1 gap-2 w-full md:w-32">
                 <div className="text-center bg-gray-50/60 rounded-xl p-3 border border-gray-100">
                   <div className="font-mono text-sm font-bold text-gray-800">{batch.maxReactorTemp}°C</div>
-                  <div className="text-[8px] text-gray-400 mt-0.5">{t("Temp. máx", "Max temp")}</div>
+                  <div className="text-[8px] text-gray-500 mt-0.5">{t("Temp. máx", "Max temp")}</div>
                 </div>
                 <div className="text-center bg-gray-50/60 rounded-xl p-3 border border-gray-100">
                   <div className="font-mono text-sm font-bold text-gray-800">{batch.durationMinutes ? `${Math.floor(batch.durationMinutes / 60)}h` : "—"}</div>
-                  <div className="text-[8px] text-gray-400 mt-0.5">{t("Duración", "Duration")}</div>
+                  <div className="text-[8px] text-gray-500 mt-0.5">{t("Duración", "Duration")}</div>
                 </div>
                 <div className="text-center bg-[#7C5CFC]/[0.04] rounded-xl p-3 border border-[#7C5CFC]/10">
                   <div className="font-mono text-sm font-bold" style={{ color: "#7C5CFC" }}>{oilL} L</div>
-                  <div className="text-[8px] text-gray-400 mt-0.5">{t("Producción", "Output")}</div>
+                  <div className="text-[8px] text-gray-500 mt-0.5">{t("Producción", "Output")}</div>
                 </div>
                 <div className="text-center bg-[#7C5CFC]/[0.04] rounded-xl p-3 border border-[#7C5CFC]/10">
                   <div className="font-mono text-sm font-bold" style={{ color: "#7C5CFC" }}>{(batch.yieldPercent ?? 0).toFixed(0)}%</div>
-                  <div className="text-[8px] text-gray-400 mt-0.5">{t("Rendimiento", "Yield")}</div>
+                  <div className="text-[8px] text-gray-500 mt-0.5">{t("Rendimiento", "Yield")}</div>
                 </div>
               </div>
               </div>{/* end thermal+metrics grid */}
@@ -618,13 +618,13 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                           <span className="text-[10px] font-bold text-gray-700">{p.name}</span>
                           <span className="text-[10px] font-mono" style={{ color: p.color }}>{p.amount}</span>
                         </div>
-                        <p className="text-[8px] text-gray-400 leading-relaxed mt-0.5">{p.desc}</p>
+                        <p className="text-[8px] text-gray-500 leading-relaxed mt-0.5">{p.desc}</p>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <p className="text-[8px] text-gray-400 italic mt-2 font-mono">
+                <p className="text-[8px] text-gray-500 italic mt-2 font-mono">
                   {t("Balance cerrado", "Closed balance")}: {batch.feedstockWeight} kg {t("entrada", "input")} = {contaminationKg} kg {t("contaminación", "contamination")} + {oilKg} kg {t("aceite", "oil")} + {charKg} kg char + {gasKg} kg gas
                 </p>
               </Section>
@@ -639,7 +639,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                 </div>
 
                 {/* Inputs */}
-                <p className="text-[8px] uppercase tracking-[1.5px] text-gray-400 font-semibold mb-1.5">{t("Entradas (energía operativa)", "Inputs (operational energy)")}</p>
+                <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-1.5">{t("Entradas (energía operativa)", "Inputs (operational energy)")}</p>
                 <div className="space-y-1 mb-2">
                   {dieselL > 0 && <Row label={t("Diésel (arranque)", "Diesel (startup)")} value={`${dieselL} L → ${dieselMJ} MJ`}
                     sub={t(`Solo fase de arranque (primeros 140 min). LHV: 45.6 MJ/kg × 0.85 kg/L. Después el proceso se autoalimenta.`,
@@ -656,7 +656,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                 </div>
 
                 {/* Outputs */}
-                <p className="text-[8px] uppercase tracking-[1.5px] text-gray-400 font-semibold mb-1.5">{t("Salidas (contenido energético)", "Outputs (energy content)")}</p>
+                <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-1.5">{t("Salidas (contenido energético)", "Outputs (energy content)")}</p>
                 <div className="space-y-1 mb-2">
                   <Row label={t(`Aceite pirolítico (${oilMJperKg} MJ/kg)`, `Pyrolysis oil (${oilMJperKg} MJ/kg)`)} value={`${oilKg} kg → ${oilEnergyMJ} MJ`}
                     sub={t("Poder calorífico medido por laboratorio. Comparable a diésel comercial (45.6 MJ/kg).",
@@ -719,15 +719,15 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                 </div>
 
                 {/* Lab results with diesel comparison */}
-                <p className="text-[8px] uppercase tracking-[1.5px] text-gray-400 font-semibold mb-2">
+                <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-2">
                   {t("Resultados analíticos vs. estándar diésel", "Analytical results vs. diesel standard")}
                 </p>
                 <div className="bg-gray-50/60 rounded-xl p-3">
                   <div className="grid grid-cols-[1fr,auto,auto,auto] gap-x-3 items-center pb-1.5 mb-1 border-b border-gray-200">
-                    <span className="text-[8px] font-bold text-gray-400 uppercase">{t("Parámetro", "Parameter")}</span>
-                    <span className="text-[8px] font-bold text-gray-400 uppercase text-right">{t("Resultado", "Result")}</span>
-                    <span className="text-[8px] font-bold text-gray-400 uppercase text-right">{t("Ref. diésel", "Diesel ref.")}</span>
-                    <span className="text-[8px] font-bold text-gray-400 uppercase"></span>
+                    <span className="text-[8px] font-bold text-gray-500 uppercase">{t("Parámetro", "Parameter")}</span>
+                    <span className="text-[8px] font-bold text-gray-500 uppercase text-right">{t("Resultado", "Result")}</span>
+                    <span className="text-[8px] font-bold text-gray-500 uppercase text-right">{t("Ref. diésel", "Diesel ref.")}</span>
+                    <span className="text-[8px] font-bold text-gray-500 uppercase"></span>
                   </div>
                   {lab.sulfurPercent != null && <LabRow label={t("Azufre", "Sulfur")} value={`${lab.sulfurPercent}`} unit="% m/m" diesel="<0.05%" pass method="ASTM D4951" />}
                   {lab.waterContent != null && <LabRow label={t("Agua", "Water")} value={`${lab.waterContent}`} unit="PPM" diesel="<200" pass method="ASTM D6304" />}
@@ -769,7 +769,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                       </div>
                     )}
                     {co2PerLiter > 0 && (
-                      <div className="text-[10px] text-gray-400 mt-2">
+                      <div className="text-[10px] text-gray-500 mt-2">
                         <span className="font-mono font-semibold" style={{ color: "#3d5c0e" }}>{co2PerLiter.toFixed(2)} kg CO₂</span> {t("evitados/litro", "avoided/liter")}
                       </div>
                     )}
@@ -777,15 +777,15 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                   <div className="grid grid-cols-1 gap-2.5">
                     <div className="text-center bg-[#3d5c0e]/[0.04] rounded-xl p-3 border border-[#3d5c0e]/10">
                       <div className="font-mono text-lg font-bold text-[#3d5c0e]">{Math.round(co2Avoided / 21.77)}</div>
-                      <div className="text-[8px] text-gray-400 mt-1 leading-tight">{t("árboles absorbiendo CO₂ por 1 año", "trees absorbing CO₂ for 1 year")}</div>
+                      <div className="text-[8px] text-gray-500 mt-1 leading-tight">{t("árboles absorbiendo CO₂ por 1 año", "trees absorbing CO₂ for 1 year")}</div>
                     </div>
                     <div className="text-center bg-[#3d5c0e]/[0.04] rounded-xl p-3 border border-[#3d5c0e]/10">
                       <div className="font-mono text-lg font-bold text-[#3d5c0e]">{Math.round(co2Avoided / 0.245).toLocaleString()}</div>
-                      <div className="text-[8px] text-gray-400 mt-1 leading-tight">{t("km no recorridos en auto", "km not driven by car")}</div>
+                      <div className="text-[8px] text-gray-500 mt-1 leading-tight">{t("km no recorridos en auto", "km not driven by car")}</div>
                     </div>
                     <div className="text-center bg-[#3d5c0e]/[0.04] rounded-xl p-3 border border-[#3d5c0e]/10">
                       <div className="font-mono text-lg font-bold text-[#3d5c0e]">{Math.round(co2Avoided / 8.9)}</div>
-                      <div className="text-[8px] text-gray-400 mt-1 leading-tight">{t("días de electricidad de un hogar MX", "days of MX household electricity")}</div>
+                      <div className="text-[8px] text-gray-500 mt-1 leading-tight">{t("días de electricidad de un hogar MX", "days of MX household electricity")}</div>
                     </div>
                   </div>
                 </div>
@@ -793,7 +793,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                 {/* Comparison bars + Indicators — side by side */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <p className="text-[8px] uppercase tracking-[1.5px] text-gray-400 font-semibold mb-2">
+                    <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-2">
                       {t("Comparación por litro producido", "Comparison per liter produced")}
                     </p>
                     <div className="space-y-3">
@@ -819,31 +819,31 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                   </div>
 
                   <div>
-                    <p className="text-[8px] uppercase tracking-[1.5px] text-gray-400 font-semibold mb-2">
+                    <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-2">
                       {t("Indicadores adicionales (ISO 14044 §4.4)", "Additional indicators (ISO 14044 §4.4)")}
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                   {(batch.emissionsNoxKg != null || batch.emissionsSoxKg != null) && (
                     <div className="bg-gray-50/60 rounded-xl p-3 border border-gray-100">
                       <div className="font-mono text-base font-bold text-gray-700">{((batch.emissionsNoxKg ?? 0) + (batch.emissionsSoxKg ?? 0)).toFixed(2)} kg</div>
-                      <div className="text-[9px] text-gray-400 mt-1">{t("NOx + SOx (acidificación)", "NOx + SOx (acidification)")}</div>
+                      <div className="text-[9px] text-gray-500 mt-1">{t("NOx + SOx (acidificación)", "NOx + SOx (acidification)")}</div>
                     </div>
                   )}
                   {batch.emissionsPmKg != null && (
                     <div className="bg-gray-50/60 rounded-xl p-3 border border-gray-100">
                       <div className="font-mono text-base font-bold text-gray-700">{batch.emissionsPmKg} kg</div>
-                      <div className="text-[9px] text-gray-400 mt-1">{t("Material particulado (PM₂.₅)", "Particulate matter (PM₂.₅)")}</div>
+                      <div className="text-[9px] text-gray-500 mt-1">{t("Material particulado (PM₂.₅)", "Particulate matter (PM₂.₅)")}</div>
                     </div>
                   )}
                   {batch.waterConsumedL != null && (
                     <div className="bg-gray-50/60 rounded-xl p-3 border border-gray-100">
                       <div className="font-mono text-base font-bold text-gray-700">{batch.waterConsumedL} L</div>
-                      <div className="text-[9px] text-gray-400 mt-1">{t("Uso de agua (recirculada)", "Water use (recirculated)")}</div>
+                      <div className="text-[9px] text-gray-500 mt-1">{t("Uso de agua (recirculada)", "Water use (recirculated)")}</div>
                     </div>
                   )}
                   <div className="bg-[#2D8CF0]/[0.04] rounded-xl p-3 border border-[#2D8CF0]/10">
                     <div className="font-mono text-base font-bold" style={{ color: "#2D8CF0" }}>100%</div>
-                    <div className="text-[9px] text-gray-400 mt-1">{t("Contenido reciclado (ESPR Art. 7)", "Recycled content (ESPR Art. 7)")}</div>
+                    <div className="text-[9px] text-gray-500 mt-1">{t("Contenido reciclado (ESPR Art. 7)", "Recycled content (ESPR Art. 7)")}</div>
                   </div>
                     </div>
                   </div>
@@ -1007,10 +1007,10 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
           <div className="px-6 sm:px-8 py-4 bg-gray-50/60 border-t border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[8px] tracking-[2px] text-gray-400 uppercase font-semibold mb-1">
+                <p className="text-[8px] tracking-[2px] text-gray-500 uppercase font-semibold mb-1">
                   {t("Verificación Digital — Integridad Criptográfica", "Digital Verification — Cryptographic Integrity")}
                 </p>
-                <p className="font-mono text-[8px] text-gray-400 break-all leading-relaxed">SHA-256: {certificate.hash}</p>
+                <p className="font-mono text-[8px] text-gray-500 break-all leading-relaxed">SHA-256: {certificate.hash}</p>
                 <div className="flex items-center gap-2 mt-1.5">
                   <p className="text-[10px] text-gray-500 font-medium font-mono">{certificate.code}</p>
                   {certificate.verifiedAt && (
@@ -1028,13 +1028,13 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
 
           {/* ═══ BRANDING FOOTER ═══ */}
           <div className="px-6 sm:px-8 py-3 text-center" style={{ background: "linear-gradient(135deg, #1a2e1a, #2d4a1a)" }}>
-            <p className="text-[8px] tracking-[3px] text-white/30 uppercase">
+            <p className="text-[8px] tracking-[3px] text-white/50 uppercase">
               EcoNova México · {t("Economía Circular", "Circular Economy")} · econova.com.mx
             </p>
           </div>
         </div>
 
-        <p className="text-center text-[8px] text-gray-400 mt-4 leading-relaxed">
+        <p className="text-center text-[8px] text-gray-500 mt-4 leading-relaxed">
           {t("Pasaporte Digital de Producto", "Digital Product Passport")} · EU DPP (ESPR 2024/1781) · ISO 14040/14044 LCA · ISCC+ · Verra PWRM0002
         </p>
       </div>
