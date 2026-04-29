@@ -291,74 +291,82 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
             </div>
           </div>
 
-          {/* ═══ CONTENT ═══ */}
+          {/* ═══ LIFECYCLE JOURNEY FLOW ═══ */}
+          <div className="px-5 sm:px-8 py-5 border-b border-gray-100">
+            <p className="text-[8px] uppercase tracking-[2.5px] text-gray-500 font-semibold mb-4 text-center">
+              {t("Ciclo de vida del lote", "Batch lifecycle")}
+            </p>
+            <div className="flex items-start justify-between relative">
+              {/* Connecting line */}
+              <div className="absolute top-[10px] left-[10%] right-[10%] h-px bg-gray-300" />
+
+              {/* Stage 1: Origin */}
+              <div className="flex flex-col items-center text-center relative z-10 flex-1">
+                <div className="w-5 h-5 rounded-full bg-[#64748b] mb-2 flex-shrink-0" />
+                <span className="text-[8px] tracking-[1.5px] text-[#64748b] font-bold uppercase mb-1">
+                  {t("Origen", "Origin")}
+                </span>
+                <span className="font-mono text-sm font-bold text-gray-800">{batch.feedstockWeight} kg</span>
+                <span className="text-[8px] text-gray-500 leading-tight mt-0.5">
+                  {t("plástico\nagrícola", "agricultural\nplastic")}
+                </span>
+              </div>
+
+              {/* Stage 2: Transport */}
+              <div className="flex flex-col items-center text-center relative z-10 flex-1">
+                <div className="w-5 h-5 rounded-full bg-[#E8700A] mb-2 flex-shrink-0" />
+                <span className="text-[8px] tracking-[1.5px] text-[#E8700A] font-bold uppercase mb-1">
+                  {t("Traslado", "Transport")}
+                </span>
+                <span className="font-mono text-sm font-bold text-gray-800">{batch.transportDistanceKm ?? "—"} km</span>
+                <span className="text-[8px] text-gray-500 leading-tight mt-0.5">
+                  {t("campo → planta", "field → plant")}
+                </span>
+              </div>
+
+              {/* Stage 3: Transformation */}
+              <div className="flex flex-col items-center text-center relative z-10 flex-1">
+                <div className="w-5 h-5 rounded-full bg-[#E8700A] mb-2 flex-shrink-0" />
+                <span className="text-[8px] tracking-[1.5px] text-[#E8700A] font-bold uppercase mb-1">
+                  {t("Transformación", "Transformation")}
+                </span>
+                <span className="font-mono text-sm font-bold text-gray-800">{batch.durationMinutes ? `${Math.floor(batch.durationMinutes / 60)} ${t("horas", "hours")}` : "—"}</span>
+                <span className="text-[8px] text-gray-500 leading-tight mt-0.5">
+                  {t("pirólisis\ncatalítica", "catalytic\npyrolysis")}
+                </span>
+              </div>
+
+              {/* Stage 4: Product */}
+              <div className="flex flex-col items-center text-center relative z-10 flex-1">
+                <div className="w-5 h-5 rounded-full bg-[#7C5CFC] mb-2 flex-shrink-0" />
+                <span className="text-[8px] tracking-[1.5px] text-[#7C5CFC] font-bold uppercase mb-1">
+                  {t("Producto", "Product")}
+                </span>
+                <span className="font-mono text-sm font-bold text-gray-800">{oilL} L</span>
+                <span className="text-[8px] text-gray-500 leading-tight mt-0.5">
+                  {t("aceite\npirolítico", "pyrolysis\noil")}
+                </span>
+              </div>
+
+              {/* Stage 5: Impact */}
+              <div className="flex flex-col items-center text-center relative z-10 flex-1">
+                <div className="w-5 h-5 rounded-full bg-[#3d5c0e] mb-2 flex-shrink-0" />
+                <span className="text-[8px] tracking-[1.5px] text-[#3d5c0e] font-bold uppercase mb-1">
+                  {t("Impacto", "Impact")}
+                </span>
+                <span className="font-mono text-sm font-bold text-gray-800">-{co2Avoided.toFixed(0)} kg</span>
+                <span className="text-[8px] text-gray-500 leading-tight mt-0.5">
+                  CO₂eq
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* ═══ CONTENT — JOURNEY CHAPTERS ═══ */}
           <div className="px-5 sm:px-8 py-6 space-y-8">
 
-            {/* ROW: 01 + 02 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-            {/* 01 — PRODUCER IDENTITY */}
-            <Section num="01" title={t("Identidad del Productor", "Producer Identity")}>
-              <div className="space-y-1">
-                <Row label={t("Empresa", "Company")} value="EcoNova México S.A. de C.V." bold />
-                <Row label={t("Instalación", "Facility")} value={t("Planta Morelia, Michoacán, México", "Morelia Plant, Michoacán, Mexico")}
-                  sub={t("Coordenadas: 19.7006° N, 101.1845° W", "Coordinates: 19.7006° N, 101.1845° W")} />
-                <Row label={t("Reactor", "Reactor")} value="DY-500"
-                  sub={t("Reactor rotatorio discontinuo (batch), capacidad 500 kg/lote, calentamiento externo por quemador diésel/syngas",
-                    "Batch rotary reactor, 500 kg/batch capacity, external heating via diesel/syngas burner")} />
-                <Row label={t("Tipo de producto", "Product type")} value={t("Aceite pirolítico (pyrolysis oil)", "Pyrolysis oil")}
-                  sub={t("Mezcla de hidrocarburos C₆₋₂₀ derivada de residuo plástico — comparable a diésel/nafta",
-                    "C₆₋₂₀ hydrocarbon mixture derived from plastic waste — comparable to diesel/naphtha")} />
-                <Row label="ID" value={certificate.code} bold />
-                <Row label={t("Contenido reciclado", "Recycled content")} value={t("100% — residuo plástico post-consumo", "100% — post-consumer plastic waste")} bold />
-              </div>
-              <Info>
-                {t(
-                  "Conforme a ESPR 2024/1781 Annex III: identidad del operador económico (a), identificador único del producto (b), trazabilidad de materias primas (e), contenido reciclado (Art. 7).",
-                  "Per ESPR 2024/1781 Annex III: economic operator identity (a), unique product identifier (b), raw material traceability (e), recycled content (Art. 7)."
-                )}
-              </Info>
-            </Section>
-
-            {/* 02 — LCA FRAMEWORK (same row) */}
-            <Section num="02" title={t("Marco LCA", "LCA Framework")}>
-              <div className="space-y-1">
-                <Row label={t("Norma", "Standard")} value="ISO 14040:2006 / ISO 14044:2006" bold />
-                <Row label={t("Unidad funcional", "Functional unit")}
-                  value={t(
-                    `Producción de ${oilL} L de aceite pirolítico (${oilKg} kg) a partir de ${batch.feedstockWeight} kg de residuo plástico agrícola`,
-                    `Production of ${oilL} L of pyrolysis oil (${oilKg} kg) from ${batch.feedstockWeight} kg of agricultural plastic waste`
-                  )} bold />
-                <Row label={t("Frontera del sistema", "System boundary")}
-                  value={t("Cuna a puerta (cradle-to-gate)", "Cradle-to-gate")}
-                  sub={t(
-                    "Incluye: recolección en campo, transporte a planta, pre-procesamiento, pirólisis catalítica, condensación. Excluye: uso final del aceite, distribución post-producción.",
-                    "Includes: field collection, transport to plant, pre-processing, catalytic pyrolysis, condensation. Excludes: end-use of oil, post-production distribution."
-                  )} />
-                <Row label={t("Asignación co-productos", "Co-product allocation")}
-                  value={t("Energético — por contenido calórico (MJ/kg)", "Energy-based — by calorific content (MJ/kg)")}
-                  sub={t("ISO 14044 §4.3.4 — jerarquía: evitar asignación > físico > energético. Energético seleccionado por naturaleza combustible de todos los co-productos.",
-                    "ISO 14044 §4.3.4 — hierarchy: avoid allocation > physical > energy. Energy-based selected given the fuel nature of all co-products.")} />
-                <Row label={t("Regla de corte", "Cut-off rule")} value="<1% masa y <1% energía" />
-                <Row label={t("Factores de caracterización", "Characterization factors")} value="IPCC AR5 GWP₁₀₀ (CH₄=28, N₂O=265)" />
-                <Row label={t("Factor red eléctrica", "Grid emission factor")} value="IEA México 2023: 0.435 kg CO₂/kWh" />
-                <Row label={t("Datos primarios", "Primary data")}
-                  value={t("Medición directa en planta — DY-500", "Direct plant measurement — DY-500")}
-                  sub={t("Temperaturas, masas, volúmenes y consumo energético medidos por operador con instrumentos calibrados.",
-                    "Temperatures, masses, volumes, and energy consumption measured by operator with calibrated instruments.")} />
-              </div>
-              <Info>
-                {t(
-                  "Categorías de impacto evaluadas conforme ISO 14044 §4.4: cambio climático (GWP₁₀₀), acidificación (NOx+SOx), material particulado (PM₂.₅), uso de agua. Baseline: IPCC 2006 Vol. 5 Table 5.3 — quema abierta de polietileno.",
-                  "Impact categories assessed per ISO 14044 §4.4: climate change (GWP₁₀₀), acidification (NOx+SOx), particulate matter (PM₂.₅), water use. Baseline: IPCC 2006 Vol. 5 Table 5.3 — open burning of polyethylene."
-                )}
-              </Info>
-            </Section>
-
-            </div>{/* end ROW 01+02 */}
-
-            {/* 03 — FEEDSTOCK CHARACTERIZATION */}
-            <Section num="03" title={t("Caracterización del Feedstock", "Feedstock Characterization")}>
+            {/* ═══ CHAPTER 01 — ORIGEN / ORIGIN ═══ */}
+            <Section num="01" title={t("Origen — De los campos de Michoacán", "Origin — From the fields of Michoacán")}>
               {/* Agricultural context — 2-col grid */}
               <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-2">
                 {t("Contexto agrícola", "Agricultural context")}
@@ -494,8 +502,27 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
               </div>{/* end preprocessing+mass grid */}
             </Section>
 
-            {/* 04 — TRANSFORMATION PROCESS */}
-            <Section num="04" title={t("Proceso de Transformación", "Transformation Process")}>
+            {/* ═══ CHAPTER 02 — TRASLADO / TRANSPORT ═══ */}
+            {batch.transportDistanceKm != null && (
+              <Section num="02" title={t("Traslado — Del campo a la planta", "Transport — From field to plant")}>
+                <div className="space-y-1">
+                  <Row label={t("Vehículo", "Vehicle")} value={batch.transportMode}
+                    sub={t("Pickup diésel 2.8L, capacidad de carga ~1 tonelada", "Diesel pickup 2.8L, load capacity ~1 ton")} />
+                  <Row label={t("Ruta", "Route")}
+                    value={t(`${batch.feedstockOrigin} → Planta EcoNova, Morelia`, `${batch.feedstockOrigin} → EcoNova Plant, Morelia`)}
+                    sub={t("Campos agrícolas zona Uruapan–Tancítaro → Planta de pirólisis", "Agricultural fields Uruapan–Tancítaro area → Pyrolysis plant")} />
+                  <Row label={t("Distancia", "Distance")} value={`${batch.transportDistanceKm} km`} bold />
+                  <Row label={t("Combustible", "Fuel")} value={`${batch.transportFuelType} — ${batch.transportFuelL} L`}
+                    sub={t("Consumo ida y vuelta completo", "Full round-trip consumption")} />
+                  <Row label={t("Emisiones transporte", "Transport emissions")} value={`${batch.transportCo2Kg} kg CO₂`} bold
+                    sub={t(`Cálculo: ${batch.transportFuelL} L × 0.85 kg/L × 3.15 kg CO₂/kg diésel (IPCC 2006 Vol 2 Table 3.2.1) = ${batch.transportCo2Kg} kg`,
+                      `Calculation: ${batch.transportFuelL} L × 0.85 kg/L × 3.15 kg CO₂/kg diesel (IPCC 2006 Vol 2 Table 3.2.1) = ${batch.transportCo2Kg} kg`)} />
+                </div>
+              </Section>
+            )}
+
+            {/* ═══ CHAPTER 03 — TRANSFORMACIÓN / TRANSFORMATION ═══ */}
+            <Section num="03" title={t("Transformación — De plástico a combustible", "Transformation — From plastic to fuel")}>
               {/* Process info + Catalyst — side by side */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                 <div className="space-y-1">
@@ -585,126 +612,127 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                 </div>
               </div>
               </div>{/* end thermal+metrics grid */}
-            </Section>
 
-            {/* ROW: 05 + 06 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Mass Balance (formerly Section 05) */}
+              {oilL > 0 && (
+                <div className="mt-6">
+                  <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-3">
+                    {t("Balance de masa", "Mass balance")}
+                  </p>
+                  <div className="bg-gray-50/80 rounded-xl p-3 -mx-1">
+                    <SankeyFlow feedstockKg={batch.feedstockWeight} feedstockType={batch.feedstockType}
+                      contaminationPct={batch.contaminationPct ?? 0} oilLiters={oilL} oilKg={oilKg} charKg={charKg} gasKg={gasKg} />
+                  </div>
 
-            {/* 05 — MASS BALANCE */}
-            {oilL > 0 && (
-              <Section num="05" title={t("Balance de Masa", "Mass Balance")}>
-                <div className="bg-gray-50/80 rounded-xl p-3 -mx-1">
-                  <SankeyFlow feedstockKg={batch.feedstockWeight} feedstockType={batch.feedstockType}
-                    contaminationPct={batch.contaminationPct ?? 0} oilLiters={oilL} oilKg={oilKg} charKg={charKg} gasKg={gasKg} />
-                </div>
-
-                {/* Product descriptions */}
-                <div className="grid grid-cols-1 gap-2 mt-3">
-                  {[
-                    { name: t("Aceite pirolítico", "Pyrolysis oil"), amount: `${oilKg} kg (${oilL} L)`, color: "#7C5CFC",
-                      desc: t("Mezcla de hidrocarburos C₆₋₂₀ comparable a diésel/nafta. Uso: combustible alterno industrial, feedstock para refinería, materia prima petroquímica.",
-                        "C₆₋₂₀ hydrocarbon mixture comparable to diesel/naphtha. Use: industrial alternative fuel, refinery feedstock, petrochemical raw material.") },
-                    { name: t("Char (carbón)", "Char (carbon)"), amount: `${charKg} kg`, color: "#3d7a0a",
-                      desc: t("Residuo carbonoso sólido de alta pureza. Uso: secuestro de carbono en suelo agrícola (biochar) — el carbono permanece estable 100+ años. Mejora retención de agua y nutrientes.",
-                        "High-purity solid carbonaceous residue. Use: carbon sequestration in agricultural soil (biochar) — carbon remains stable 100+ years. Improves water and nutrient retention.") },
-                    { name: t("Gas no condensable", "Non-condensable gas"), amount: `${gasKg} kg`, color: "#f59e0b",
-                      desc: t("Mezcla de H₂ (~15%), CH₄ (~30%), C₂₋C₄ (~40%), CO/CO₂ (~15%). 100% recirculado al quemador como combustible — no se emite a la atmósfera.",
-                        "Mixture of H₂ (~15%), CH₄ (~30%), C₂₋C₄ (~40%), CO/CO₂ (~15%). 100% recirculated to burner as fuel — not emitted to atmosphere.") },
-                  ].map((p) => (
-                    <div key={p.name} className="flex items-start gap-2 py-1.5">
-                      <div className="w-2 h-2 rounded-full flex-shrink-0 mt-1" style={{ backgroundColor: p.color }} />
-                      <div>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-[10px] font-bold text-gray-700">{p.name}</span>
-                          <span className="text-[10px] font-mono" style={{ color: p.color }}>{p.amount}</span>
+                  {/* Product descriptions */}
+                  <div className="grid grid-cols-1 gap-2 mt-3">
+                    {[
+                      { name: t("Aceite pirolítico", "Pyrolysis oil"), amount: `${oilKg} kg (${oilL} L)`, color: "#7C5CFC",
+                        desc: t("Mezcla de hidrocarburos C₆₋₂₀ comparable a diésel/nafta. Uso: combustible alterno industrial, feedstock para refinería, materia prima petroquímica.",
+                          "C₆₋₂₀ hydrocarbon mixture comparable to diesel/naphtha. Use: industrial alternative fuel, refinery feedstock, petrochemical raw material.") },
+                      { name: t("Char (carbón)", "Char (carbon)"), amount: `${charKg} kg`, color: "#3d7a0a",
+                        desc: t("Residuo carbonoso sólido de alta pureza. Uso: secuestro de carbono en suelo agrícola (biochar) — el carbono permanece estable 100+ años. Mejora retención de agua y nutrientes.",
+                          "High-purity solid carbonaceous residue. Use: carbon sequestration in agricultural soil (biochar) — carbon remains stable 100+ years. Improves water and nutrient retention.") },
+                      { name: t("Gas no condensable", "Non-condensable gas"), amount: `${gasKg} kg`, color: "#f59e0b",
+                        desc: t("Mezcla de H₂ (~15%), CH₄ (~30%), C₂₋C₄ (~40%), CO/CO₂ (~15%). 100% recirculado al quemador como combustible — no se emite a la atmósfera.",
+                          "Mixture of H₂ (~15%), CH₄ (~30%), C₂₋C₄ (~40%), CO/CO₂ (~15%). 100% recirculated to burner as fuel — not emitted to atmosphere.") },
+                    ].map((p) => (
+                      <div key={p.name} className="flex items-start gap-2 py-1.5">
+                        <div className="w-2 h-2 rounded-full flex-shrink-0 mt-1" style={{ backgroundColor: p.color }} />
+                        <div>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-[10px] font-bold text-gray-700">{p.name}</span>
+                            <span className="text-[10px] font-mono" style={{ color: p.color }}>{p.amount}</span>
+                          </div>
+                          <p className="text-[8px] text-gray-500 leading-relaxed mt-0.5">{p.desc}</p>
                         </div>
-                        <p className="text-[8px] text-gray-500 leading-relaxed mt-0.5">{p.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="text-[8px] text-gray-500 italic mt-2 font-mono">
+                    {t("Balance cerrado", "Closed balance")}: {batch.feedstockWeight} kg {t("entrada", "input")} = {contaminationKg} kg {t("contaminación", "contamination")} + {oilKg} kg {t("aceite", "oil")} + {charKg} kg char + {gasKg} kg gas
+                  </p>
+                </div>
+              )}
+
+              {/* Energy Balance (formerly Section 06) */}
+              {hasEnergyData && (
+                <div className="mt-6">
+                  <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-3">
+                    {t("Balance energético", "Energy balance")}
+                  </p>
+                  <div className="text-center py-5 mb-4 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(232,112,10,0.07), rgba(232,112,10,0.02))" }}>
+                    <div className="font-mono text-3xl font-bold" style={{ color: "#E8700A" }}>{energyRatio.toFixed(1)}:1</div>
+                    <div className="text-[11px] text-gray-500 mt-1">{t("energía producida / consumida", "energy produced / consumed")}</div>
+                  </div>
+
+                  {/* Inputs */}
+                  <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-1.5">{t("Entradas (energía operativa)", "Inputs (operational energy)")}</p>
+                  <div className="space-y-1 mb-2">
+                    {dieselL > 0 && <Row label={t("Diésel (arranque)", "Diesel (startup)")} value={`${dieselL} L → ${dieselMJ} MJ`}
+                      sub={t(`Solo fase de arranque (primeros 140 min). LHV: 45.6 MJ/kg × 0.85 kg/L. Después el proceso se autoalimenta.`,
+                        `Startup phase only (first 140 min). LHV: 45.6 MJ/kg × 0.85 kg/L. Process self-fuels afterwards.`)} />}
+                    {elecKwh > 0 && <Row label={t("Electricidad", "Electricity")} value={`${elecKwh.toFixed(1)} kWh → ${elecMJ} MJ`}
+                      sub={t("Motor de rotación del reactor, bombas de agua, sopladores de aire, compresor, panel de control. Factor: 3.6 MJ/kWh.",
+                        "Reactor rotation motor, water pumps, air blowers, compressor, control panel. Factor: 3.6 MJ/kWh.")} />}
+                    {gasRecKg > 0 && <Row label={t("Gas pirolítico recirculado", "Recirculated pyrolysis gas")} value={`${gasRecKg} kg → ${gasMJ} MJ`}
+                      sub={t(`Producido por el propio proceso y recirculado al quemador. Constituye el ${gasPctOfEnergy}% de la energía de entrada. LHV: ~38 MJ/kg.`,
+                        `Produced by the process itself and recirculated to the burner. Constitutes ${gasPctOfEnergy}% of input energy. LHV: ~38 MJ/kg.`)} />}
+                  </div>
+                  <div className="border-t border-gray-100 pt-1 mb-3">
+                    <Row label={t("Total energía entrada", "Total energy input")} value={`${totalEnergyIn} MJ`} bold />
+                  </div>
+
+                  {/* Outputs */}
+                  <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-1.5">{t("Salidas (contenido energético)", "Outputs (energy content)")}</p>
+                  <div className="space-y-1 mb-2">
+                    <Row label={t(`Aceite pirolítico (${oilMJperKg} MJ/kg)`, `Pyrolysis oil (${oilMJperKg} MJ/kg)`)} value={`${oilKg} kg → ${oilEnergyMJ} MJ`}
+                      sub={t("Poder calorífico medido por laboratorio. Comparable a diésel comercial (45.6 MJ/kg).",
+                        "Calorific value lab-tested. Comparable to commercial diesel (45.6 MJ/kg).")} />
+                    <Row label={`Char (${charMJperKg} MJ/kg)`} value={`${charKg} kg → ${charEnergyMJ} MJ`}
+                      sub={t("Carbón de alta fijación. Si se usa como combustible sólido aporta energía adicional; si se usa como biochar, secuestra carbono.",
+                        "High-fixation carbon. If used as solid fuel, provides additional energy; if used as biochar, sequesters carbon.")} />
+                  </div>
+                  <div className="border-t border-gray-100 pt-1 mb-3">
+                    <Row label={t("Total energía salida", "Total energy output")} value={`${totalEnergyOut} MJ`} bold />
+                  </div>
+
+                  {/* Visual bars */}
+                  <div className="space-y-1.5">
+                    <div>
+                      <div className="flex justify-between text-[10px] mb-0.5">
+                        <span className="text-gray-500">{t("Entrada", "Input")}</span>
+                        <span className="font-mono text-[#E8700A] font-bold">{totalEnergyIn} MJ</span>
+                      </div>
+                      <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${Math.min(100, (totalEnergyIn / totalEnergyOut) * 100)}%`, background: "linear-gradient(90deg, #E8700A, #f59e0b)" }} />
                       </div>
                     </div>
-                  ))}
-                </div>
-
-                <p className="text-[8px] text-gray-500 italic mt-2 font-mono">
-                  {t("Balance cerrado", "Closed balance")}: {batch.feedstockWeight} kg {t("entrada", "input")} = {contaminationKg} kg {t("contaminación", "contamination")} + {oilKg} kg {t("aceite", "oil")} + {charKg} kg char + {gasKg} kg gas
-                </p>
-              </Section>
-            )}
-
-            {/* 06 — ENERGY BALANCE */}
-            {hasEnergyData && (
-              <Section num="06" title={t("Balance Energético", "Energy Balance")}>
-                <div className="text-center py-5 mb-4 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(232,112,10,0.07), rgba(232,112,10,0.02))" }}>
-                  <div className="font-mono text-3xl font-bold" style={{ color: "#E8700A" }}>{energyRatio.toFixed(1)}:1</div>
-                  <div className="text-[11px] text-gray-500 mt-1">{t("energía producida / consumida", "energy produced / consumed")}</div>
-                </div>
-
-                {/* Inputs */}
-                <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-1.5">{t("Entradas (energía operativa)", "Inputs (operational energy)")}</p>
-                <div className="space-y-1 mb-2">
-                  {dieselL > 0 && <Row label={t("Diésel (arranque)", "Diesel (startup)")} value={`${dieselL} L → ${dieselMJ} MJ`}
-                    sub={t(`Solo fase de arranque (primeros 140 min). LHV: 45.6 MJ/kg × 0.85 kg/L. Después el proceso se autoalimenta.`,
-                      `Startup phase only (first 140 min). LHV: 45.6 MJ/kg × 0.85 kg/L. Process self-fuels afterwards.`)} />}
-                  {elecKwh > 0 && <Row label={t("Electricidad", "Electricity")} value={`${elecKwh.toFixed(1)} kWh → ${elecMJ} MJ`}
-                    sub={t("Motor de rotación del reactor, bombas de agua, sopladores de aire, compresor, panel de control. Factor: 3.6 MJ/kWh.",
-                      "Reactor rotation motor, water pumps, air blowers, compressor, control panel. Factor: 3.6 MJ/kWh.")} />}
-                  {gasRecKg > 0 && <Row label={t("Gas pirolítico recirculado", "Recirculated pyrolysis gas")} value={`${gasRecKg} kg → ${gasMJ} MJ`}
-                    sub={t(`Producido por el propio proceso y recirculado al quemador. Constituye el ${gasPctOfEnergy}% de la energía de entrada. LHV: ~38 MJ/kg.`,
-                      `Produced by the process itself and recirculated to the burner. Constitutes ${gasPctOfEnergy}% of input energy. LHV: ~38 MJ/kg.`)} />}
-                </div>
-                <div className="border-t border-gray-100 pt-1 mb-3">
-                  <Row label={t("Total energía entrada", "Total energy input")} value={`${totalEnergyIn} MJ`} bold />
-                </div>
-
-                {/* Outputs */}
-                <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-1.5">{t("Salidas (contenido energético)", "Outputs (energy content)")}</p>
-                <div className="space-y-1 mb-2">
-                  <Row label={t(`Aceite pirolítico (${oilMJperKg} MJ/kg)`, `Pyrolysis oil (${oilMJperKg} MJ/kg)`)} value={`${oilKg} kg → ${oilEnergyMJ} MJ`}
-                    sub={t("Poder calorífico medido por laboratorio. Comparable a diésel comercial (45.6 MJ/kg).",
-                      "Calorific value lab-tested. Comparable to commercial diesel (45.6 MJ/kg).")} />
-                  <Row label={`Char (${charMJperKg} MJ/kg)`} value={`${charKg} kg → ${charEnergyMJ} MJ`}
-                    sub={t("Carbón de alta fijación. Si se usa como combustible sólido aporta energía adicional; si se usa como biochar, secuestra carbono.",
-                      "High-fixation carbon. If used as solid fuel, provides additional energy; if used as biochar, sequesters carbon.")} />
-                </div>
-                <div className="border-t border-gray-100 pt-1 mb-3">
-                  <Row label={t("Total energía salida", "Total energy output")} value={`${totalEnergyOut} MJ`} bold />
-                </div>
-
-                {/* Visual bars */}
-                <div className="space-y-1.5">
-                  <div>
-                    <div className="flex justify-between text-[10px] mb-0.5">
-                      <span className="text-gray-500">{t("Entrada", "Input")}</span>
-                      <span className="font-mono text-[#E8700A] font-bold">{totalEnergyIn} MJ</span>
-                    </div>
-                    <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${Math.min(100, (totalEnergyIn / totalEnergyOut) * 100)}%`, background: "linear-gradient(90deg, #E8700A, #f59e0b)" }} />
+                    <div>
+                      <div className="flex justify-between text-[10px] mb-0.5">
+                        <span className="text-gray-500">{t("Salida", "Output")}</span>
+                        <span className="font-mono text-[#7C5CFC] font-bold">{totalEnergyOut} MJ</span>
+                      </div>
+                      <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full bg-[#7C5CFC]/70" style={{ width: "100%" }} />
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <div className="flex justify-between text-[10px] mb-0.5">
-                      <span className="text-gray-500">{t("Salida", "Output")}</span>
-                      <span className="font-mono text-[#7C5CFC] font-bold">{totalEnergyOut} MJ</span>
-                    </div>
-                    <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-[#7C5CFC]/70" style={{ width: "100%" }} />
-                    </div>
-                  </div>
+
+                  <Info>
+                    {t(
+                      "Conforme a ISO 14040 §4.3 e ISCC+ 205. LHV diésel: 45.6 MJ/kg (IPCC 2006 Vol 2). Syngas: ~38 MJ/kg (medición directa). Electricidad: 3.6 MJ/kWh (factor termodinámico).",
+                      "Per ISO 14040 §4.3 and ISCC+ 205. Diesel LHV: 45.6 MJ/kg (IPCC 2006 Vol 2). Syngas: ~38 MJ/kg (direct measurement). Electricity: 3.6 MJ/kWh (thermodynamic factor)."
+                    )}
+                  </Info>
                 </div>
+              )}
+            </Section>
 
-                <Info>
-                  {t(
-                    "Conforme a ISO 14040 §4.3 e ISCC+ 205. LHV diésel: 45.6 MJ/kg (IPCC 2006 Vol 2). Syngas: ~38 MJ/kg (medición directa). Electricidad: 3.6 MJ/kWh (factor termodinámico).",
-                    "Per ISO 14040 §4.3 and ISCC+ 205. Diesel LHV: 45.6 MJ/kg (IPCC 2006 Vol 2). Syngas: ~38 MJ/kg (direct measurement). Electricity: 3.6 MJ/kWh (thermodynamic factor)."
-                  )}
-                </Info>
-              </Section>
-            )}
-
-            </div>{/* end ROW 05+06 */}
-
-            {/* 07 — LAB RESULTS */}
+            {/* ═══ CHAPTER 04 — PRODUCTO / PRODUCT ═══ */}
             {lab && (
-              <Section num="07" title={t("Control de Calidad — Laboratorio", "Quality Control — Laboratory")}>
+              <Section num="04" title={t("Tu Producto — Aceite pirolítico certificado", "Your Product — Certified pyrolysis oil")}>
                 <div className="space-y-1 mb-3">
                   <Row label={t("Laboratorio", "Laboratory")} value={lab.labName} bold />
                   {lab.labCertification && <Row label={t("Acreditación", "Accreditation")} value={lab.labCertification} />}
@@ -755,9 +783,9 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
               </Section>
             )}
 
-            {/* 08 — ENVIRONMENTAL IMPACT */}
+            {/* ═══ CHAPTER 05 — IMPACTO / IMPACT ═══ */}
             {co2Avoided > 0 && (
-              <Section num="08" title={t("Huella Ambiental", "Environmental Footprint")}>
+              <Section num="05" title={t("Impacto — Lo que este lote logró", "Impact — What this batch achieved")}>
                 {/* CO₂ hero + Equivalencies — side by side */}
                 <div className="grid grid-cols-1 md:grid-cols-[1fr,1fr] gap-5 mb-5">
                   <div className="flex flex-col items-center justify-center py-5 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(61,122,10,0.07), rgba(61,122,10,0.02))" }}>
@@ -855,102 +883,149 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                     "GHG methodology: Open PE burning produces 3.08 kg CO₂/kg (IPCC 2006 Vol. 5 T5.3) + CH₄ (0.002 kg/kg, GWP=28) + N₂O (0.0001 kg/kg, GWP=265). Project: diesel (3.15 kg CO₂/kg), electricity (IEA MX 0.435 kg CO₂/kWh), measured direct emissions."
                   )}
                 </Info>
-              </Section>
-            )}
 
-            {/* ROW: 09 + 10 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-            {/* 09 — TRANSPORT */}
-            {batch.transportDistanceKm != null && (
-              <Section num="09" title={t("Transporte del Feedstock", "Feedstock Transport")}>
-                <div className="space-y-1">
-                  <Row label={t("Vehículo", "Vehicle")} value={batch.transportMode}
-                    sub={t("Pickup diésel 2.8L, capacidad de carga ~1 tonelada", "Diesel pickup 2.8L, load capacity ~1 ton")} />
-                  <Row label={t("Ruta", "Route")}
-                    value={t(`${batch.feedstockOrigin} → Planta EcoNova, Morelia`, `${batch.feedstockOrigin} → EcoNova Plant, Morelia`)}
-                    sub={t("Campos agrícolas zona Uruapan–Tancítaro → Planta de pirólisis", "Agricultural fields Uruapan–Tancítaro area → Pyrolysis plant")} />
-                  <Row label={t("Distancia", "Distance")} value={`${batch.transportDistanceKm} km`} bold />
-                  <Row label={t("Combustible", "Fuel")} value={`${batch.transportFuelType} — ${batch.transportFuelL} L`}
-                    sub={t("Consumo ida y vuelta completo", "Full round-trip consumption")} />
-                  <Row label={t("Emisiones transporte", "Transport emissions")} value={`${batch.transportCo2Kg} kg CO₂`} bold
-                    sub={t(`Cálculo: ${batch.transportFuelL} L × 0.85 kg/L × 3.15 kg CO₂/kg diésel (IPCC 2006 Vol 2 Table 3.2.1) = ${batch.transportCo2Kg} kg`,
-                      `Calculation: ${batch.transportFuelL} L × 0.85 kg/L × 3.15 kg CO₂/kg diesel (IPCC 2006 Vol 2 Table 3.2.1) = ${batch.transportCo2Kg} kg`)} />
-                </div>
-              </Section>
-            )}
-
-            {/* 10 — PROCESS EMISSIONS */}
-            {batch.emissionsCo2Kg != null && (
-              <Section num="10" title={t("Inventario de Emisiones del Proceso", "Process Emissions Inventory")}>
-                <div className="space-y-1">
-                  <Row label={t("CO₂ directo", "Direct CO₂")} value={`${batch.emissionsCo2Kg} kg`} bold
-                    sub={t("Combustión del diésel de arranque en el quemador del reactor. Fuente primaria de CO₂ directo.",
-                      "Startup diesel combustion in the reactor burner. Primary direct CO₂ source.")} />
-                  <Row label={t("CH₄ fugitivas", "Fugitive CH₄")} value={batch.emissionsCh4Kg != null ? `${batch.emissionsCh4Kg} kg` : null}
-                    sub={t("Microfiltraciones en sellos del reactor y conexiones del sistema de gas. Minimizadas por sellado optimizado y reapriete a 100°C.",
-                      "Micro-leaks in reactor seals and gas system connections. Minimized by optimized sealing and re-tightening at 100°C.")} />
-                  <Row label="NOx" value={batch.emissionsNoxKg != null ? `${batch.emissionsNoxKg} kg` : null}
-                    sub={t("Oxidación del nitrógeno atmosférico a altas temperaturas en el quemador.",
-                      "Atmospheric nitrogen oxidation at high temperatures in the burner.")} />
-                  <Row label="SOx" value={batch.emissionsSoxKg != null ? `${batch.emissionsSoxKg} kg` : null}
-                    sub={t("Trazas mínimas — el LDPE agrícola tiene contenido de azufre <0.01%.",
-                      "Minimal traces — agricultural LDPE has sulfur content <0.01%.")} />
-                  <Row label={t("Partículas (PM₂.₅)", "Particulates (PM₂.₅)")} value={batch.emissionsPmKg != null ? `${batch.emissionsPmKg} kg` : null}
-                    sub={t("Material particulado fino del quemador, controlado por diseño de cámara de combustión cerrada.",
-                      "Fine particulate from burner, controlled by closed combustion chamber design.")} />
-                </div>
-                <div className="mt-2 pt-2 border-t border-gray-100 space-y-1">
-                  <Row label={t("Agua consumida", "Water consumed")} value={batch.waterConsumedL != null ? `${batch.waterConsumedL} L` : null}
-                    sub={t("Agua de enfriamiento del sistema de condensación. Recircula en circuito semi-cerrado (torre de enfriamiento).",
-                      "Condensation system cooling water. Recirculates in semi-closed loop (cooling tower).")} />
-                  <Row label={t("Agua residual neta", "Net wastewater")} value={batch.emissionsWaterL != null ? `${batch.emissionsWaterL} L` : null}
-                    sub={t("Pérdida neta por evaporación. Se repone con agua fresca. Sin descarga a cuerpos de agua.",
-                      "Net loss from evaporation. Replenished with fresh water. No discharge to water bodies.")} />
-                </div>
-              </Section>
-            )}
-
-            </div>{/* end ROW 09+10 */}
-
-            {/* ROW: 11 + 12 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-            {/* 11 — WASTE MANAGEMENT */}
-            {batch.charDisposition && (
-              <Section num="11" title={t("Gestión de Residuos — Economía Circular", "Waste Management — Circular Economy")}>
-                <div className="space-y-3">
-                  <div className="bg-[#3d7a0a]/[0.04] rounded-xl p-4 border border-[#3d7a0a]/10">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <div className="w-2 h-2 rounded-full bg-[#3d7a0a]" />
-                      <span className="text-[10px] font-bold text-gray-700">{t("Char / Biochar", "Char / Biochar")} — {charKg} kg</span>
-                    </div>
-                    <p className="text-[9px] text-gray-500 leading-relaxed">
-                      {t(
-                        "Secuestro en suelo agrícola como enmienda (biochar). El carbono pirolítico permanece estable en el suelo por 100+ años (Lehmann et al., 2015). Mejora retención de agua y nutrientes. Circularidad: el plástico que vino del campo agrícola regresa como mejorador de suelo al mismo campo.",
-                        "Sequestered in agricultural soil as amendment (biochar). Pyrolytic carbon remains stable in soil for 100+ years (Lehmann et al., 2015). Improves water and nutrient retention. Circularity: plastic from the agricultural field returns as soil improver to the same field."
-                      )}
+                {/* Process Emissions (formerly Section 10) */}
+                {batch.emissionsCo2Kg != null && (
+                  <div className="mt-6">
+                    <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-3">
+                      {t("Inventario de emisiones del proceso", "Process emissions inventory")}
                     </p>
+                    <div className="space-y-1">
+                      <Row label={t("CO₂ directo", "Direct CO₂")} value={`${batch.emissionsCo2Kg} kg`} bold
+                        sub={t("Combustión del diésel de arranque en el quemador del reactor. Fuente primaria de CO₂ directo.",
+                          "Startup diesel combustion in the reactor burner. Primary direct CO₂ source.")} />
+                      <Row label={t("CH₄ fugitivas", "Fugitive CH₄")} value={batch.emissionsCh4Kg != null ? `${batch.emissionsCh4Kg} kg` : null}
+                        sub={t("Microfiltraciones en sellos del reactor y conexiones del sistema de gas. Minimizadas por sellado optimizado y reapriete a 100°C.",
+                          "Micro-leaks in reactor seals and gas system connections. Minimized by optimized sealing and re-tightening at 100°C.")} />
+                      <Row label="NOx" value={batch.emissionsNoxKg != null ? `${batch.emissionsNoxKg} kg` : null}
+                        sub={t("Oxidación del nitrógeno atmosférico a altas temperaturas en el quemador.",
+                          "Atmospheric nitrogen oxidation at high temperatures in the burner.")} />
+                      <Row label="SOx" value={batch.emissionsSoxKg != null ? `${batch.emissionsSoxKg} kg` : null}
+                        sub={t("Trazas mínimas — el LDPE agrícola tiene contenido de azufre <0.01%.",
+                          "Minimal traces — agricultural LDPE has sulfur content <0.01%.")} />
+                      <Row label={t("Partículas (PM₂.₅)", "Particulates (PM₂.₅)")} value={batch.emissionsPmKg != null ? `${batch.emissionsPmKg} kg` : null}
+                        sub={t("Material particulado fino del quemador, controlado por diseño de cámara de combustión cerrada.",
+                          "Fine particulate from burner, controlled by closed combustion chamber design.")} />
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-gray-100 space-y-1">
+                      <Row label={t("Agua consumida", "Water consumed")} value={batch.waterConsumedL != null ? `${batch.waterConsumedL} L` : null}
+                        sub={t("Agua de enfriamiento del sistema de condensación. Recircula en circuito semi-cerrado (torre de enfriamiento).",
+                          "Condensation system cooling water. Recirculates in semi-closed loop (cooling tower).")} />
+                      <Row label={t("Agua residual neta", "Net wastewater")} value={batch.emissionsWaterL != null ? `${batch.emissionsWaterL} L` : null}
+                        sub={t("Pérdida neta por evaporación. Se repone con agua fresca. Sin descarga a cuerpos de agua.",
+                          "Net loss from evaporation. Replenished with fresh water. No discharge to water bodies.")} />
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <Row label={t("Cenizas", "Ash")} value={batch.ashDisposition}
-                      sub={t("Volumen mínimo (<1 kg por lote). Contenido inerte, sin contaminantes peligrosos.",
-                        "Minimal volume (<1 kg per batch). Inert content, no hazardous contaminants.")} />
-                    <Row label={t("Agua residual", "Wastewater")} value={batch.wastewaterDisp}
-                      sub={t("Circuito cerrado de torre de enfriamiento. Sin descarga a drenaje o cuerpos de agua. Pérdida neta: 50 L por evaporación.",
-                        "Closed-loop cooling tower circuit. No discharge to drains or water bodies. Net loss: 50 L from evaporation.")} />
-                    <Row label={t("Gas no condensable", "Non-condensable gas")}
-                      value={t("100% recirculado como combustible", "100% recirculated as fuel")}
-                      sub={t("El gas no condensable (H₂, CH₄, C₂₋C₄) se quema en el quemador del reactor, eliminando la necesidad de diésel externo y evitando emisiones de gas pirolítico a la atmósfera.",
-                        "Non-condensable gas (H₂, CH₄, C₂₋C₄) is burned in the reactor burner, eliminating the need for external diesel and preventing pyrolysis gas emissions to the atmosphere.")} />
-                    <Row label={t("Otros insumos químicos", "Other chemical inputs")} value={batch.chemicalsUsed ?? t("Ninguno", "None")} />
+                )}
+
+                {/* Waste Management — Circular Economy (formerly Section 11) */}
+                {batch.charDisposition && (
+                  <div className="mt-6">
+                    <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-3">
+                      {t("Gestión de residuos — Economía circular", "Waste management — Circular economy")}
+                    </p>
+                    <div className="space-y-3">
+                      <div className="bg-[#3d7a0a]/[0.04] rounded-xl p-4 border border-[#3d7a0a]/10">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <div className="w-2 h-2 rounded-full bg-[#3d7a0a]" />
+                          <span className="text-[10px] font-bold text-gray-700">{t("Char / Biochar", "Char / Biochar")} — {charKg} kg</span>
+                        </div>
+                        <p className="text-[9px] text-gray-500 leading-relaxed">
+                          {t(
+                            "Secuestro en suelo agrícola como enmienda (biochar). El carbono pirolítico permanece estable en el suelo por 100+ años (Lehmann et al., 2015). Mejora retención de agua y nutrientes. Circularidad: el plástico que vino del campo agrícola regresa como mejorador de suelo al mismo campo.",
+                            "Sequestered in agricultural soil as amendment (biochar). Pyrolytic carbon remains stable in soil for 100+ years (Lehmann et al., 2015). Improves water and nutrient retention. Circularity: plastic from the agricultural field returns as soil improver to the same field."
+                          )}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <Row label={t("Cenizas", "Ash")} value={batch.ashDisposition}
+                          sub={t("Volumen mínimo (<1 kg por lote). Contenido inerte, sin contaminantes peligrosos.",
+                            "Minimal volume (<1 kg per batch). Inert content, no hazardous contaminants.")} />
+                        <Row label={t("Agua residual", "Wastewater")} value={batch.wastewaterDisp}
+                          sub={t("Circuito cerrado de torre de enfriamiento. Sin descarga a drenaje o cuerpos de agua. Pérdida neta: 50 L por evaporación.",
+                            "Closed-loop cooling tower circuit. No discharge to drains or water bodies. Net loss: 50 L from evaporation.")} />
+                        <Row label={t("Gas no condensable", "Non-condensable gas")}
+                          value={t("100% recirculado como combustible", "100% recirculated as fuel")}
+                          sub={t("El gas no condensable (H₂, CH₄, C₂₋C₄) se quema en el quemador del reactor, eliminando la necesidad de diésel externo y evitando emisiones de gas pirolítico a la atmósfera.",
+                            "Non-condensable gas (H₂, CH₄, C₂₋C₄) is burned in the reactor burner, eliminating the need for external diesel and preventing pyrolysis gas emissions to the atmosphere.")} />
+                        <Row label={t("Otros insumos químicos", "Other chemical inputs")} value={batch.chemicalsUsed ?? t("Ninguno", "None")} />
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
               </Section>
             )}
 
-            {/* 12 — REGULATORY COMPLIANCE */}
-            <Section num="12" title={t("Cumplimiento Normativo", "Regulatory Compliance")}>
+            {/* ═══ CHAPTER 06 — ACREDITACIÓN / ACCREDITATION ═══ */}
+            <Section num="06" title={t("Acreditación — Quién, cómo y bajo qué normas", "Accreditation — Who, how, and under which standards")}>
+              {/* Producer identity + LCA framework — side by side */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {/* Producer Identity */}
+                <div>
+                  <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-2">
+                    {t("Identidad del productor", "Producer identity")}
+                  </p>
+                  <div className="space-y-1">
+                    <Row label={t("Empresa", "Company")} value="EcoNova México S.A. de C.V." bold />
+                    <Row label={t("Instalación", "Facility")} value={t("Planta Morelia, Michoacán, México", "Morelia Plant, Michoacán, Mexico")}
+                      sub={t("Coordenadas: 19.7006° N, 101.1845° W", "Coordinates: 19.7006° N, 101.1845° W")} />
+                    <Row label={t("Reactor", "Reactor")} value="DY-500"
+                      sub={t("Reactor rotatorio discontinuo (batch), capacidad 500 kg/lote, calentamiento externo por quemador diésel/syngas",
+                        "Batch rotary reactor, 500 kg/batch capacity, external heating via diesel/syngas burner")} />
+                    <Row label={t("Tipo de producto", "Product type")} value={t("Aceite pirolítico (pyrolysis oil)", "Pyrolysis oil")}
+                      sub={t("Mezcla de hidrocarburos C₆₋₂₀ derivada de residuo plástico — comparable a diésel/nafta",
+                        "C₆₋₂₀ hydrocarbon mixture derived from plastic waste — comparable to diesel/naphtha")} />
+                    <Row label="ID" value={certificate.code} bold />
+                    <Row label={t("Contenido reciclado", "Recycled content")} value={t("100% — residuo plástico post-consumo", "100% — post-consumer plastic waste")} bold />
+                  </div>
+                  <Info>
+                    {t(
+                      "Conforme a ESPR 2024/1781 Annex III: identidad del operador económico (a), identificador único del producto (b), trazabilidad de materias primas (e), contenido reciclado (Art. 7).",
+                      "Per ESPR 2024/1781 Annex III: economic operator identity (a), unique product identifier (b), raw material traceability (e), recycled content (Art. 7)."
+                    )}
+                  </Info>
+                </div>
+
+                {/* LCA Framework */}
+                <div>
+                  <p className="text-[8px] uppercase tracking-[1.5px] text-gray-500 font-semibold mb-2">
+                    {t("Marco LCA", "LCA framework")}
+                  </p>
+                  <div className="space-y-1">
+                    <Row label={t("Norma", "Standard")} value="ISO 14040:2006 / ISO 14044:2006" bold />
+                    <Row label={t("Unidad funcional", "Functional unit")}
+                      value={t(
+                        `Producción de ${oilL} L de aceite pirolítico (${oilKg} kg) a partir de ${batch.feedstockWeight} kg de residuo plástico agrícola`,
+                        `Production of ${oilL} L of pyrolysis oil (${oilKg} kg) from ${batch.feedstockWeight} kg of agricultural plastic waste`
+                      )} bold />
+                    <Row label={t("Frontera del sistema", "System boundary")}
+                      value={t("Cuna a puerta (cradle-to-gate)", "Cradle-to-gate")}
+                      sub={t(
+                        "Incluye: recolección en campo, transporte a planta, pre-procesamiento, pirólisis catalítica, condensación. Excluye: uso final del aceite, distribución post-producción.",
+                        "Includes: field collection, transport to plant, pre-processing, catalytic pyrolysis, condensation. Excludes: end-use of oil, post-production distribution."
+                      )} />
+                    <Row label={t("Asignación co-productos", "Co-product allocation")}
+                      value={t("Energético — por contenido calórico (MJ/kg)", "Energy-based — by calorific content (MJ/kg)")}
+                      sub={t("ISO 14044 §4.3.4 — jerarquía: evitar asignación > físico > energético. Energético seleccionado por naturaleza combustible de todos los co-productos.",
+                        "ISO 14044 §4.3.4 — hierarchy: avoid allocation > physical > energy. Energy-based selected given the fuel nature of all co-products.")} />
+                    <Row label={t("Regla de corte", "Cut-off rule")} value="<1% masa y <1% energía" />
+                    <Row label={t("Factores de caracterización", "Characterization factors")} value="IPCC AR5 GWP₁₀₀ (CH₄=28, N₂O=265)" />
+                    <Row label={t("Factor red eléctrica", "Grid emission factor")} value="IEA México 2023: 0.435 kg CO₂/kWh" />
+                    <Row label={t("Datos primarios", "Primary data")}
+                      value={t("Medición directa en planta — DY-500", "Direct plant measurement — DY-500")}
+                      sub={t("Temperaturas, masas, volúmenes y consumo energético medidos por operador con instrumentos calibrados.",
+                        "Temperatures, masses, volumes, and energy consumption measured by operator with calibrated instruments.")} />
+                  </div>
+                  <Info>
+                    {t(
+                      "Categorías de impacto evaluadas conforme ISO 14044 §4.4: cambio climático (GWP₁₀₀), acidificación (NOx+SOx), material particulado (PM₂.₅), uso de agua. Baseline: IPCC 2006 Vol. 5 Table 5.3 — quema abierta de polietileno.",
+                      "Impact categories assessed per ISO 14044 §4.4: climate change (GWP₁₀₀), acidification (NOx+SOx), particulate matter (PM₂.₅), water use. Baseline: IPCC 2006 Vol. 5 Table 5.3 — open burning of polyethylene."
+                    )}
+                  </Info>
+                </div>
+              </div>
+
+              {/* Compliance cards */}
               <div className="grid grid-cols-1 gap-2.5">
                 <ComplianceCard color="#3d5c0e" name="ISO 14040/14044"
                   article={t("Análisis de Ciclo de Vida", "Life Cycle Assessment")}
@@ -999,8 +1074,6 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
               )}
             </Section>
 
-            </div>{/* end ROW 11+12 */}
-
           </div>
 
           {/* ═══ VERIFICATION FOOTER ═══ */}
@@ -1035,7 +1108,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
         </div>
 
         <p className="text-center text-[8px] text-gray-500 mt-4 leading-relaxed">
-          {t("Pasaporte Digital de Producto", "Digital Product Passport")} · EU DPP (ESPR 2024/1781) · ISO 14040/14044 LCA · ISCC+ · Verra PWRM0002
+          {t("Pasaporte Digital de Producto — Trazabilidad de Ciclo de Vida Completo", "Digital Product Passport — Complete Life Cycle Traceability")} · EU DPP · ISO 14040 · ISCC+ · Verra
         </p>
       </div>
     </div>
