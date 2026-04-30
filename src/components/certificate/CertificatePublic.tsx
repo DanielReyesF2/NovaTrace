@@ -156,16 +156,35 @@ function LabRow({ label, value, unit, diesel, pass, method }: {
   label: string; value: string; unit: string; diesel: string; pass: boolean; method: string;
 }) {
   return (
-    <div className="grid grid-cols-[1fr,auto,auto,auto] gap-x-4 items-center py-2 border-b border-gray-100/60 last:border-0">
-      <div>
-        <span className="text-[11px] text-gray-600 font-medium">{label}</span>
-        <span className="text-[8px] text-gray-300 ml-1.5">{method}</span>
+    <div className="py-2 border-b border-gray-100/60 last:border-0">
+      {/* Desktop: single row */}
+      <div className="hidden sm:grid grid-cols-[1fr,auto,auto,auto] gap-x-4 items-center">
+        <div>
+          <span className="text-[11px] text-gray-600 font-medium">{label}</span>
+          <span className="text-[8px] text-gray-300 ml-1.5">{method}</span>
+        </div>
+        <span className="font-mono text-[11px] font-bold text-gray-800 text-right">{value} <span className="text-[9px] text-gray-500 font-normal">{unit}</span></span>
+        <span className="text-[9px] text-gray-500 text-right">{diesel}</span>
+        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${pass ? "bg-[#3d5c0e]/10 text-[#3d5c0e]" : "bg-red-50 text-red-500"}`}>
+          {pass ? "\u2713" : "\u2717"}
+        </span>
       </div>
-      <span className="font-mono text-[11px] font-bold text-gray-800 text-right">{value} <span className="text-[9px] text-gray-500 font-normal">{unit}</span></span>
-      <span className="text-[9px] text-gray-500 text-right">{diesel}</span>
-      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${pass ? "bg-[#3d5c0e]/10 text-[#3d5c0e]" : "bg-red-50 text-red-500"}`}>
-        {pass ? "\u2713" : "\u2717"}
-      </span>
+      {/* Mobile: stacked */}
+      <div className="flex sm:hidden items-center justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] text-gray-600 font-medium truncate">{label}</span>
+            <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold flex-shrink-0 ${pass ? "bg-[#3d5c0e]/10 text-[#3d5c0e]" : "bg-red-50 text-red-500"}`}>
+              {pass ? "\u2713" : "\u2717"}
+            </span>
+          </div>
+          <span className="text-[8px] text-gray-300">{method}</span>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <div className="font-mono text-[11px] font-bold text-gray-800">{value} <span className="text-[9px] text-gray-500 font-normal">{unit}</span></div>
+          <div className="text-[8px] text-gray-400">{diesel}</div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -229,7 +248,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
 
           {/* ═══ HEADER ═══ */}
           <div style={{ background: "linear-gradient(135deg, #1a2e1a 0%, #2d4a1a 50%, #1a2e1a 100%)" }}>
-            <div className="px-6 sm:px-8 pt-5 pb-3">
+            <div className="px-4 sm:px-8 pt-5 pb-3">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[8px] tracking-[4px] text-white/60 uppercase mb-1">
@@ -255,7 +274,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
               </div>
             </div>
             {/* Compliance badges */}
-            <div className="flex items-center justify-center gap-5 px-6 py-2.5 bg-white/[0.05] border-t border-white/[0.08]">
+            <div className="flex items-center justify-center gap-3 sm:gap-5 px-4 sm:px-6 py-2.5 bg-white/[0.05] border-t border-white/[0.08]">
               {[
                 { label: "EU DPP", sub: "ESPR 2024/1781" },
                 { label: "ISO 14040", sub: "LCA" },
@@ -271,7 +290,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
           </div>
 
           {/* ═══ EXECUTIVE SUMMARY ═══ */}
-          <div className="px-6 sm:px-8 py-5 border-b border-gray-100">
+          <div className="px-4 sm:px-8 py-5 border-b border-gray-100">
             {/* Bold title */}
             <h2 className="text-[11px] tracking-[2.5px] text-[#3d5c0e] font-bold uppercase mb-2">
               {t("Resumen Ejecutivo", "Executive Summary")}
@@ -292,7 +311,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
             </div>
 
             {/* Key KPIs grid */}
-            <div className="grid grid-cols-4 gap-2 mb-5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
               <Stat value={co2Avoided.toFixed(0)} unit="kg" label={t("CO\u2082eq evitados", "CO\u2082eq avoided")} color="#3d5c0e" />
               <Stat value={`${energyRatio.toFixed(1)}:1`} label={t("Ratio energ\u00e9tico", "Energy ratio")} color="#E8700A" />
               <Stat value={(batch.yieldPercent ?? 0).toFixed(0)} unit="%" label={t("Rendimiento", "Yield")} color="#7C5CFC" />
@@ -305,7 +324,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
             </p>
 
             {/* Timeline cards */}
-            <div className="grid grid-cols-6 gap-1.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5">
               {[
                 { label: t("ORIGEN", "ORIGIN"), value: `${batch.feedstockWeight}`, unit: "kg", sub: t("plástico agrícola", "agricultural plastic"), color: "#64748b", bg: "from-slate-50 to-slate-100/50" },
                 { label: t("TRASLADO", "TRANSPORT"), value: `${batch.transportDistanceKm ?? 280}`, unit: "km", sub: t("Michoacán → Lerma", "Michoacán → Lerma"), color: "#92400e", bg: "from-amber-50/80 to-orange-50/50" },
@@ -329,16 +348,16 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                     {/* Sub */}
                     <div className="text-[8px] text-gray-500 mt-0.5 leading-tight">{stage.sub}</div>
                   </div>
-                  {/* Arrow connector */}
+                  {/* Arrow connector — hidden on mobile where cards wrap */}
                   {i < arr.length - 1 && (
-                    <div className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 text-gray-300 text-[10px]">›</div>
+                    <div className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 text-gray-300 text-[10px] hidden lg:block">›</div>
                   )}
                 </div>
               ))}
             </div>
 
             {/* Reverse logistics strip */}
-            <div className="mt-3 rounded-xl border border-dashed border-[#92400e]/20 bg-[#92400e]/[0.03] px-4 py-2.5 flex items-center justify-between gap-3">
+            <div className="mt-3 rounded-xl border border-dashed border-[#92400e]/20 bg-[#92400e]/[0.03] px-4 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-full bg-[#92400e]/10 flex items-center justify-center flex-shrink-0">
                   <span className="text-[10px]" style={{ color: "#92400e" }}>↺</span>
@@ -347,7 +366,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                   {t("Logística inversa — nuestro diésel alimenta el camión de recolección", "Reverse logistics — our diesel fuels the collection truck")}
                 </span>
               </div>
-              <div className="flex items-center gap-3 flex-shrink-0">
+              <div className="flex items-center gap-3 flex-shrink-0 ml-8 sm:ml-0">
                 <div className="text-center">
                   <div className="font-mono text-xs font-bold" style={{ color: "#92400e" }}>{batch.transportFuelL ?? 59} L</div>
                   <div className="text-[7px] text-gray-500">{t("logística", "logistics")}</div>
@@ -362,7 +381,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
           </div>
 
           {/* ═══ CONTENT — JOURNEY CHAPTERS ═══ */}
-          <div className="px-5 sm:px-8 py-6 space-y-8">
+          <div className="px-4 sm:px-8 py-6 space-y-8">
 
             {/* ═══ CHAPTER 01 — ORIGEN / ORIGIN ═══ */}
             <Section num="01" title={t("Origen \u2014 De los campos de Michoac\u00e1n", "Origin \u2014 From the fields of Michoac\u00e1n")}>
@@ -813,11 +832,17 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
                   {t("Resultados anal\u00edticos vs. est\u00e1ndar di\u00e9sel", "Analytical results vs. diesel standard")}
                 </p>
                 <div className="bg-gray-50/60 rounded-xl p-3">
-                  <div className="grid grid-cols-[1fr,auto,auto,auto] gap-x-3 items-center pb-1.5 mb-1 border-b border-gray-200">
+                  {/* Desktop header */}
+                  <div className="hidden sm:grid grid-cols-[1fr,auto,auto,auto] gap-x-3 items-center pb-1.5 mb-1 border-b border-gray-200">
                     <span className="text-[8px] font-bold text-gray-500 uppercase">{t("Par\u00e1metro", "Parameter")}</span>
                     <span className="text-[8px] font-bold text-gray-500 uppercase text-right">{t("Resultado", "Result")}</span>
                     <span className="text-[8px] font-bold text-gray-500 uppercase text-right">{t("Ref. di\u00e9sel", "Diesel ref.")}</span>
                     <span className="text-[8px] font-bold text-gray-500 uppercase"></span>
+                  </div>
+                  {/* Mobile header */}
+                  <div className="flex sm:hidden justify-between pb-1.5 mb-1 border-b border-gray-200">
+                    <span className="text-[8px] font-bold text-gray-500 uppercase">{t("Par\u00e1metro", "Parameter")}</span>
+                    <span className="text-[8px] font-bold text-gray-500 uppercase">{t("Resultado", "Result")}</span>
                   </div>
                   {lab.sulfurPercent != null && <LabRow label={t("Azufre", "Sulfur")} value={`${lab.sulfurPercent}`} unit="% m/m" diesel="<0.05%" pass method="ASTM D4951" />}
                   {lab.waterContent != null && <LabRow label={t("Agua", "Water")} value={`${lab.waterContent}`} unit="PPM" diesel="<200" pass method="ASTM D6304" />}
@@ -1185,13 +1210,13 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
           </div>
 
           {/* ═══ VERIFICATION FOOTER ═══ */}
-          <div className="px-6 sm:px-8 py-4 bg-gray-50/60 border-t border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
+          <div className="px-4 sm:px-8 py-4 bg-gray-50/60 border-t border-gray-100">
+            <div className="flex items-start sm:items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
                 <p className="text-[8px] tracking-[2px] text-gray-500 uppercase font-semibold mb-1">
                   {t("Verificaci\u00f3n Digital \u2014 Integridad Criptogr\u00e1fica", "Digital Verification \u2014 Cryptographic Integrity")}
                 </p>
-                <p className="font-mono text-[8px] text-gray-500 break-all leading-relaxed">SHA-256: {certificate.hash}</p>
+                <p className="font-mono text-[7px] sm:text-[8px] text-gray-500 break-all leading-relaxed">SHA-256: {certificate.hash}</p>
                 <div className="flex items-center gap-2 mt-1.5">
                   <p className="text-[10px] text-gray-500 font-medium font-mono">{certificate.code}</p>
                   {certificate.verifiedAt && (
@@ -1208,7 +1233,7 @@ export function CertificatePublic({ certificate }: CertificatePublicProps) {
           </div>
 
           {/* ═══ BRANDING FOOTER ═══ */}
-          <div className="px-6 sm:px-8 py-3 text-center" style={{ background: "linear-gradient(135deg, #1a2e1a, #2d4a1a)" }}>
+          <div className="px-4 sm:px-8 py-3 text-center" style={{ background: "linear-gradient(135deg, #1a2e1a, #2d4a1a)" }}>
             <p className="text-[8px] tracking-[3px] text-white/50 uppercase">
               EcoNova M\u00e9xico \u00b7 {t("Econom\u00eda Circular", "Circular Economy")} \u00b7 econova.com.mx
             </p>
